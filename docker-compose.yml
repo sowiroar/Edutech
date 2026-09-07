@@ -1,7 +1,6 @@
 services:
   ollama:
     image: ollama/ollama:latest
-    container_name: azimutai-ollama
     ports:
       - "${OLLAMA_PORT:-11435}:11434"
     volumes:
@@ -25,7 +24,6 @@ services:
 
   ollama-init:
     image: ollama/ollama:latest
-    container_name: azimutai-ollama-init
     depends_on:
       ollama:
         condition: service_healthy
@@ -54,7 +52,6 @@ services:
 
   kokoro-tts:
     image: ghcr.io/remsky/kokoro-fastapi-gpu:latest
-    container_name: azimutai-kokoro
     ports:
       - "8880:8880"
     volumes:
@@ -68,31 +65,54 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
 
+  whisper-stt:
+    build:
+      context: ./whisper-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - whisper_cache:/models_cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - DEVICE=cuda
+      - COMPUTE_TYPE=float16
+      - HF_HOME=/models_cache
+    restart: unless-stopped
+
   voice-agent:
     build:
       context: ./agent-starter-python
       dockerfile: Dockerfile
-    container_name: azimutai-voice-agent
     depends_on:
       ollama-init:
         condition: service_completed_successfully
       kokoro-tts:
         condition: service_started
-    volumes:
-      - nemotron_cache:/app/.cache/huggingface
+      whisper-stt:
+        condition: service_started
     environment:
       - LIVEKIT_URL=${LIVEKIT_URL}
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
       - OLLAMA_BASE_URL=http://ollama:11434/v1
       - KOKORO_BASE_URL=http://kokoro-tts:8880/v1
+      - WHISPER_BASE_URL=http://whisper-stt:8000/v1
+      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - UV_CACHE_DIR=/tmp/uv-cache
     restart: unless-stopped
 
   frontend:
     build:
       context: ./agent-starter-react
       dockerfile: Dockerfile
-    container_name: azimutai-frontend
     ports:
       - "3000:3000"
     environment:
@@ -106,8 +126,11 @@ services:
 
 volumes:
   ollama_data:
+    external: true
     name: azimutai_ollama_data
   kokoro_cache:
+    external: true
     name: azimutai_kokoro_cache
-  nemotron_cache:
-    name: azimutai_nemotron_cache
+  whisper_cache:
+    name: azimutai_whisper_cache
+

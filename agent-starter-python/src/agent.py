@@ -18,7 +18,6 @@ from urllib.parse import urlparse
 import httpx
 import openai as py_openai
 from livekit.plugins import ai_coustics, openai, silero
-from nemotron_stt import NemotronSTT
 
 logger = logging.getLogger("agent-nexus")
 
@@ -90,10 +89,11 @@ class NexusAgent(Agent):
 def get_tts_engine():
     """Retorna exclusivamente el motor local Kokoro TTS (OpenAI-compatible) con voz masculina en español (em_alex).
     100% local, sin uso de TTS en la nube.
+    Usa model='tts-1' para seleccionar el transporte de bytes directos de LiveKit.
     """
     logger.info(f"Usando exclusivamente Kokoro TTS local en {KOKORO_BASE_URL} (voz masculina 'em_alex').")
     return openai.TTS(
-        model="kokoro",
+        model="tts-1",
         voice="em_alex",
         api_key="not-needed",
         base_url=KOKORO_BASE_URL,
@@ -101,14 +101,13 @@ def get_tts_engine():
     )
 
 
-server = AgentServer()
+server = AgentServer(num_idle_processes=1)
 
 
 def prewarm(proc: JobProcess):
-    """Precarga Silero VAD y Nemotron STT en memoria al iniciar el proceso del servidor."""
+    """Precarga Silero VAD en memoria al iniciar el proceso del servidor."""
+    logger.info("Precargando Silero VAD local...")
     proc.userdata["vad"] = silero.VAD.load()
-    logger.info("Precargando modelo Nemotron STT local (INT4 ONNX)...")
-    proc.userdata["stt"] = NemotronSTT(language="es-419")
 
 
 server.setup_fnc = prewarm
@@ -120,18 +119,28 @@ async def nexus_session(ctx: JobContext):
         "room": ctx.room.name,
     }
 
-    # Pipeline de voz en streaming 100% local (Silero VAD + Nemotron STT + Ollama LLM + Kokoro TTS)
+    whisper_base_url = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
+    whisper_model = os.getenv("WHISPER_MODEL", "Systran/faster-whisper-large-v3-turbo")
+
+    logger.info(f"Iniciando sesión Nexus en sala {ctx.room.name} con STT Whisper en {whisper_base_url}")
+
+    # Pipeline de voz en streaming 100% local (Silero VAD + Faster-Whisper STT + Ollama LLM + Kokoro TTS)
     session = AgentSession(
         # Silero VAD precargado localmente
         vad=ctx.proc.userdata.get("vad") or silero.VAD.load(),
-        # Speech-to-text: Nemotron-3.5 ASR Streaming 0.6B (INT4 ONNX) 100% local
-        stt=ctx.proc.userdata.get("stt") or NemotronSTT(language="es-419"),
+        # Speech-to-text: Faster-Whisper local vía microservicio OpenAI
+        stt=openai.STT(
+            base_url=whisper_base_url,
+            model=whisper_model,
+            api_key="not-needed",
+            language="es",
+        ),
         # Text-to-speech (TTS): Kokoro local (em_alex)
         tts=get_tts_engine(),
         turn_handling=TurnHandlingOptions(
             # LiveKit TurnDetector: modelo acústico y semántico multilingüe que evita cortes prematuros
             turn_detection=inference.TurnDetector(),
-            # Interrupción adaptativa (barge-in): distingue pausas y confirmaciones ("ajá", "sí") de interrupciones reales
+            # Interrupción adaptativa (barge-in): distingue pausas y confirmaciones de interrupciones reales
             interruption={"mode": "adaptive"},
             # Generación preventiva: predice y genera tokens antes de que finalice el turno del usuario
             preemptive_generation={"enabled": True},
@@ -154,6 +163,12 @@ async def nexus_session(ctx: JobContext):
     # Conecta al participante a la sala WebRTC
     await ctx.connect()
 
+    # Saludo inicial proactivo para confirmar audio y dar bienvenida
+    session.generate_reply(
+        instructions="Saluda brevemente al usuario en una sola oración en español como Nexus, tutor senior de IA, e invítalo a hacer preguntas."
+    )
+
 
 if __name__ == "__main__":
     cli.run_app(server)
+
