@@ -1,0 +1,48 @@
+# Environment variables and credentials
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
+
+# Agents directories
+.agents
+.agents/
+.agent
+.agent/
+**/.agents
+**/.agents/
+**/.agent
+**/.agent/
+
+# Dependencies and virtual environments
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+venv/
+**/venv/
+
+# Build outputs
+.next/
+**/.next/
+dist/
+build/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Cache directories
+.cache/
+**/.cache/
+.pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
