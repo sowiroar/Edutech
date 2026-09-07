@@ -78,6 +78,8 @@ services:
         condition: service_completed_successfully
       kokoro-tts:
         condition: service_started
+    volumes:
+      - nemotron_cache:/app/.cache/huggingface
     environment:
       - LIVEKIT_URL=${LIVEKIT_URL}
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
@@ -107,3 +109,5 @@ volumes:
     name: azimutai_ollama_data
   kokoro_cache:
     name: azimutai_kokoro_cache
+  nemotron_cache:
+    name: azimutai_nemotron_cache

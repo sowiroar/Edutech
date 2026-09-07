@@ -9,10 +9,12 @@ description = "Simple voice AI assistant built with LiveKit Agents for Python"
 requires-python = ">=3.10, <3.15"
 
 dependencies = [
+    "huggingface-hub>=1.30.0",
     "livekit-agents>=1.6.9",
     "livekit-plugins-ai-coustics~=0.2",
     "livekit-plugins-openai>=1.8.0",
     "livekit-plugins-silero>=1.8.0",
+    "onnxruntime-genai>=0.12.2",
     "python-dotenv",
 ]
 

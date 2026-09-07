@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 import httpx
 import openai as py_openai
 from livekit.plugins import ai_coustics, openai, silero
+from nemotron_stt import NemotronSTT
 
 logger = logging.getLogger("agent-nexus")
 
@@ -104,8 +105,10 @@ server = AgentServer()
 
 
 def prewarm(proc: JobProcess):
-    """Precarga Silero VAD en memoria al iniciar el proceso del servidor."""
+    """Precarga Silero VAD y Nemotron STT en memoria al iniciar el proceso del servidor."""
     proc.userdata["vad"] = silero.VAD.load()
+    logger.info("Precargando modelo Nemotron STT local (INT4 ONNX)...")
+    proc.userdata["stt"] = NemotronSTT(language="es-419")
 
 
 server.setup_fnc = prewarm
@@ -117,38 +120,13 @@ async def nexus_session(ctx: JobContext):
         "room": ctx.room.name,
     }
 
-    # Pipeline de voz en streaming con soporte nativo para español latino (es-419)
+    # Pipeline de voz en streaming 100% local (Silero VAD + Nemotron STT + Ollama LLM + Kokoro TTS)
     session = AgentSession(
         # Silero VAD precargado localmente
         vad=ctx.proc.userdata.get("vad") or silero.VAD.load(),
-        # Speech-to-text: Deepgram Nova-3 en español latino (es-419) con refuerzo de keyterms técnicos
-        stt=inference.STT(
-            model="deepgram/nova-3",
-            language="es-419",
-            extra_kwargs={
-                "keyterm": [
-                    "Scikit-learn",
-                    "YOLO",
-                    "TensorFlow",
-                    "PyTorch",
-                    "RAG",
-                    "Transformer",
-                    "Backpropagation",
-                    "Gradient Descent",
-                    "Bounding Box",
-                    "IoU",
-                    "NMS",
-                    "Segmentación",
-                    "SAM",
-                    "CUDA",
-                    "VRAM",
-                    "Kernel",
-                    "LoRA",
-                    "Overfitting",
-                ],
-            },
-        ),
-        # Text-to-speech (TTS): Kokoro local si está activo en 8880, o LiveKit Cloud TTS
+        # Speech-to-text: Nemotron-3.5 ASR Streaming 0.6B (INT4 ONNX) 100% local
+        stt=ctx.proc.userdata.get("stt") or NemotronSTT(language="es-419"),
+        # Text-to-speech (TTS): Kokoro local (em_alex)
         tts=get_tts_engine(),
         turn_handling=TurnHandlingOptions(
             # LiveKit TurnDetector: modelo acústico y semántico multilingüe que evita cortes prematuros
