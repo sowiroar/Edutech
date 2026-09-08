@@ -36,15 +36,11 @@ services:
       - |
         echo "Verificando disponibilidad de Ollama..."
         until ollama list > /dev/null 2>&1; do sleep 1; done
-        if ! ollama list | grep -q "nexus"; then
-          echo "Descargando modelo base llama3.2:3b..."
-          ollama pull llama3.2:3b
-          echo "Creando modelo personalizado nexus (4096 tokens de contexto)..."
-          ollama create nexus -f /Modelfile
-          echo "Modelo nexus listo para su uso."
-        else
-          echo "Modelo nexus ya disponible en el volumen persistente."
-        fi
+        echo "Descargando modelo base hf.co/unsloth/Qwen3.5-4B-MTP-GGUF:Q4_K_M..."
+        ollama pull hf.co/unsloth/Qwen3.5-4B-MTP-GGUF:Q4_K_M
+        echo "Creando modelo personalizado nexus (Qwen3.5 4B MTP, 4096 tokens)..."
+        ollama create nexus -f /Modelfile
+        echo "Modelo nexus listo para su uso."
         echo "Precargando modelo nexus en memoria..."
         ollama run nexus "hola" > /dev/null 2>&1
         echo "Nexus activo en memoria y listo para llamadas."
@@ -81,7 +77,9 @@ services:
               count: all
               capabilities: [gpu]
     environment:
-      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - WHISPER_MODEL=${WHISPER_MODEL:-medium}
+      - WHISPER_BEAM_SIZE=${WHISPER_BEAM_SIZE:-1}
+      - WHISPER_VAD_FILTER=${WHISPER_VAD_FILTER:-false}
       - DEVICE=cuda
       - COMPUTE_TYPE=float16
       - HF_HOME=/models_cache
@@ -105,7 +103,7 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434/v1
       - KOKORO_BASE_URL=http://kokoro-tts:8880/v1
       - WHISPER_BASE_URL=http://whisper-stt:8000/v1
-      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - WHISPER_MODEL=${WHISPER_MODEL:-medium}
       - UV_CACHE_DIR=/tmp/uv-cache
     restart: unless-stopped
 

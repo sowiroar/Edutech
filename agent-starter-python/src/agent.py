@@ -51,6 +51,7 @@ class NexusAgent(Agent):
                 client=ollama_client,
                 timeout=httpx.Timeout(connect=30.0, read=90.0, write=30.0, pool=30.0),
                 temperature=0.6,
+                extra_body={"think": False},
             ),
             instructions=textwrap.dedent(
                 """\
@@ -120,7 +121,7 @@ async def nexus_session(ctx: JobContext):
     }
 
     whisper_base_url = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
-    whisper_model = os.getenv("WHISPER_MODEL", "Systran/faster-whisper-large-v3-turbo")
+    whisper_model = os.getenv("WHISPER_MODEL", "medium")
 
     logger.info(f"Iniciando sesión Nexus en sala {ctx.room.name} con STT Whisper en {whisper_base_url}")
 

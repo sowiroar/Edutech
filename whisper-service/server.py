@@ -25,9 +25,11 @@ import torch
 logger = logging.getLogger("whisper-service")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-MODEL_NAME = os.getenv("WHISPER_MODEL", "large-v3-turbo")
+MODEL_NAME = os.getenv("WHISPER_MODEL", "medium")
 DEVICE = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 COMPUTE_TYPE = os.getenv("COMPUTE_TYPE", "float16" if DEVICE == "cuda" else "int8")
+BEAM_SIZE = int(os.getenv("WHISPER_BEAM_SIZE", "1"))
+VAD_FILTER = os.getenv("WHISPER_VAD_FILTER", "false").lower() == "true"
 
 _model: WhisperModel | None = None
 
@@ -84,10 +86,12 @@ async def transcribe(
         segments, info = _model.transcribe(
             io.BytesIO(audio_bytes),
             language=target_lang,
+            beam_size=BEAM_SIZE,
+            condition_on_previous_text=False,
             temperature=float(temperature) if temperature else 0.0,
             initial_prompt=prompt or None,
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=250),
+            vad_filter=VAD_FILTER,
+            vad_parameters=dict(min_silence_duration_ms=250) if VAD_FILTER else None,
         )
         text = "".join(segment.text for segment in segments).strip()
         logger.info(
