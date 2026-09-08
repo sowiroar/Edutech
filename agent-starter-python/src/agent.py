@@ -37,6 +37,16 @@ ollama_client = py_openai.AsyncClient(
     ),
 )
 
+WHISPER_BASE_URL = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
+whisper_client = py_openai.AsyncClient(
+    base_url=WHISPER_BASE_URL,
+    api_key="not-needed",
+    http_client=httpx.AsyncClient(
+        timeout=httpx.Timeout(connect=15.0, read=30.0, write=15.0, pool=15.0),
+        follow_redirects=True,
+    ),
+)
+
 
 def get_llm_engine(model_name: str = "nexus") -> openai.LLM:
     """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local."""
@@ -132,9 +142,8 @@ async def nexus_session(ctx: JobContext):
         ),
         # Speech-to-text: Faster-Whisper local vía microservicio OpenAI
         stt=openai.STT(
-            base_url=whisper_base_url,
+            client=whisper_client,
             model=whisper_model,
-            api_key="not-needed",
             language="es",
         ),
         # Text-to-speech (TTS): Kokoro local (em_alex)
