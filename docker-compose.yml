@@ -36,9 +36,9 @@ services:
       - |
         echo "Verificando disponibilidad de Ollama..."
         until ollama list > /dev/null 2>&1; do sleep 1; done
-        echo "Descargando modelo base hf.co/unsloth/Qwen3.5-4B-MTP-GGUF:Q4_K_M..."
-        ollama pull hf.co/unsloth/Qwen3.5-4B-MTP-GGUF:Q4_K_M
-        echo "Creando modelo personalizado nexus (Qwen3.5 4B MTP, 4096 tokens)..."
+        echo "Descargando modelo base hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M..."
+        ollama pull hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M
+        echo "Creando modelo personalizado nexus (Qwen3-VL 2B Instruct, 4096 tokens)..."
         ollama create nexus -f /Modelfile
         echo "Modelo nexus listo para su uso."
         echo "Precargando modelo nexus en memoria..."
@@ -77,7 +77,7 @@ services:
               count: all
               capabilities: [gpu]
     environment:
-      - WHISPER_MODEL=${WHISPER_MODEL:-medium}
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - WHISPER_BEAM_SIZE=${WHISPER_BEAM_SIZE:-1}
       - WHISPER_VAD_FILTER=${WHISPER_VAD_FILTER:-false}
       - DEVICE=cuda
@@ -103,7 +103,7 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434/v1
       - KOKORO_BASE_URL=http://kokoro-tts:8880/v1
       - WHISPER_BASE_URL=http://whisper-stt:8000/v1
-      - WHISPER_MODEL=${WHISPER_MODEL:-medium}
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - UV_CACHE_DIR=/tmp/uv-cache
     restart: unless-stopped
 

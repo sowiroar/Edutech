@@ -38,21 +38,23 @@ ollama_client = py_openai.AsyncClient(
 )
 
 
+def get_llm_engine(model_name: str = "nexus") -> openai.LLM:
+    """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local."""
+    return openai.LLM(
+        model=model_name,
+        base_url=OLLAMA_BASE_URL,
+        api_key="ollama",
+        client=ollama_client,
+        temperature=0.6,
+    )
+
+
 class NexusAgent(Agent):
     """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning."""
 
     def __init__(self, model_name: str = "nexus") -> None:
         super().__init__(
-            # Inferencia de lenguaje local mediante Ollama con 100% GPU y 90s timeout
-            llm=openai.LLM(
-                model=model_name,
-                base_url=OLLAMA_BASE_URL,
-                api_key="ollama",
-                client=ollama_client,
-                timeout=httpx.Timeout(connect=30.0, read=90.0, write=30.0, pool=30.0),
-                temperature=0.6,
-                extra_body={"think": False},
-            ),
+            llm=get_llm_engine(model_name),
             instructions=textwrap.dedent(
                 """\
                 Eres Nexus, un tutor e investigador senior experto en Inteligencia Artificial, Machine Learning y Visión por Computadora.
@@ -68,23 +70,13 @@ class NexusAgent(Agent):
                 # Reglas estrictas de interacción por voz:
                 1. Idioma: Comunícate SIEMPRE en español con entonación natural, pedagógica, clara y profesional.
                 2. Formato oral estricto: Estás hablando en voz alta por un sintetizador de audio. NUNCA uses formato markdown, asteriscos (*), negritas (**), almohadillas (#), viñetas (-), emojis ni bloques de código formateado. Habla en texto continuo fluido.
-                3. Concisión conversacional: Responde en 1 a 3 oraciones por turno. Sé directo al núcleo de la duda técnica. Si el concepto requiere mayor profundidad, invita al estudiante a profundizar en el siguiente turno para evitar monólogos.
-                4. Vocabulario técnico en inglés: Pronuncia con fluidez los términos técnicos en inglés estándar (Scikit-learn, PyTorch, TensorFlow, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation, Gradient Descent, Loss, GPU, CUDA).
+                3. Directo, veloz y pedagógico: Responde SIEMPRE de manera directa a la pregunta o duda técnica del estudiante en 1 a 3 oraciones cortas y concisas. Usa oraciones breves para que la síntesis de audio empiece de inmediato. NUNCA respondas con evasivas ni preguntas retóricas. Da la explicación conceptual o práctica inmediatamente.
+                4. Vocabulario técnico en inglés: Pronuncia con fluidez los términos técnicos en inglés estándar (Clustering, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, TensorFlow, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation, Gradient Descent, Loss, GPU, CUDA).
                 5. Soluciones de código habladas: Describe la solución con lenguaje hablado claro (por ejemplo: 'en Scikit-learn puedes instanciar un Pipeline con StandardScaler y SVC antes de ajustar los datos').
                 """
             ),
         )
 
-    async def on_enter(self):
-        """Saludo proactivo de bienvenida al ingresar el estudiante a la sesión."""
-        await self.session.generate_reply(
-            instructions=(
-                "Saluda con entusiasmo y calidez en español en una sola frase breve. "
-                "Preséntate como Nexus, especialista en Inteligencia Artificial y Deep Learning, "
-                "y pregunta en qué duda técnica o proyecto de IA puedes colaborar hoy."
-            ),
-            allow_interruptions=True,
-        )
 
 
 def get_tts_engine():
@@ -92,7 +84,6 @@ def get_tts_engine():
     100% local, sin uso de TTS en la nube.
     Usa model='tts-1' para seleccionar el transporte de bytes directos de LiveKit.
     """
-    logger.info(f"Usando exclusivamente Kokoro TTS local en {KOKORO_BASE_URL} (voz masculina 'em_alex').")
     return openai.TTS(
         model="tts-1",
         voice="em_alex",
@@ -106,9 +97,13 @@ server = AgentServer(num_idle_processes=1)
 
 
 def prewarm(proc: JobProcess):
-    """Precarga Silero VAD en memoria al iniciar el proceso del servidor."""
+    """Precarga Silero VAD en memoria con tiempos calibrados para rapidez de respuesta sin cortar al usuario."""
     logger.info("Precargando Silero VAD local...")
-    proc.userdata["vad"] = silero.VAD.load()
+    proc.userdata["vad"] = silero.VAD.load(
+        min_silence_duration=0.50,    # 500ms de silencio antes de marcar fin de segmento
+        min_speech_duration=0.08,    # 80ms de voz para filtrar chasquidos o ruidos
+        prefix_padding_duration=0.5, # 500ms de padding previo para no perder la primera palabra
+    )
 
 
 server.setup_fnc = prewarm
@@ -121,14 +116,20 @@ async def nexus_session(ctx: JobContext):
     }
 
     whisper_base_url = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
-    whisper_model = os.getenv("WHISPER_MODEL", "medium")
+    whisper_model = os.getenv("WHISPER_MODEL", "base")
 
     logger.info(f"Iniciando sesión Nexus en sala {ctx.room.name} con STT Whisper en {whisper_base_url}")
 
     # Pipeline de voz en streaming 100% local (Silero VAD + Faster-Whisper STT + Ollama LLM + Kokoro TTS)
     session = AgentSession(
+        # LLM local Ollama explícito para evitar fallback a LiveKit Cloud Inference
+        llm=get_llm_engine(),
         # Silero VAD precargado localmente
-        vad=ctx.proc.userdata.get("vad") or silero.VAD.load(),
+        vad=ctx.proc.userdata.get("vad") or silero.VAD.load(
+            min_silence_duration=0.50,
+            min_speech_duration=0.08,
+            prefix_padding_duration=0.5,
+        ),
         # Speech-to-text: Faster-Whisper local vía microservicio OpenAI
         stt=openai.STT(
             base_url=whisper_base_url,
@@ -139,12 +140,27 @@ async def nexus_session(ctx: JobContext):
         # Text-to-speech (TTS): Kokoro local (em_alex)
         tts=get_tts_engine(),
         turn_handling=TurnHandlingOptions(
-            # LiveKit TurnDetector: modelo acústico y semántico multilingüe que evita cortes prematuros
-            turn_detection=inference.TurnDetector(),
-            # Interrupción adaptativa (barge-in): distingue pausas y confirmaciones de interrupciones reales
-            interruption={"mode": "adaptive"},
-            # Generación preventiva: predice y genera tokens antes de que finalice el turno del usuario
-            preemptive_generation={"enabled": True},
+            # TurnDetector v1-mini: modelo acústico local en CPU para evitar cortes prematuros sin depender de la nube
+            turn_detection=inference.TurnDetector(
+                version="v1-mini",
+                unlikely_threshold=0.55,  # Umbral calibrado: espera si detecta entonación de pensamiento o pausa intermedia
+            ),
+            # Endpointing dinámico: adapta los tiempos de espera a las pausas naturales del usuario
+            endpointing={
+                "mode": "dynamic",
+                "min_delay": 0.5,   # Límite inferior para cierres ágiles cuando el TurnDetector está seguro
+                "max_delay": 3.0,   # Límite superior para pausas de duda
+                "alpha": 0.85,
+            },
+            # Interrupción: distingue interrupciones reales de ruidos o carraspeos y reanuda si fue falsa interrupción
+            interruption={
+                "enabled": True,
+                "mode": "adaptive",
+                "min_duration": 0.45,
+                "false_interruption_timeout": 2.0,
+                "resume_false_interruption": True,
+            },
+            preemptive_generation={"enabled": False},
         ),
     )
 
@@ -163,11 +179,6 @@ async def nexus_session(ctx: JobContext):
 
     # Conecta al participante a la sala WebRTC
     await ctx.connect()
-
-    # Saludo inicial proactivo para confirmar audio y dar bienvenida
-    session.generate_reply(
-        instructions="Saluda brevemente al usuario en una sola oración en español como Nexus, tutor senior de IA, e invítalo a hacer preguntas."
-    )
 
 
 if __name__ == "__main__":

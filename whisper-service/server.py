@@ -25,11 +25,18 @@ import torch
 logger = logging.getLogger("whisper-service")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-MODEL_NAME = os.getenv("WHISPER_MODEL", "medium")
+MODEL_NAME = os.getenv("WHISPER_MODEL", "base")
 DEVICE = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 COMPUTE_TYPE = os.getenv("COMPUTE_TYPE", "float16" if DEVICE == "cuda" else "int8")
 BEAM_SIZE = int(os.getenv("WHISPER_BEAM_SIZE", "1"))
 VAD_FILTER = os.getenv("WHISPER_VAD_FILTER", "false").lower() == "true"
+DEFAULT_INITIAL_PROMPT = os.getenv(
+    "WHISPER_INITIAL_PROMPT",
+    "Términos técnicos de Inteligencia Artificial y Machine Learning en español: "
+    "clustering, K-means, DBSCAN, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, TensorFlow, "
+    "Deep Learning, Random Forest, SVM, YOLO, IoU, bounding box, backpropagation, gradient descent, "
+    "loss, fine-tuning, LoRA, QLoRA, embeddings, RAG, FAISS, Transformer, self-attention.",
+)
 
 _model: WhisperModel | None = None
 
@@ -89,7 +96,7 @@ async def transcribe(
             beam_size=BEAM_SIZE,
             condition_on_previous_text=False,
             temperature=float(temperature) if temperature else 0.0,
-            initial_prompt=prompt or None,
+            initial_prompt=prompt or DEFAULT_INITIAL_PROMPT,
             vad_filter=VAD_FILTER,
             vad_parameters=dict(min_silence_duration_ms=250) if VAD_FILTER else None,
         )
