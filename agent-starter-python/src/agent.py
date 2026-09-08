@@ -1,31 +1,38 @@
+from __future__ import annotations
+
 import logging
+import os
 import textwrap
+from typing import Optional
 
 from dotenv import load_dotenv
+import httpx
 from livekit.agents import (
     Agent,
     AgentServer,
     AgentSession,
+    ChatContext,
     JobContext,
     JobProcess,
+    RunContext,
     TurnHandlingOptions,
     cli,
+    function_tool,
     inference,
     room_io,
 )
-import os
-from urllib.parse import urlparse
-import httpx
 import openai as py_openai
 from livekit.plugins import ai_coustics, openai, silero
 
-logger = logging.getLogger("agent-nexus")
+logger = logging.getLogger("agent-multi")
 
 load_dotenv(".env.local")
 
 # Configuración dinámica de endpoints locales / Docker
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 KOKORO_BASE_URL = os.getenv("KOKORO_BASE_URL", "http://localhost:8880/v1")
+WHISPER_BASE_URL = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
 
 # Cliente HTTP con timeout de 60s para evitar cortes en inferencia local con GPU
 ollama_client = py_openai.AsyncClient(
@@ -49,50 +56,180 @@ def get_llm_engine(model_name: str = "nexus") -> openai.LLM:
     )
 
 
-class NexusAgent(Agent):
-    """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning."""
-
-    def __init__(self, model_name: str = "nexus") -> None:
-        super().__init__(
-            llm=get_llm_engine(model_name),
-            instructions=textwrap.dedent(
-                """\
-                Eres Nexus, un tutor e investigador senior experto en Inteligencia Artificial, Machine Learning y Visión por Computadora.
-                Tu función principal es resolver dudas teóricas, conceptuales y prácticas sobre:
-                - Machine Learning Clásico: Scikit-learn (clasificación, regresión, SVM, kernels, Random Forest, PCA, pipelines de preprocesamiento, métricas como F1, ROC-AUC y matriz de confusión).
-                - Deep Learning Frameworks: PyTorch y TensorFlow/Keras (tensores, autograd, grafos de cálculo, capas convolucionales, optimizadores como AdamW y SGD, funciones de pérdida y debugging de dimensiones).
-                - Visión Artificial: YOLO (detección de objetos en tiempo real, bounding boxes, IoU, non-max suppression NMS, mAP), Detección de objetos y Segmentación (semántica con UNet, por instancias con Mask R-CNN y modelos fundacionales como SAM).
-                - LLMs y Modelos Generativos: Arquitecturas Transformer, mecanismos de atención (Self-Attention, FlashAttention), tokenización, pre-entrenamiento y fine-tuning con LoRA/QLoRA.
-                - RAG (Retrieval-Augmented Generation): Chunking de texto, modelos de embeddings, bases de datos vectoriales (FAISS, Chroma, Pinecone) y re-ranking de contexto.
-                - Sistemas de Agentes y Multiagente: Agentes autónomos, llamado de funciones (tool-calling), memoria contextual, planificación, patrones ReAct y handoffs.
-                - Infraestructura y aceleración: GPUs, VRAM, precisión mixta (FP16/BF16), CUDA y cuantización.
-
-                # Reglas estrictas de interacción por voz:
-                1. Idioma: Comunícate SIEMPRE en español con entonación natural, pedagógica, clara y profesional.
-                2. Formato oral estricto: Estás hablando en voz alta por un sintetizador de audio. NUNCA uses formato markdown, asteriscos (*), negritas (**), almohadillas (#), viñetas (-), emojis ni bloques de código formateado. Habla en texto continuo fluido.
-                3. Directo, veloz y pedagógico: Responde SIEMPRE de manera directa a la pregunta o duda técnica del estudiante en 1 a 3 oraciones cortas y concisas. Usa oraciones breves para que la síntesis de audio empiece de inmediato. NUNCA respondas con evasivas ni preguntas retóricas. Da la explicación conceptual o práctica inmediatamente.
-                4. Vocabulario técnico en inglés: Pronuncia con fluidez los términos técnicos en inglés estándar (Clustering, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, TensorFlow, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation, Gradient Descent, Loss, GPU, CUDA).
-                5. Soluciones de código habladas: Describe la solución con lenguaje hablado claro (por ejemplo: 'en Scikit-learn puedes instanciar un Pipeline con StandardScaler y SVC antes de ajustar los datos').
-                """
-            ),
-        )
-
-
-
-def get_tts_engine():
-    """Retorna exclusivamente el motor local Kokoro TTS (OpenAI-compatible) con voz masculina en español (em_alex).
-    100% local, sin uso de TTS en la nube.
-    Usa model='tts-1' para seleccionar el transporte de bytes directos de LiveKit.
+def get_tts_engine(voice: str = "ef_dora") -> openai.TTS:
+    """Retorna el motor local Kokoro TTS (OpenAI-compatible) con la voz en español seleccionada:
+    - ef_dora: Voz femenina cálida en español (Lira - Recepción y Triage).
+    - em_alex: Voz masculina técnica en español (Nexus - Especialista en IA).
+    - em_santa: Voz masculina formal en español (Elian - Especialista UAM).
+    Usa model='tts-1' para activar el streaming binario de audio de LiveKit.
     """
     return openai.TTS(
         model="tts-1",
-        voice="em_alex",
+        voice=voice,
         api_key="not-needed",
         base_url=KOKORO_BASE_URL,
         response_format="wav",
     )
 
 
+# ---------------------------------------------------------------------------
+# AGENTE 1: Lira - Recepcionista y Triage (Voz femenina ef_dora)
+# ---------------------------------------------------------------------------
+class LiraAgent(Agent):
+    """Lira: Recepcionista de bienvenida y enrutamiento inteligente.
+    Voz: ef_dora (Español femenina).
+    """
+
+    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+        super().__init__(
+            llm=get_llm_engine(),
+            tts=get_tts_engine("ef_dora"),
+            chat_ctx=chat_ctx,
+            instructions=textwrap.dedent(
+                """\
+                Eres Lira, la recepcionista principal y orientadora de bienvenida.
+                Tu función es recibir al usuario amablemente, identificar su necesidad y enrutarlo de inmediato al especialista adecuado usando tus herramientas.
+
+                # Especialistas disponibles:
+                1. Nexus (Especialista en Inteligencia Artificial y Deep Learning):
+                   Transfiérele si el usuario pregunta sobre: Machine Learning, Deep Learning, PyTorch, TensorFlow, YOLO, visión por computadora, NLP, Transformers, LLMs, RAG, embeddings, algoritmos como clustering, Lasso, Ridge, o código de IA.
+                   Herramienta: `transfer_to_nexus`.
+                2. Elian (Especialista Institucional de la Universidad Autónoma de Manizales - UAM):
+                   Transfiérele si el usuario pregunta sobre: Carreras de pregrado o posgrado, admisiones, matrículas, campus, facultades, calendario académico, bienestar universitario, trámites administrativos o historia de la UAM.
+                   Herramienta: `transfer_to_elian`.
+
+                # Reglas estrictas de interacción por voz:
+                - Idioma: Habla SIEMPRE en español claro, cálido y conciso.
+                - Sin formato: Nunca uses markdown, asteriscos, viñetas ni emojis. Habla en texto continuo.
+                - Brevedad: Respuestas de 1 a 2 oraciones.
+                - Si el usuario ya plantea su duda técnica o administrativa en su primer mensaje, llama de inmediato la herramienta de transferencia respectiva sin hacer preguntas redundantes.
+                - Si solo saluda, responde con un saludo breve presentándote como Lira y preguntando si tiene dudas sobre Inteligencia Artificial o sobre la Universidad Autónoma de Manizales.
+                """
+            ),
+        )
+
+    async def on_enter(self) -> None:
+        """Saludo inicial breve de bienvenida."""
+        await self.session.generate_reply(
+            instructions="Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
+        )
+
+    @function_tool()
+    async def transfer_to_nexus(self, context: RunContext) -> tuple[NexusAgent, str]:
+        """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
+        logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
+        nexus = NexusAgent(chat_ctx=self.chat_ctx)
+        return nexus, "Te comunico de inmediato con Nexus, nuestro especialista en Inteligencia Artificial."
+
+    @function_tool()
+    async def transfer_to_elian(self, context: RunContext) -> tuple[ElianAgent, str]:
+        """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
+        logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
+        elian = ElianAgent(chat_ctx=self.chat_ctx)
+        return elian, "Te comunico con Elian, nuestro especialista en la Universidad Autónoma de Manizales."
+
+
+# ---------------------------------------------------------------------------
+# AGENTE 2: Nexus - Especialista en IA y Deep Learning (Voz masculina em_alex)
+# ---------------------------------------------------------------------------
+class NexusAgent(Agent):
+    """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning.
+    Voz: em_alex (Español masculina).
+    """
+
+    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+        super().__init__(
+            llm=get_llm_engine(),
+            tts=get_tts_engine("em_alex"),
+            chat_ctx=chat_ctx,
+            instructions=textwrap.dedent(
+                """\
+                Eres Nexus, un tutor e investigador senior experto en Inteligencia Artificial, Machine Learning y Visión por Computadora.
+                Tu función principal es resolver dudas teóricas, conceptuales y prácticas sobre:
+                - Machine Learning Clásico: Scikit-learn (clasificación, regresión, SVM, kernels, Random Forest, PCA, pipelines de preprocesamiento, clustering como K-means o DBSCAN, regularización Lasso, Ridge y ElasticNet).
+                - Deep Learning Frameworks: PyTorch y TensorFlow/Keras (tensores, autograd, grafos de cálculo, capas convolucionales, optimizadores como AdamW y SGD, funciones de pérdida y debugging de dimensiones).
+                - Visión Artificial: YOLO (detección de objetos en tiempo real, bounding boxes, IoU, non-max suppression NMS, mAP), segmentación (UNet, Mask R-CNN, SAM).
+                - LLMs y Modelos Generativos: Arquitecturas Transformer, mecanismos de atención (Self-Attention, FlashAttention), tokenización, fine-tuning con LoRA/QLoRA.
+                - RAG (Retrieval-Augmented Generation): Chunking, embeddings, bases de datos vectoriales (FAISS, Chroma, Pinecone) y re-ranking.
+                - Infraestructura y aceleración: GPUs, VRAM, CUDA y cuantización.
+
+                # Transferencia a Elian:
+                Si el usuario te hace preguntas institucionales sobre la Universidad Autónoma de Manizales (admisiones, programas, campus, fechas de matrícula o costos), utiliza la herramienta `transfer_to_elian` para transferir la llamada.
+
+                # Reglas estrictas de interacción por voz:
+                1. Idioma: Comunícate SIEMPRE en español técnico, claro y profesional.
+                2. Formato oral estricto: NUNCA uses formato markdown, asteriscos, negritas, viñetas, emojis ni bloques de código formateado. Habla en texto continuo fluido.
+                3. Directo, veloz y pedagógico: Responde directamente a la pregunta en 1 a 3 oraciones cortas y concisas para que el audio empiece de inmediato.
+                4. Vocabulario técnico en inglés: Pronuncia con fluidez términos estándar (Clustering, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation).
+                """
+            ),
+        )
+
+    async def on_enter(self) -> None:
+        """Saluda brevemente confirmando que está listo para abordar el tema de Inteligencia Artificial."""
+        await self.session.generate_reply(
+            instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
+        )
+
+    @function_tool()
+    async def transfer_to_elian(self, context: RunContext) -> tuple[ElianAgent, str]:
+        """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
+        logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
+        elian = ElianAgent(chat_ctx=self.chat_ctx)
+        return elian, "Te transfiero con Elian para atender tu consulta sobre la Universidad Autónoma de Manizales."
+
+
+# ---------------------------------------------------------------------------
+# AGENTE 3: Elian - Especialista Institucional UAM (Voz masculina em_santa)
+# ---------------------------------------------------------------------------
+class ElianAgent(Agent):
+    """Elian: Asistente experto en la Universidad Autónoma de Manizales (UAM).
+    Voz: em_santa (Español masculina formal).
+    """
+
+    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+        super().__init__(
+            llm=get_llm_engine(),
+            tts=get_tts_engine("em_santa"),
+            chat_ctx=chat_ctx,
+            instructions=textwrap.dedent(
+                """\
+                Eres Elian, asesor institucional y académico de la Universidad Autónoma de Manizales (UAM) en Colombia.
+                Tu función principal es brindar información precisa y acogedora sobre:
+                - Oferta académica de la UAM: Facultades de Ingeniería (Sistemas, Biomédica, Mecánica, Industrial, Electrónica), Salud (Fisioterapia, Odontología), y Estudios Sociales y Empresariales (Administración, Economía, Diseño).
+                - Admisiones y matrículas: Requisitos de inscripción, homologaciones, becas, opciones de financiación y calendario académico.
+                - Campus y servicios: Campus universitario en Manizales, laboratorios de alta tecnología, biblioteca, bienestar universitario, deportes y cultura.
+                - Trámites administrativos: Certificados, pagos de matrícula y fechas clave.
+
+                # Transferencia a Nexus:
+                Si el usuario te hace consultas técnicas sobre Inteligencia Artificial, programación, algoritmos o ciencia de datos, utiliza la herramienta `transfer_to_nexus`.
+
+                # Reglas estrictas de interacción por voz:
+                1. Idioma: Comunícate SIEMPRE en español cordial, institucional, cálido y profesional.
+                2. Formato oral estricto: NUNCA uses formato markdown, viñetas, emojis ni listas. Habla en texto continuo fluido.
+                3. Concisión: Responde de forma clara y directa en 1 a 3 oraciones cortas.
+                4. Identidad institucional: Resalta siempre los valores de innovación, excelencia y calidez de la Universidad Autónoma de Manizales.
+                """
+            ),
+        )
+
+    async def on_enter(self) -> None:
+        """Saluda brevemente confirmando que atenderá los temas de la Universidad Autónoma de Manizales."""
+        await self.session.generate_reply(
+            instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
+        )
+
+    @function_tool()
+    async def transfer_to_nexus(self, context: RunContext) -> tuple[NexusAgent, str]:
+        """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
+        logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
+        nexus = NexusAgent(chat_ctx=self.chat_ctx)
+        return nexus, "Te comunico con Nexus para profundizar en los detalles técnicos de inteligencia artificial."
+
+
+# ---------------------------------------------------------------------------
+# SERVIDOR Y SESIÓN RTC MULTIAGENTE
+# ---------------------------------------------------------------------------
 server = AgentServer(num_idle_processes=1)
 
 
@@ -110,49 +247,45 @@ server.setup_fnc = prewarm
 
 
 @server.rtc_session(agent_name="nexus")
-async def nexus_session(ctx: JobContext):
+async def multiagent_session(ctx: JobContext):
     ctx.log_context_fields = {
         "room": ctx.room.name,
     }
 
-    whisper_base_url = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
-    whisper_model = os.getenv("WHISPER_MODEL", "base")
+    whisper_url = os.getenv("WHISPER_BASE_URL", WHISPER_BASE_URL)
+    whisper_mod = os.getenv("WHISPER_MODEL", WHISPER_MODEL)
 
-    logger.info(f"Iniciando sesión Nexus en sala {ctx.room.name} con STT Whisper en {whisper_base_url}")
+    logger.info(
+        f"Iniciando sesión Multi-Agente (Lira, Nexus, Elian) en sala {ctx.room.name} con STT Whisper ({whisper_mod}) en {whisper_url}"
+    )
 
     # Pipeline de voz en streaming 100% local (Silero VAD + Faster-Whisper STT + Ollama LLM + Kokoro TTS)
+    # LiraAgent es el agente inicial activo (voz femenina ef_dora)
     session = AgentSession(
-        # LLM local Ollama explícito para evitar fallback a LiveKit Cloud Inference
         llm=get_llm_engine(),
-        # Silero VAD precargado localmente
         vad=ctx.proc.userdata.get("vad") or silero.VAD.load(
             min_silence_duration=0.50,
             min_speech_duration=0.08,
             prefix_padding_duration=0.5,
         ),
-        # Speech-to-text: Faster-Whisper local vía microservicio OpenAI
         stt=openai.STT(
-            base_url=whisper_base_url,
-            model=whisper_model,
+            base_url=whisper_url,
+            model=whisper_mod,
             api_key="not-needed",
             language="es",
         ),
-        # Text-to-speech (TTS): Kokoro local (em_alex)
-        tts=get_tts_engine(),
+        tts=get_tts_engine("ef_dora"),
         turn_handling=TurnHandlingOptions(
-            # TurnDetector v1-mini: modelo acústico local en CPU para evitar cortes prematuros sin depender de la nube
             turn_detection=inference.TurnDetector(
                 version="v1-mini",
-                unlikely_threshold=0.55,  # Umbral calibrado: espera si detecta entonación de pensamiento o pausa intermedia
+                unlikely_threshold=0.55,
             ),
-            # Endpointing dinámico: adapta los tiempos de espera a las pausas naturales del usuario
             endpointing={
                 "mode": "dynamic",
-                "min_delay": 0.5,   # Límite inferior para cierres ágiles cuando el TurnDetector está seguro
-                "max_delay": 3.0,   # Límite superior para pausas de duda
+                "min_delay": 0.5,
+                "max_delay": 3.0,
                 "alpha": 0.85,
             },
-            # Interrupción: distingue interrupciones reales de ruidos o carraspeos y reanuda si fue falsa interrupción
             interruption={
                 "enabled": True,
                 "mode": "adaptive",
@@ -164,9 +297,9 @@ async def nexus_session(ctx: JobContext):
         ),
     )
 
-    # Inicia la sesión asociando el agente Nexus y el filtro de cancelación de ruido acústico
+    # Inicia la sesión asociando el agente Lira y la cancelación de ruido
     await session.start(
-        agent=NexusAgent(),
+        agent=LiraAgent(),
         room=ctx.room,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
@@ -183,4 +316,5 @@ async def nexus_session(ctx: JobContext):
 
 if __name__ == "__main__":
     cli.run_app(server)
+
 

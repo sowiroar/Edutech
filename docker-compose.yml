@@ -107,6 +107,7 @@ services:
       - UV_CACHE_DIR=/tmp/uv-cache
     volumes:
       - ./agent-starter-python/src:/app/src
+      - ./agent-starter-python/tests:/app/tests
     restart: unless-stopped
 
   frontend:
