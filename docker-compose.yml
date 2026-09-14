@@ -31,16 +31,28 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     volumes:
       - ./agent-starter-python/Modelfile:/Modelfile:ro
+      - ollama_data:/root/.ollama
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        set -e
         echo "Verificando disponibilidad de Ollama..."
         until ollama list > /dev/null 2>&1; do sleep 1; done
-        echo "Descargando modelo base hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M..."
-        ollama pull hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M
-        echo "Creando modelo personalizado nexus (Qwen3-VL 2B Instruct, 4096 tokens)..."
-        ollama create nexus -f /Modelfile
-        echo "Modelo nexus listo para su uso."
+        # El modelo base se lee del Modelfile: cambiarlo ahí basta para que se actualice.
+        BASE_MODEL=$$(tr -d '\r' < /Modelfile | awk '/^FROM/ {print $$2; exit}')
+        MODELFILE_SHA=$$(tr -d '\r' < /Modelfile | sha256sum | cut -d' ' -f1)
+        STAMP=/root/.ollama/nexus.modelfile.sha256
+        if ollama list | grep -q '^nexus:' && [ "$$(cat "$$STAMP" 2>/dev/null)" = "$$MODELFILE_SHA" ]; then
+          echo "Modelo nexus al día con el Modelfile (base $$BASE_MODEL)."
+        else
+          echo "Descargando modelo base $$BASE_MODEL..."
+          ollama pull "$$BASE_MODEL"
+          echo "Creando modelo personalizado nexus desde el Modelfile..."
+          tr -d '\r' < /Modelfile > /tmp/Modelfile
+          ollama create nexus -f /tmp/Modelfile
+          echo "$$MODELFILE_SHA" > "$$STAMP"
+          echo "Modelo nexus listo para su uso."
+        fi
         echo "Precargando modelo nexus en memoria..."
         ollama run nexus "hola" > /dev/null 2>&1
         echo "Nexus activo en memoria y listo para llamadas."
@@ -126,13 +138,11 @@ services:
       - IS_VERCEL_PREVIEW=true
     restart: unless-stopped
 
+# Los volúmenes se crean solos en el primer `docker compose up` y se reutilizan después.
 volumes:
   ollama_data:
-    external: true
     name: azimutai_ollama_data
   kokoro_cache:
-    external: true
     name: azimutai_kokoro_cache
   whisper_cache:
     name: azimutai_whisper_cache
-

@@ -1,0 +1,35 @@
+name: Gitflow
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-policy:
+    name: Política de ramas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar rama origen
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          case "$BASE_REF" in
+            main)    allowed='^(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+$' ;;
+            develop) allowed='^(main|(feature|bugfix)/[a-z0-9._-]+|(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+)$' ;;
+            *)       exit 0 ;;
+          esac
+
+          if printf '%s' "$HEAD_REF" | grep -Eq "$allowed"; then
+            echo "✓ '$HEAD_REF' -> '$BASE_REF' cumple gitflow."
+          else
+            echo "::error::'$HEAD_REF' no puede fusionarse en '$BASE_REF'."
+            echo "Reglas:"
+            echo "  main    <- release/X.Y.Z | hotfix/X.Y.Z"
+            echo "  develop <- feature/nombre | bugfix/nombre | release/X.Y.Z | hotfix/X.Y.Z | main (back-merge)"
+            exit 1
+          fi

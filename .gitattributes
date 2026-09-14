@@ -1,2 +1,13 @@
-# Auto detect text files and perform LF normalization
+# Normaliza finales de línea de texto
 * text=auto
+
+# Scripts y archivos que se ejecutan dentro de Linux/sh deben quedar siempre en LF,
+# aunque el clon sea en Windows con core.autocrlf=true.
+*.sh        text eol=lf
+.githooks/* text eol=lf
+Dockerfile  text eol=lf
+Modelfile   text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.py        text eol=lf
+*.ps1       text eol=crlf

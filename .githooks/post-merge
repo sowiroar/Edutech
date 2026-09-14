@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Se ejecuta tras `git pull` / `git merge`.
+exec sh "$(git rev-parse --show-toplevel)/.githooks/deploy-if-changed" ORIG_HEAD HEAD
