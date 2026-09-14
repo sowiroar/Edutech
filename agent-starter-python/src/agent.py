@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import textwrap
@@ -22,6 +23,8 @@ from livekit.agents import (
     room_io,
 )
 from livekit.plugins import ai_coustics, openai, silero
+
+import knowledge
 
 logger = logging.getLogger("agent-multi")
 
@@ -196,7 +199,14 @@ class ElianAgent(Agent):
             instructions=textwrap.dedent(
                 """\
                 Eres Elian, asesor institucional y académico de la Universidad Autónoma de Manizales (UAM) en Colombia.
-                Tu función principal es brindar información precisa y acogedora. Utiliza la siguiente base de conocimiento:
+                Tu función principal es brindar información precisa y acogedora.
+
+                # Consulta de información oficial (OBLIGATORIO):
+                Antes de responder sobre reglamentos, acuerdos, políticas, matrícula, grados, trámites, correo institucional, IntraUAM, PQRSF o cualquier dato concreto de la UAM, llama a la herramienta `buscar_informacion_uam` con palabras clave de la pregunta.
+                Responde SOLO con lo que devuelva la herramienta y menciona el nombre del documento o guía de donde sale. Si no encuentra nada, dilo con honestidad y sugiere contactar a la universidad. NUNCA inventes fechas, costos, requisitos ni números de acuerdos.
+                Si la fuente es una guía privada, indica que se consulta iniciando sesión con la Cuenta UAM en el Portal de Conocimiento.
+
+                Orientación general sobre la oferta académica (verifícala con la herramienta cuando sea posible):
                 - Facultad de Estudios Sociales y Empresariales: Administración de Empresas (presencial y virtual), Economía, Negocios Internacionales, Artes Culinarias y Gastronomía, Ciencia Política, Gobierno y Relaciones Internacionales, Diseño Industrial, Diseño de Modas.
                 - Facultad de Ingeniería: Ingeniería Biomédica, Ingeniería de Sistemas, Ingeniería Industrial, Ingeniería Mecánica, Ingeniería Electrónica, Tecnologías y programas técnicos relacionados con procesos logísticos y automatización.
                 - Facultad de Salud: Fisioterapia, Odontología, Tecnología en Atención Prehospitalaria.
@@ -220,6 +230,33 @@ class ElianAgent(Agent):
         await self.session.generate_reply(
             instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
         )
+
+    @function_tool(
+        description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas) y en el Portal de Conocimiento (guías de matrícula, grados, IntraUAM, correo, PQRSF y trámites). Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
+    )
+    async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
+        """Busca en la base de conocimiento de la UAM.
+
+        Args:
+            consulta: Palabras clave de lo que pregunta el usuario, por ejemplo "requisitos postulación a grado".
+        """
+        logger.info("Elian consultando la base de conocimiento: %s", consulta)
+        try:
+            resultados = await asyncio.to_thread(knowledge.buscar, consulta)
+        except knowledge.IndiceNoDisponibleError:
+            logger.warning("El índice de conocimiento todavía no está disponible")
+            return (
+                "La base de conocimiento de la UAM todavía se está sincronizando. Dile al usuario"
+                " que por ahora no puedes consultar los documentos oficiales y que lo intente en"
+                " unos minutos o revise autonoma.edu.co."
+            )
+        except Exception:
+            logger.exception("Error consultando la base de conocimiento")
+            return (
+                "Hubo un error al consultar los documentos de la UAM. Discúlpate y sugiere"
+                " intentarlo de nuevo más tarde."
+            )
+        return knowledge.formatear_resultados(resultados)
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."
