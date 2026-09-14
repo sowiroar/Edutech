@@ -15,9 +15,10 @@ ENV PYTHONUNBUFFERED=1
 # expense of a slightly longer build.
 ENV UV_COMPILE_BYTECODE=1
 
-# Ensure local models are downloaded to a shared directory accessible by all stages.
-ENV HF_HOME=/app/.cache/huggingface
-ENV TORCH_HOME=/app/.cache/torch
+# Ensure local models and uv cache are stored in writable paths with proper permissions.
+ENV HF_HOME=/models_cache
+ENV TORCH_HOME=/models_cache/torch
+ENV UV_CACHE_DIR=/tmp/uv-cache
 
 # --- Build stage ---
 # Install dependencies, build native extensions, and prepare the application
@@ -73,6 +74,10 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --uid "${UID}" \
     appuser
+
+# Pre-create models and uv cache directories with appuser ownership
+RUN mkdir -p /models_cache /tmp/uv-cache \
+    && chown -R appuser:appuser /models_cache /tmp/uv-cache
 
 # Copy the application and virtual environment with correct ownership in a single layer
 # This avoids expensive recursive chown and excludes build tools from the final image

@@ -1,50 +1,72 @@
-# Agent behavior is covered by the simulations in scenarios.yaml, which run full
-# conversations against the agent on LiveKit Cloud (see README.md). The eval
-# below is kept as an example of the in-process testing framework
-# (https://docs.livekit.io/agents/start/testing/) for turn-level checks that
-# don't need a live session. Uncomment it and run `uv run pytest` to use it.
-#
-# import textwrap
-#
-# import pytest
-# from livekit.agents import AgentSession, inference, llm
-#
-# from agent import Assistant
-#
-#
-# def _judge_llm() -> llm.LLM:
-#     return inference.LLM(model="openai/gpt-4.1-mini")
-#
-#
-# @pytest.mark.asyncio
-# async def test_offers_assistance() -> None:
-#     """Evaluation of the agent's friendly nature."""
-#     async with (
-#         _judge_llm() as judge_llm,
-#         AgentSession() as session,
-#     ):
-#         await session.start(Assistant())
-#
-#         # Run an agent turn following the user's greeting
-#         result = await session.run(user_input="Hello")
-#
-#         # Evaluate the agent's response for friendliness
-#         await (
-#             result.expect.next_event()
-#             .is_message(role="assistant")
-#             .judge(
-#                 judge_llm,
-#                 intent=textwrap.dedent(
-#                     """\
-#                     Greets the user in a friendly manner.
-#
-#                     Optional context that may or may not be included:
-#                     - Offer of assistance with any request the user may have
-#                     - Other small talk or chit chat is acceptable, so long as it is friendly and not too intrusive
-#                     """
-#                 ),
-#             )
-#         )
-#
-#         # Ensures there are no function calls or other unexpected events
-#         result.expect.no_more_events()
+import pytest
+from livekit.agents import ChatContext
+
+from agent import ElianAgent, LiraAgent, NexusAgent, get_tts_engine
+
+
+def test_agent_voices_and_initialization():
+    """Verifica que cada agente se inicialice con su personalidad y voz correspondiente."""
+    lira = LiraAgent()
+    nexus = NexusAgent()
+    elian = ElianAgent()
+
+    assert "Lira" in lira.instructions
+    assert "ef_dora" in lira.tts._opts.voice
+
+    assert "Nexus" in nexus.instructions
+    assert "em_alex" in nexus.tts._opts.voice
+
+    assert "Elian" in elian.instructions
+    assert "em_santa" in elian.tts._opts.voice
+
+
+def test_lira_handoff_tools_registered():
+    """Verifica que Lira exponga las herramientas de enrutamiento a Nexus y Elian."""
+    lira = LiraAgent()
+    tool_names = [tool.info.name for tool in lira._tools]
+
+    assert "transfer_to_nexus" in tool_names
+    assert "transfer_to_elian" in tool_names
+
+
+def test_specialists_cross_handoff_tools():
+    """Verifica que Nexus y Elian puedan referenciar cruzadamente sus temas."""
+    nexus = NexusAgent()
+    elian = ElianAgent()
+
+    nexus_tools = [tool.info.name for tool in nexus._tools]
+    elian_tools = [tool.info.name for tool in elian._tools]
+
+    assert "transfer_to_elian" in nexus_tools
+    assert "transfer_to_nexus" in elian_tools
+
+
+@pytest.mark.asyncio
+async def test_lira_transfer_to_nexus_execution():
+    """Verifica la ejecución de la herramienta de transferencia de Lira hacia Nexus."""
+    chat_ctx = ChatContext()
+    chat_ctx.add_message(role="user", content="Hola, ¿cómo implemento un modelo YOLO en PyTorch?")
+
+    lira = LiraAgent(chat_ctx=chat_ctx)
+    nexus_target = await lira.transfer_to_nexus(context=None)
+
+    assert isinstance(nexus_target, NexusAgent)
+    assert nexus_target.chat_ctx is not None
+    assert len(nexus_target.chat_ctx.items) == 1
+    assert "YOLO" in nexus_target.chat_ctx.items[0].text_content
+
+
+@pytest.mark.asyncio
+async def test_lira_transfer_to_elian_execution():
+    """Verifica la ejecución de la herramienta de transferencia de Lira hacia Elian."""
+    chat_ctx = ChatContext()
+    chat_ctx.add_message(role="user", content="¿Cuáles son los requisitos de admisión en la Universidad Autónoma de Manizales?")
+
+    lira = LiraAgent(chat_ctx=chat_ctx)
+    elian_target = await lira.transfer_to_elian(context=None)
+
+    assert isinstance(elian_target, ElianAgent)
+    assert elian_target.chat_ctx is not None
+    assert len(elian_target.chat_ctx.items) == 1
+    assert "Universidad Autónoma de Manizales" in elian_target.chat_ctx.items[0].text_content
+
