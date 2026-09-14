@@ -20,6 +20,11 @@ Asistente de voz en español con tres agentes que se transfieren la llamada:
 
 La sala WebRTC, el detector de turno y la cancelación de ruido usan **LiveKit Cloud**.
 
+Por defecto el agente usa el modelo `nexus` del contenedor `ollama`. Para usar un Ollama instalado en el
+host (por ejemplo `gemma4:31b-cloud`, de mejor calidad que el modelo local de 2B), define en `.env`
+`OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` y `OLLAMA_MODEL=<modelo>`; ese Ollama debe estar
+corriendo y, para modelos cloud, con sesión iniciada (`ollama signin`).
+
 ## Requisitos
 
 - Docker Desktop con soporte de GPU NVIDIA (virtualización activada en la BIOS)
