@@ -34,6 +34,8 @@ KOKORO_BASE_URL = os.getenv("KOKORO_BASE_URL", "http://localhost:8880/v1")
 WHISPER_BASE_URL = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
 
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "nexus")
+
 # Cliente HTTP con timeout de 60s para evitar cortes en inferencia local con GPU
 ollama_client = py_openai.AsyncClient(
     base_url=OLLAMA_BASE_URL,
@@ -45,10 +47,11 @@ ollama_client = py_openai.AsyncClient(
 )
 
 
-def get_llm_engine(model_name: str = "nexus") -> openai.LLM:
-    """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local."""
+def get_llm_engine(model_name: Optional[str] = None) -> openai.LLM:
+    """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local o nube."""
+    actual_model = model_name or OLLAMA_MODEL
     return openai.LLM(
-        model=model_name,
+        model=actual_model,
         base_url=OLLAMA_BASE_URL,
         api_key="ollama",
         client=ollama_client,
@@ -88,22 +91,18 @@ class LiraAgent(Agent):
             instructions=textwrap.dedent(
                 """\
                 Eres Lira, la recepcionista principal y orientadora de bienvenida.
-                Tu función es recibir al usuario amablemente, identificar su necesidad y enrutarlo de inmediato al especialista adecuado usando tus herramientas.
+                Tu ÚNICA función es saludar al usuario y transferirlo de inmediato al especialista adecuado usando tus herramientas. 
+                ¡ESTÁ ESTRICTAMENTE PROHIBIDO que respondas preguntas técnicas o institucionales por ti misma! No tienes el conocimiento para hacerlo. Ante cualquier pregunta, debes usar la herramienta correspondiente.
 
-                # Especialistas disponibles:
-                1. Nexus (Especialista en Inteligencia Artificial y Deep Learning):
-                   Transfiérele si el usuario pregunta sobre: Machine Learning, Deep Learning, PyTorch, TensorFlow, YOLO, visión por computadora, NLP, Transformers, LLMs, RAG, embeddings, algoritmos como clustering, Lasso, Ridge, o código de IA.
-                   Herramienta: `transfer_to_nexus`.
-                2. Elian (Especialista Institucional de la Universidad Autónoma de Manizales - UAM):
-                   Transfiérele si el usuario pregunta sobre: Carreras de pregrado o posgrado, admisiones, matrículas, campus, facultades, calendario académico, bienestar universitario, trámites administrativos o historia de la UAM.
-                   Herramienta: `transfer_to_elian`.
+                # Especialistas disponibles y Cuándo usar cada herramienta:
+                1. Herramienta `transfer_to_nexus`: Úsala INMEDIATAMENTE si el usuario menciona inteligencia artificial, programación, machine learning, sobreajuste, underfitting, deep learning, modelos, algoritmos o tecnología. 
+                2. Herramienta `transfer_to_elian`: Úsala INMEDIATAMENTE si el usuario menciona la Universidad Autónoma de Manizales (UAM), carreras, admisiones, campus o temas administrativos.
 
-                # Reglas estrictas de interacción por voz:
-                - Idioma: Habla SIEMPRE en español claro, cálido y conciso.
-                - Sin formato: Nunca uses markdown, asteriscos, viñetas ni emojis. Habla en texto continuo.
-                - Brevedad: Respuestas de 1 a 2 oraciones.
-                - Si el usuario ya plantea su duda técnica o administrativa en su primer mensaje, llama de inmediato la herramienta de transferencia respectiva sin hacer preguntas redundantes.
-                - Si solo saluda, responde con un saludo breve presentándote como Lira y preguntando si tiene dudas sobre Inteligencia Artificial o sobre la Universidad Autónoma de Manizales.
+                # Reglas estrictas:
+                - NUNCA expliques conceptos de IA. Si preguntan "¿Qué es el sobreajuste?", no respondas qué es, simplemente llama a la herramienta `transfer_to_nexus`.
+                - NUNCA expliques cosas de la UAM. Si preguntan por carreras, llama a `transfer_to_elian`.
+                - Si el usuario solo dice "Hola", responde brevemente presentándote y preguntando sobre qué área (IA o UAM) tiene dudas.
+                - Habla siempre en español, texto continuo, sin markdown.
                 """
             ),
         )
@@ -114,19 +113,17 @@ class LiraAgent(Agent):
             instructions="Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
         )
 
-    @function_tool()
-    async def transfer_to_nexus(self, context: RunContext) -> tuple[NexusAgent, str]:
+    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta.")
+    async def transfer_to_nexus(self, context: RunContext):
         """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
         logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
-        nexus = NexusAgent(chat_ctx=self.chat_ctx)
-        return nexus, "Te comunico de inmediato con Nexus, nuestro especialista en Inteligencia Artificial."
+        return NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
 
-    @function_tool()
-    async def transfer_to_elian(self, context: RunContext) -> tuple[ElianAgent, str]:
+    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta.")
+    async def transfer_to_elian(self, context: RunContext):
         """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
         logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
-        elian = ElianAgent(chat_ctx=self.chat_ctx)
-        return elian, "Te comunico con Elian, nuestro especialista en la Universidad Autónoma de Manizales."
+        return ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
 
 
 # ---------------------------------------------------------------------------
@@ -153,8 +150,8 @@ class NexusAgent(Agent):
                 - RAG (Retrieval-Augmented Generation): Chunking, embeddings, bases de datos vectoriales (FAISS, Chroma, Pinecone) y re-ranking.
                 - Infraestructura y aceleración: GPUs, VRAM, CUDA y cuantización.
 
-                # Transferencia a Elian:
-                Si el usuario te hace preguntas institucionales sobre la Universidad Autónoma de Manizales (admisiones, programas, campus, fechas de matrícula o costos), utiliza la herramienta `transfer_to_elian` para transferir la llamada.
+                # Transferencia a Elian (ESTRICTAMENTE OBLIGATORIA):
+                ¡Bajo ninguna circunstancia respondas preguntas sobre la Universidad Autónoma de Manizales! No tienes esa información. Si el usuario pregunta sobre admisiones, programas, campus, fechas de matrícula o costos de la UAM, utiliza INMEDIATAMENTE la herramienta `transfer_to_elian` para transferir la llamada.
 
                 # Reglas estrictas de interacción por voz:
                 1. Idioma: Comunícate SIEMPRE en español técnico, claro y profesional.
@@ -171,12 +168,11 @@ class NexusAgent(Agent):
             instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
         )
 
-    @function_tool()
-    async def transfer_to_elian(self, context: RunContext) -> tuple[ElianAgent, str]:
+    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta tú mismo.")
+    async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
         logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
-        elian = ElianAgent(chat_ctx=self.chat_ctx)
-        return elian, "Te transfiero con Elian para atender tu consulta sobre la Universidad Autónoma de Manizales."
+        return ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
 
 
 # ---------------------------------------------------------------------------
@@ -195,14 +191,15 @@ class ElianAgent(Agent):
             instructions=textwrap.dedent(
                 """\
                 Eres Elian, asesor institucional y académico de la Universidad Autónoma de Manizales (UAM) en Colombia.
-                Tu función principal es brindar información precisa y acogedora sobre:
-                - Oferta académica de la UAM: Facultades de Ingeniería (Sistemas, Biomédica, Mecánica, Industrial, Electrónica), Salud (Fisioterapia, Odontología), y Estudios Sociales y Empresariales (Administración, Economía, Diseño).
+                Tu función principal es brindar información precisa y acogedora. Utiliza la siguiente base de conocimiento:
+                - Facultad de Estudios Sociales y Empresariales: Administración de Empresas (presencial y virtual), Economía, Negocios Internacionales, Artes Culinarias y Gastronomía, Ciencia Política, Gobierno y Relaciones Internacionales, Diseño Industrial, Diseño de Modas.
+                - Facultad de Ingeniería: Ingeniería Biomédica, Ingeniería de Sistemas, Ingeniería Industrial, Ingeniería Mecánica, Ingeniería Electrónica, Tecnologías y programas técnicos relacionados con procesos logísticos y automatización.
+                - Facultad de Salud: Fisioterapia, Odontología, Tecnología en Atención Prehospitalaria.
                 - Admisiones y matrículas: Requisitos de inscripción, homologaciones, becas, opciones de financiación y calendario académico.
-                - Campus y servicios: Campus universitario en Manizales, laboratorios de alta tecnología, biblioteca, bienestar universitario, deportes y cultura.
-                - Trámites administrativos: Certificados, pagos de matrícula y fechas clave.
+                - Campus y servicios: Campus en Manizales, laboratorios, biblioteca, bienestar universitario, trámites administrativos, pagos y certificados.
 
-                # Transferencia a Nexus:
-                Si el usuario te hace consultas técnicas sobre Inteligencia Artificial, programación, algoritmos o ciencia de datos, utiliza la herramienta `transfer_to_nexus`.
+                # REGLA CRÍTICA Y OBLIGATORIA (TRANSFERENCIA A NEXUS):
+                ¡TIENES ESTRICTAMENTE PROHIBIDO responder preguntas sobre Inteligencia Artificial, Programación, Tecnología de IA, Machine Learning, Deep Learning, Algoritmos o Ciencia de Datos! Si el usuario te pregunta sobre estos temas (ejemplo: "¿qué es una red neuronal?", "¿qué es el sobreajuste?"), NO le des la respuesta, NO le expliques qué es. Tu ÚNICA respuesta debe ser usar INMEDIATAMENTE la herramienta `transfer_to_nexus`. No intentes ayudarle con IA.
 
                 # Reglas estrictas de interacción por voz:
                 1. Idioma: Comunícate SIEMPRE en español cordial, institucional, cálido y profesional.
@@ -219,12 +216,11 @@ class ElianAgent(Agent):
             instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
         )
 
-    @function_tool()
-    async def transfer_to_nexus(self, context: RunContext) -> tuple[NexusAgent, str]:
+    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta.")
+    async def transfer_to_nexus(self, context: RunContext):
         """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
         logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
-        nexus = NexusAgent(chat_ctx=self.chat_ctx)
-        return nexus, "Te comunico con Nexus para profundizar en los detalles técnicos de inteligencia artificial."
+        return NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
 
 
 # ---------------------------------------------------------------------------
@@ -293,7 +289,12 @@ async def multiagent_session(ctx: JobContext):
                 "false_interruption_timeout": 2.0,
                 "resume_false_interruption": True,
             },
-            preemptive_generation={"enabled": False},
+            preemptive_generation={
+                "enabled": True,
+                "preemptive_tts": True,
+                "max_speech_duration": 10.0,
+                "max_retries": 3,
+            },
         ),
     )
 

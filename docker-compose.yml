@@ -100,10 +100,11 @@ services:
       - LIVEKIT_URL=${LIVEKIT_URL}
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
-      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434/v1}
       - KOKORO_BASE_URL=http://kokoro-tts:8880/v1
       - WHISPER_BASE_URL=http://whisper-stt:8000/v1
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-nexus}
       - UV_CACHE_DIR=/tmp/uv-cache
     volumes:
       - ./agent-starter-python/src:/app/src

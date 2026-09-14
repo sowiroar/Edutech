@@ -48,10 +48,9 @@ async def test_lira_transfer_to_nexus_execution():
     chat_ctx.add_message(role="user", content="Hola, ¿cómo implemento un modelo YOLO en PyTorch?")
 
     lira = LiraAgent(chat_ctx=chat_ctx)
-    nexus_target, message = await lira.transfer_to_nexus(context=None)
+    nexus_target = await lira.transfer_to_nexus(context=None)
 
     assert isinstance(nexus_target, NexusAgent)
-    assert "Nexus" in message
     assert nexus_target.chat_ctx is not None
     assert len(nexus_target.chat_ctx.items) == 1
     assert "YOLO" in nexus_target.chat_ctx.items[0].text_content
@@ -64,10 +63,9 @@ async def test_lira_transfer_to_elian_execution():
     chat_ctx.add_message(role="user", content="¿Cuáles son los requisitos de admisión en la Universidad Autónoma de Manizales?")
 
     lira = LiraAgent(chat_ctx=chat_ctx)
-    elian_target, message = await lira.transfer_to_elian(context=None)
+    elian_target = await lira.transfer_to_elian(context=None)
 
     assert isinstance(elian_target, ElianAgent)
-    assert "Elian" in message
     assert elian_target.chat_ctx is not None
     assert len(elian_target.chat_ctx.items) == 1
     assert "Universidad Autónoma de Manizales" in elian_target.chat_ctx.items[0].text_content
