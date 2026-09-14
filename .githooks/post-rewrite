@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Se ejecuta tras `git pull --rebase` / `git rebase` (no tras `git commit --amend`).
+[ "$1" = "rebase" ] || exit 0
+exec sh "$(git rev-parse --show-toplevel)/.githooks/deploy-if-changed" ORIG_HEAD HEAD

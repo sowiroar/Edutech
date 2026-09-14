@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Se ejecuta tras `git checkout` / `git switch` de rama ($3 = 1). Ignora checkouts de archivos.
+[ "$3" = "1" ] || exit 0
+exec sh "$(git rev-parse --show-toplevel)/.githooks/deploy-if-changed" "$1" "$2"

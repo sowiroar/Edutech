@@ -31,16 +31,28 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     volumes:
       - ./agent-starter-python/Modelfile:/Modelfile:ro
+      - ollama_data:/root/.ollama
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        set -e
         echo "Verificando disponibilidad de Ollama..."
         until ollama list > /dev/null 2>&1; do sleep 1; done
-        echo "Descargando modelo base hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M..."
-        ollama pull hf.co/unsloth/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M
-        echo "Creando modelo personalizado nexus (Qwen3-VL 2B Instruct, 4096 tokens)..."
-        ollama create nexus -f /Modelfile
-        echo "Modelo nexus listo para su uso."
+        # El modelo base se lee del Modelfile: cambiarlo ahí basta para que se actualice.
+        BASE_MODEL=$$(tr -d '\r' < /Modelfile | awk '/^FROM/ {print $$2; exit}')
+        MODELFILE_SHA=$$(tr -d '\r' < /Modelfile | sha256sum | cut -d' ' -f1)
+        STAMP=/root/.ollama/nexus.modelfile.sha256
+        if ollama list | grep -q '^nexus:' && [ "$$(cat "$$STAMP" 2>/dev/null)" = "$$MODELFILE_SHA" ]; then
+          echo "Modelo nexus al día con el Modelfile (base $$BASE_MODEL)."
+        else
+          echo "Descargando modelo base $$BASE_MODEL..."
+          ollama pull "$$BASE_MODEL"
+          echo "Creando modelo personalizado nexus desde el Modelfile..."
+          tr -d '\r' < /Modelfile > /tmp/Modelfile
+          ollama create nexus -f /tmp/Modelfile
+          echo "$$MODELFILE_SHA" > "$$STAMP"
+          echo "Modelo nexus listo para su uso."
+        fi
         echo "Precargando modelo nexus en memoria..."
         ollama run nexus "hola" > /dev/null 2>&1
         echo "Nexus activo en memoria y listo para llamadas."
@@ -85,6 +97,26 @@ services:
       - HF_HOME=/models_cache
     restart: unless-stopped
 
+  knowledge-sync:
+    build:
+      context: ./knowledge-sync
+      dockerfile: Dockerfile
+    environment:
+      - DATA_DIR=/data
+      - SYNC_INTERVAL_HOURS=${SYNC_INTERVAL_HOURS:-24}
+      - PORTAL_CONOCIMIENTO_URL=${PORTAL_CONOCIMIENTO_URL:-https://portalconocimiento.autonoma.edu.co}
+      - PORTAL_CONOCIMIENTO_USER=${PORTAL_CONOCIMIENTO_USER:-}
+      - PORTAL_CONOCIMIENTO_APP_PASSWORD=${PORTAL_CONOCIMIENTO_APP_PASSWORD:-}
+    volumes:
+      - knowledge_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys; sys.exit(0 if os.path.isfile('/data/knowledge.db') else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30m
+    restart: unless-stopped
+
   voice-agent:
     build:
       context: ./agent-starter-python
@@ -106,9 +138,11 @@ services:
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-nexus}
       - UV_CACHE_DIR=/tmp/uv-cache
+      - KNOWLEDGE_DB=/data/knowledge.db
     volumes:
       - ./agent-starter-python/src:/app/src
       - ./agent-starter-python/tests:/app/tests
+      - knowledge_data:/data:ro
     restart: unless-stopped
 
   frontend:
@@ -126,13 +160,13 @@ services:
       - IS_VERCEL_PREVIEW=true
     restart: unless-stopped
 
+# Los volúmenes se crean solos en el primer `docker compose up` y se reutilizan después.
 volumes:
   ollama_data:
-    external: true
     name: azimutai_ollama_data
   kokoro_cache:
-    external: true
     name: azimutai_kokoro_cache
   whisper_cache:
     name: azimutai_whisper_cache
-
+  knowledge_data:
+    name: azimutai_knowledge_data

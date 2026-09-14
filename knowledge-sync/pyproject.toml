@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# Script aportado por el equipo: se conserva tal cual.
+extend-exclude = ["descargar_documentos_uam.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "A", "C4", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["descargar_documentos_uam", "sync"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

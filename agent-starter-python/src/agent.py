@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import textwrap
-from typing import Optional
 
-from dotenv import load_dotenv
 import httpx
+import openai as py_openai
+from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -21,8 +22,9 @@ from livekit.agents import (
     inference,
     room_io,
 )
-import openai as py_openai
 from livekit.plugins import ai_coustics, openai, silero
+
+import knowledge
 
 logger = logging.getLogger("agent-multi")
 
@@ -47,7 +49,7 @@ ollama_client = py_openai.AsyncClient(
 )
 
 
-def get_llm_engine(model_name: Optional[str] = None) -> openai.LLM:
+def get_llm_engine(model_name: str | None = None) -> openai.LLM:
     """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local o nube."""
     actual_model = model_name or OLLAMA_MODEL
     return openai.LLM(
@@ -83,7 +85,7 @@ class LiraAgent(Agent):
     Voz: ef_dora (Español femenina).
     """
 
-    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+    def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
             llm=get_llm_engine(),
             tts=get_tts_engine("ef_dora"),
@@ -91,11 +93,11 @@ class LiraAgent(Agent):
             instructions=textwrap.dedent(
                 """\
                 Eres Lira, la recepcionista principal y orientadora de bienvenida.
-                Tu ÚNICA función es saludar al usuario y transferirlo de inmediato al especialista adecuado usando tus herramientas. 
+                Tu ÚNICA función es saludar al usuario y transferirlo de inmediato al especialista adecuado usando tus herramientas.
                 ¡ESTÁ ESTRICTAMENTE PROHIBIDO que respondas preguntas técnicas o institucionales por ti misma! No tienes el conocimiento para hacerlo. Ante cualquier pregunta, debes usar la herramienta correspondiente.
 
                 # Especialistas disponibles y Cuándo usar cada herramienta:
-                1. Herramienta `transfer_to_nexus`: Úsala INMEDIATAMENTE si el usuario menciona inteligencia artificial, programación, machine learning, sobreajuste, underfitting, deep learning, modelos, algoritmos o tecnología. 
+                1. Herramienta `transfer_to_nexus`: Úsala INMEDIATAMENTE si el usuario menciona inteligencia artificial, programación, machine learning, sobreajuste, underfitting, deep learning, modelos, algoritmos o tecnología.
                 2. Herramienta `transfer_to_elian`: Úsala INMEDIATAMENTE si el usuario menciona la Universidad Autónoma de Manizales (UAM), carreras, admisiones, campus o temas administrativos.
 
                 # Reglas estrictas:
@@ -113,13 +115,17 @@ class LiraAgent(Agent):
             instructions="Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
         )
 
-    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta.")
+    @function_tool(
+        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta."
+    )
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
         logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
         return NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
 
-    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta.")
+    @function_tool(
+        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta."
+    )
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
         logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
@@ -134,7 +140,7 @@ class NexusAgent(Agent):
     Voz: em_alex (Español masculina).
     """
 
-    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+    def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
             llm=get_llm_engine(),
             tts=get_tts_engine("em_alex"),
@@ -168,7 +174,9 @@ class NexusAgent(Agent):
             instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
         )
 
-    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta tú mismo.")
+    @function_tool(
+        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta tú mismo."
+    )
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
         logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
@@ -183,7 +191,7 @@ class ElianAgent(Agent):
     Voz: em_santa (Español masculina formal).
     """
 
-    def __init__(self, chat_ctx: Optional[ChatContext] = None) -> None:
+    def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
             llm=get_llm_engine(),
             tts=get_tts_engine("em_santa"),
@@ -191,7 +199,14 @@ class ElianAgent(Agent):
             instructions=textwrap.dedent(
                 """\
                 Eres Elian, asesor institucional y académico de la Universidad Autónoma de Manizales (UAM) en Colombia.
-                Tu función principal es brindar información precisa y acogedora. Utiliza la siguiente base de conocimiento:
+                Tu función principal es brindar información precisa y acogedora.
+
+                # Consulta de información oficial (OBLIGATORIO):
+                Antes de responder sobre reglamentos, acuerdos, políticas, matrícula, grados, trámites, correo institucional, IntraUAM, PQRSF o cualquier dato concreto de la UAM, llama a la herramienta `buscar_informacion_uam` con palabras clave de la pregunta.
+                Responde SOLO con lo que devuelva la herramienta y menciona el nombre del documento o guía de donde sale. Si no encuentra nada, dilo con honestidad y sugiere contactar a la universidad. NUNCA inventes fechas, costos, requisitos ni números de acuerdos.
+                Si la fuente es una guía privada, indica que se consulta iniciando sesión con la Cuenta UAM en el Portal de Conocimiento.
+
+                Orientación general sobre la oferta académica (verifícala con la herramienta cuando sea posible):
                 - Facultad de Estudios Sociales y Empresariales: Administración de Empresas (presencial y virtual), Economía, Negocios Internacionales, Artes Culinarias y Gastronomía, Ciencia Política, Gobierno y Relaciones Internacionales, Diseño Industrial, Diseño de Modas.
                 - Facultad de Ingeniería: Ingeniería Biomédica, Ingeniería de Sistemas, Ingeniería Industrial, Ingeniería Mecánica, Ingeniería Electrónica, Tecnologías y programas técnicos relacionados con procesos logísticos y automatización.
                 - Facultad de Salud: Fisioterapia, Odontología, Tecnología en Atención Prehospitalaria.
@@ -216,7 +231,36 @@ class ElianAgent(Agent):
             instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
         )
 
-    @function_tool(description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta.")
+    @function_tool(
+        description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas) y en el Portal de Conocimiento (guías de matrícula, grados, IntraUAM, correo, PQRSF y trámites). Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
+    )
+    async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
+        """Busca en la base de conocimiento de la UAM.
+
+        Args:
+            consulta: Palabras clave de lo que pregunta el usuario, por ejemplo "requisitos postulación a grado".
+        """
+        logger.info("Elian consultando la base de conocimiento: %s", consulta)
+        try:
+            resultados = await asyncio.to_thread(knowledge.buscar, consulta)
+        except knowledge.IndiceNoDisponibleError:
+            logger.warning("El índice de conocimiento todavía no está disponible")
+            return (
+                "La base de conocimiento de la UAM todavía se está sincronizando. Dile al usuario"
+                " que por ahora no puedes consultar los documentos oficiales y que lo intente en"
+                " unos minutos o revise autonoma.edu.co."
+            )
+        except Exception:
+            logger.exception("Error consultando la base de conocimiento")
+            return (
+                "Hubo un error al consultar los documentos de la UAM. Discúlpate y sugiere"
+                " intentarlo de nuevo más tarde."
+            )
+        return knowledge.formatear_resultados(resultados)
+
+    @function_tool(
+        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."
+    )
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
         logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
@@ -233,9 +277,9 @@ def prewarm(proc: JobProcess):
     """Precarga Silero VAD en memoria con tiempos calibrados para rapidez de respuesta sin cortar al usuario."""
     logger.info("Precargando Silero VAD local...")
     proc.userdata["vad"] = silero.VAD.load(
-        min_silence_duration=0.50,    # 500ms de silencio antes de marcar fin de segmento
-        min_speech_duration=0.08,    # 80ms de voz para filtrar chasquidos o ruidos
-        prefix_padding_duration=0.5, # 500ms de padding previo para no perder la primera palabra
+        min_silence_duration=0.50,  # 500ms de silencio antes de marcar fin de segmento
+        min_speech_duration=0.08,  # 80ms de voz para filtrar chasquidos o ruidos
+        prefix_padding_duration=0.5,  # 500ms de padding previo para no perder la primera palabra
     )
 
 
@@ -259,7 +303,8 @@ async def multiagent_session(ctx: JobContext):
     # LiraAgent es el agente inicial activo (voz femenina ef_dora)
     session = AgentSession(
         llm=get_llm_engine(),
-        vad=ctx.proc.userdata.get("vad") or silero.VAD.load(
+        vad=ctx.proc.userdata.get("vad")
+        or silero.VAD.load(
             min_silence_duration=0.50,
             min_speech_duration=0.08,
             prefix_padding_duration=0.5,
@@ -317,5 +362,3 @@ async def multiagent_session(ctx: JobContext):
 
 if __name__ == "__main__":
     cli.run_app(server)
-
-
