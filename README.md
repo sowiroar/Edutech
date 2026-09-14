@@ -15,6 +15,7 @@ Asistente de voz en español con tres agentes que se transfieren la llamada:
 | `ollama` + `ollama-init` | LLM local; el modelo `nexus` se crea desde [`agent-starter-python/Modelfile`](agent-starter-python/Modelfile) | 11435 |
 | `whisper-stt` | Faster-Whisper (voz a texto), GPU | 8000 |
 | `kokoro-tts` | Kokoro (texto a voz), GPU | 8880 |
+| `knowledge-sync` | Descarga e indexa las fuentes de la UAM para Elian (SQLite FTS5) | — |
 | `voice-agent` | LiveKit Agents (Python) — [`src/agent.py`](agent-starter-python/src/agent.py) | — |
 | `frontend` | Next.js | 3000 |
 
@@ -24,6 +25,19 @@ Por defecto el agente usa el modelo `nexus` del contenedor `ollama`. Para usar u
 host (por ejemplo `gemma4:31b-cloud`, de mejor calidad que el modelo local de 2B), define en `.env`
 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` y `OLLAMA_MODEL=<modelo>`; ese Ollama debe estar
 corriendo y, para modelos cloud, con sesión iniciada (`ollama signin`).
+
+## Fuentes de conocimiento (Elian)
+
+Elian responde con la herramienta `buscar_informacion_uam`, que consulta el índice que mantiene `knowledge-sync`:
+
+| Fuente | Contenido | Cómo se obtiene |
+|---|---|---|
+| [Documentos UAM](https://www.autonoma.edu.co/conoce-la-uam/documentos-uam) | Reglamentos, acuerdos y políticas (PDF) | [`descargar_documentos_uam.py`](knowledge-sync/descargar_documentos_uam.py) + extracción de texto |
+| [Portal de Conocimiento](https://portalconocimiento.autonoma.edu.co) | Guías de trámites y soporte (IntraUAM, correo, PQRSF, matrícula, grado) | API REST de WordPress con contraseña de aplicación (`PORTAL_CONOCIMIENTO_*` en `.env`) |
+
+- La sincronización corre al arrancar y cada `SYNC_INTERVAL_HOURS` (24 por defecto); la primera tarda varios minutos.
+- Las entradas privadas del portal solo exponen título y enlace: Elian remite a iniciar sesión con la Cuenta UAM.
+- Logs: `docker compose logs -f knowledge-sync`.
 
 ## Requisitos
 
@@ -47,7 +61,7 @@ Luego abre http://localhost:3000.
 
 Con los hooks activos, cada `git pull` (merge o rebase) y cada `git checkout`/`git switch` de rama
 revisan qué cambió. Si tocó `docker-compose.yml`, `.env.example`, `agent-starter-python/`,
-`agent-starter-react/` o `whisper-service/`, se ejecuta `docker compose up -d --build --remove-orphans`:
+`agent-starter-react/`, `whisper-service/` o `knowledge-sync/`, se ejecuta `docker compose up -d --build --remove-orphans`:
 se reconstruye lo que cambió y se recrean solo los contenedores afectados.
 
 - Cambiar el modelo base en el `Modelfile` basta para que `ollama-init` lo descargue y recree `nexus`.

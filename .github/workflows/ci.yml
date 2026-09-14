@@ -40,6 +40,33 @@ jobs:
       - name: Tests
         run: uv run pytest -v
 
+  knowledge-sync:
+    name: Knowledge sync (ruff + pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: knowledge-sync
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: knowledge-sync/requirements*.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check --output-format=github .
+
+      - name: Formato
+        run: ruff format --check --diff .
+
+      - name: Tests
+        run: pytest -v
+
   frontend:
     name: Frontend (build Next.js)
     runs-on: ubuntu-latest
@@ -66,7 +93,7 @@ jobs:
   docker:
     name: Docker Compose (config + imágenes)
     runs-on: ubuntu-latest
-    needs: [agent, frontend]
+    needs: [agent, knowledge-sync, frontend]
     steps:
       - uses: actions/checkout@v4
 
@@ -76,5 +103,5 @@ jobs:
           docker compose config --quiet
 
       # whisper-stt no se construye aquí: su imagen con PyTorch+CUDA supera el disco de los runners.
-      - name: Construir imágenes del agente y del frontend
-        run: docker compose build voice-agent frontend
+      - name: Construir imágenes del agente, knowledge-sync y frontend
+        run: docker compose build voice-agent knowledge-sync frontend

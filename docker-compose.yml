@@ -97,6 +97,26 @@ services:
       - HF_HOME=/models_cache
     restart: unless-stopped
 
+  knowledge-sync:
+    build:
+      context: ./knowledge-sync
+      dockerfile: Dockerfile
+    environment:
+      - DATA_DIR=/data
+      - SYNC_INTERVAL_HOURS=${SYNC_INTERVAL_HOURS:-24}
+      - PORTAL_CONOCIMIENTO_URL=${PORTAL_CONOCIMIENTO_URL:-https://portalconocimiento.autonoma.edu.co}
+      - PORTAL_CONOCIMIENTO_USER=${PORTAL_CONOCIMIENTO_USER:-}
+      - PORTAL_CONOCIMIENTO_APP_PASSWORD=${PORTAL_CONOCIMIENTO_APP_PASSWORD:-}
+    volumes:
+      - knowledge_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys; sys.exit(0 if os.path.isfile('/data/knowledge.db') else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30m
+    restart: unless-stopped
+
   voice-agent:
     build:
       context: ./agent-starter-python
@@ -118,9 +138,11 @@ services:
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-nexus}
       - UV_CACHE_DIR=/tmp/uv-cache
+      - KNOWLEDGE_DB=/data/knowledge.db
     volumes:
       - ./agent-starter-python/src:/app/src
       - ./agent-starter-python/tests:/app/tests
+      - knowledge_data:/data:ro
     restart: unless-stopped
 
   frontend:
@@ -146,3 +168,5 @@ volumes:
     name: azimutai_kokoro_cache
   whisper_cache:
     name: azimutai_whisper_cache
+  knowledge_data:
+    name: azimutai_knowledge_data
