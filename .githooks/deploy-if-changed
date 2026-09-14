@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Uso: deploy-if-changed <rev-anterior> <rev-nueva>
+# Relanza el stack solo si cambió algo que afecta a los contenedores.
+OLD=$1
+NEW=$2
+[ -n "$OLD" ] && [ "$OLD" != "$NEW" ] || exit 0
+case "$OLD" in 0000000000000000000000000000000000000000) exit 0 ;; esac
+
+if git diff --name-only "$OLD" "$NEW" | grep -Eq '^(docker-compose\.yml|\.env\.example|agent-starter-python/|agent-starter-react/|whisper-service/)'; then
+  sh "$(git rev-parse --show-toplevel)/scripts/deploy.sh"
+else
+  printf '\033[36m[edutech-deploy]\033[0m Sin cambios en servicios Docker; no se reconstruye.\n'
+fi
+exit 0

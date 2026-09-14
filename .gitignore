@@ -6,6 +6,10 @@
 **/.env.*
 **/*.env
 
+# Las plantillas de variables sí se versionan
+!.env.example
+!**/.env.example
+
 # Agents directories
 .agents
 .agents/

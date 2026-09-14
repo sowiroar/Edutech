@@ -4,12 +4,10 @@ import asyncio
 import logging
 import os
 import time
-from typing import AsyncIterator
 
 import numpy as np
 import onnxruntime_genai as og
 from huggingface_hub import snapshot_download
-
 from livekit import rtc
 from livekit.agents import stt
 from livekit.agents.types import (
@@ -254,7 +252,9 @@ class NemotronStream(stt.RecognizeStream):
                     # Fin de segmento / turno de habla
                     flush_inputs = processor.flush()
                     if flush_inputs is not None:
-                        flushed_text = await asyncio.to_thread(_step_generator, flush_inputs)
+                        flushed_text = await asyncio.to_thread(
+                            _step_generator, flush_inputs
+                        )
                         if flushed_text:
                             accumulated_text += flushed_text
 
@@ -290,7 +290,9 @@ class NemotronStream(stt.RecognizeStream):
                     )
                     inputs = processor.process(samples)
                     if inputs is not None:
-                        new_chunk_text = await asyncio.to_thread(_step_generator, inputs)
+                        new_chunk_text = await asyncio.to_thread(
+                            _step_generator, inputs
+                        )
                         if new_chunk_text:
                             accumulated_text += new_chunk_text
                             clean_interim = accumulated_text.strip()
@@ -335,5 +337,7 @@ class NemotronStream(stt.RecognizeStream):
                 )
 
         except Exception as e:
-            logger.error(f"Error en stream de reconocimiento Nemotron: {e}", exc_info=True)
+            logger.error(
+                f"Error en stream de reconocimiento Nemotron: {e}", exc_info=True
+            )
             raise

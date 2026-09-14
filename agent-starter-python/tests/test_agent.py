@@ -1,7 +1,7 @@
 import pytest
 from livekit.agents import ChatContext
 
-from agent import ElianAgent, LiraAgent, NexusAgent, get_tts_engine
+from agent import ElianAgent, LiraAgent, NexusAgent
 
 
 def test_agent_voices_and_initialization():
@@ -45,7 +45,9 @@ def test_specialists_cross_handoff_tools():
 async def test_lira_transfer_to_nexus_execution():
     """Verifica la ejecución de la herramienta de transferencia de Lira hacia Nexus."""
     chat_ctx = ChatContext()
-    chat_ctx.add_message(role="user", content="Hola, ¿cómo implemento un modelo YOLO en PyTorch?")
+    chat_ctx.add_message(
+        role="user", content="Hola, ¿cómo implemento un modelo YOLO en PyTorch?"
+    )
 
     lira = LiraAgent(chat_ctx=chat_ctx)
     nexus_target = await lira.transfer_to_nexus(context=None)
@@ -60,7 +62,10 @@ async def test_lira_transfer_to_nexus_execution():
 async def test_lira_transfer_to_elian_execution():
     """Verifica la ejecución de la herramienta de transferencia de Lira hacia Elian."""
     chat_ctx = ChatContext()
-    chat_ctx.add_message(role="user", content="¿Cuáles son los requisitos de admisión en la Universidad Autónoma de Manizales?")
+    chat_ctx.add_message(
+        role="user",
+        content="¿Cuáles son los requisitos de admisión en la Universidad Autónoma de Manizales?",
+    )
 
     lira = LiraAgent(chat_ctx=chat_ctx)
     elian_target = await lira.transfer_to_elian(context=None)
@@ -68,5 +73,7 @@ async def test_lira_transfer_to_elian_execution():
     assert isinstance(elian_target, ElianAgent)
     assert elian_target.chat_ctx is not None
     assert len(elian_target.chat_ctx.items) == 1
-    assert "Universidad Autónoma de Manizales" in elian_target.chat_ctx.items[0].text_content
-
+    assert (
+        "Universidad Autónoma de Manizales"
+        in elian_target.chat_ctx.items[0].text_content
+    )
