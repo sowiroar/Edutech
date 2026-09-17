@@ -38,26 +38,27 @@ WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
 
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "nexus")
 
-# Cliente HTTP con timeout de 60s para evitar cortes en inferencia local con GPU
-ollama_client = py_openai.AsyncClient(
-    base_url=OLLAMA_BASE_URL,
-    api_key="ollama",
-    http_client=httpx.AsyncClient(
-        timeout=httpx.Timeout(connect=15.0, read=60.0, write=15.0, pool=15.0),
-        follow_redirects=True,
-    ),
-)
-
-
 def get_llm_engine(model_name: str | None = None) -> openai.LLM:
     """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local o nube."""
     actual_model = model_name or OLLAMA_MODEL
+    
+    # Cliente HTTP con timeout de 60s instanciado dentro del event loop actual
+    ollama_client = py_openai.AsyncClient(
+        base_url=OLLAMA_BASE_URL,
+        api_key="ollama",
+        http_client=httpx.AsyncClient(
+            timeout=httpx.Timeout(connect=15.0, read=60.0, write=15.0, pool=15.0),
+            follow_redirects=True,
+        ),
+    )
+
     return openai.LLM(
         model=actual_model,
         base_url=OLLAMA_BASE_URL,
         api_key="ollama",
         client=ollama_client,
         temperature=0.6,
+
     )
 
 
