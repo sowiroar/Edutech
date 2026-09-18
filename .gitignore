@@ -50,3 +50,8 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local memory & data storage
+agent-starter-python/data/
+**/data/mem0/
+**/data/llamaindex_storage/

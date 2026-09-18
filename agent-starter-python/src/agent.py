@@ -20,11 +20,14 @@ from livekit.agents import (
     cli,
     function_tool,
     inference,
+    llm,
     room_io,
 )
 from livekit.plugins import ai_coustics, google, silero
 
 import knowledge
+import memory_manager
+import rag_llamaindex
 
 logger = logging.getLogger("agent-multi")
 
@@ -56,9 +59,59 @@ def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
 
 
 # ---------------------------------------------------------------------------
+# AGENTE BASE: Gestión de Memoria Persistente con Mem0
+# ---------------------------------------------------------------------------
+class BaseEducationalAgent(Agent):
+    """Clase base para agentes que registra y consulta memoria persistente de usuario vía Mem0."""
+
+    async def on_user_turn_completed(
+        self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
+    ) -> None:
+        user_id = "estudiante_uam"
+        try:
+            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+                participant = getattr(self.session.room_io, "participant", None)
+                if participant and getattr(participant, "identity", None):
+                    user_id = participant.identity
+        except Exception:
+            user_id = "estudiante_uam"
+
+        texto_usuario = new_message.text_content
+        if not texto_usuario or not texto_usuario.strip():
+            return
+
+        # 1. Almacenar el mensaje/turno en memoria persistente de Mem0 en background
+        asyncio.create_task(
+            memory_manager.guardar_memoria_usuario(
+                user_id=user_id,
+                mensaje=texto_usuario,
+                metadata={"agente": self.__class__.__name__},
+            )
+        )
+
+        # 2. Recuperar recuerdos previos relevantes para inyectar al turno actual
+        try:
+            contexto_memoria = await memory_manager.formatear_contexto_memoria(
+                user_id=user_id,
+                consulta=texto_usuario,
+            )
+            if contexto_memoria:
+                logger.info(
+                    "Inyectando memorias previas de Mem0 en el turno para el usuario %s",
+                    user_id,
+                )
+                if isinstance(new_message.content, list):
+                    new_message.content.append(f"\n{contexto_memoria}")
+                else:
+                    new_message.content = [str(new_message.content), f"\n{contexto_memoria}"]
+        except Exception:
+            logger.exception("Error al recuperar o inyectar memorias de Mem0")
+
+
+# ---------------------------------------------------------------------------
 # AGENTE 1: Lira - Recepcionista y Triage (Voz femenina Aoede)
 # ---------------------------------------------------------------------------
-class LiraAgent(Agent):
+class LiraAgent(BaseEducationalAgent):
     """Lira: Recepcionista de bienvenida y enrutamiento inteligente.
     Voz: Aoede (Femenina natural bilingüe).
     """
@@ -112,7 +165,7 @@ class LiraAgent(Agent):
 # ---------------------------------------------------------------------------
 # AGENTE 2: Nexus - Especialista en IA y Deep Learning (Voz masculina em_alex)
 # ---------------------------------------------------------------------------
-class NexusAgent(Agent):
+class NexusAgent(BaseEducationalAgent):
     """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning.
     Voz: em_alex (Español masculina).
     """
@@ -163,7 +216,7 @@ class NexusAgent(Agent):
 # ---------------------------------------------------------------------------
 # AGENTE 3: Elian - Especialista Institucional UAM (Voz masculina em_santa)
 # ---------------------------------------------------------------------------
-class ElianAgent(Agent):
+class ElianAgent(BaseEducationalAgent):
     """Elian: Asistente experto en la Universidad Autónoma de Manizales (UAM).
     Voz: em_santa (Español masculina formal).
     """
@@ -212,14 +265,17 @@ class ElianAgent(Agent):
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas) y en el Portal de Conocimiento (guías de matrícula, grados, IntraUAM, correo, PQRSF y trámites). Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
     )
     async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
-        """Busca en la base de conocimiento de la UAM.
+        """Busca en la base de conocimiento de la UAM mediante RAG Semántico (LlamaIndex) y fallback léxico.
 
         Args:
-            consulta: Palabras clave de lo que pregunta el usuario, por ejemplo "requisitos postulación a grado".
+            consulta: Palabras clave o pregunta de lo que necesita el usuario.
         """
         logger.info("Elian consultando la base de conocimiento: %s", consulta)
+        # 1. Búsqueda exacta y contextual en la base de datos oficial SQLite BM25
         try:
             resultados = await asyncio.to_thread(knowledge.buscar, consulta)
+            if resultados:
+                return knowledge.formatear_resultados(resultados)
         except knowledge.IndiceNoDisponibleError:
             logger.warning("El índice de conocimiento todavía no está disponible")
             return (
@@ -228,12 +284,19 @@ class ElianAgent(Agent):
                 " unos minutos o revise autonoma.edu.co."
             )
         except Exception:
-            logger.exception("Error consultando la base de conocimiento")
-            return (
-                "Hubo un error al consultar los documentos de la UAM. Discúlpate y sugiere"
-                " intentarlo de nuevo más tarde."
-            )
-        return knowledge.formatear_resultados(resultados)
+            logger.exception("Error consultando la base de conocimiento léxica")
+
+        # 2. RAG semántico con LlamaIndex (útil para preguntas conceptuales, sinónimos o consultas ampliadas)
+        try:
+            respuesta_semantica = await rag_llamaindex.consultar_uam_semantico(consulta)
+            if respuesta_semantica and len(respuesta_semantica.strip()) > 10:
+                logger.info("LlamaIndex generó respuesta semántica para '%s'", consulta)
+                return f"Información oficial según los documentos de la UAM:\n{respuesta_semantica.strip()}"
+        except Exception:
+            logger.exception("Error en consulta semántica LlamaIndex")
+
+        # 3. Si ninguno encontró resultados
+        return knowledge.formatear_resultados([])
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."

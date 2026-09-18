@@ -77,3 +77,25 @@ async def test_lira_transfer_to_elian_execution():
         "Universidad Autónoma de Manizales"
         in elian_target.chat_ctx.items[0].text_content
     )
+
+
+@pytest.mark.asyncio
+async def test_base_agent_on_user_turn_completed():
+    """Verifica que on_user_turn_completed se ejecute de forma segura sin excepciones."""
+    from livekit.agents import llm
+    nexus = NexusAgent()
+    turn_ctx = llm.ChatContext()
+    message = llm.ChatMessage(role="user", content=["Hola, mi nombre es Daniel y estudio Ingeniería de Sistemas."])
+
+    # Debe ejecutarse sin lanzar excepciones
+    await nexus.on_user_turn_completed(turn_ctx, message)
+    assert "Daniel" in message.text_content
+
+
+@pytest.mark.asyncio
+async def test_elian_buscar_informacion_uam_fallback():
+    """Verifica que buscar_informacion_uam devuelva un mensaje coherente ante cualquier consulta."""
+    elian = ElianAgent()
+    respuesta = await elian.buscar_informacion_uam(None, "requisitos de matricula")
+    assert isinstance(respuesta, str)
+    assert len(respuesta) > 0
