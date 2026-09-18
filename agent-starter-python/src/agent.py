@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import textwrap
@@ -28,6 +29,7 @@ from livekit.plugins import ai_coustics, google, silero
 import knowledge
 import memory_manager
 import rag_llamaindex
+import rag_nexus
 
 logger = logging.getLogger("agent-multi")
 
@@ -107,6 +109,18 @@ class BaseEducationalAgent(Agent):
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
+    async def emitir_datos_frontend(self, topic: str, data: dict[str, Any]) -> None:
+        """Emite datos estructurados (como fuentes de RAG) al frontend vía LiveKit DataPacket."""
+        try:
+            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+                room = getattr(self.session.room_io, "room", None)
+                if room and hasattr(room, "local_participant") and room.local_participant:
+                    payload = json.dumps({"topic": topic, "payload": data})
+                    await room.local_participant.publish_data(payload.encode("utf-8"))
+                    logger.info("Datos emitidos al frontend: topic=%s", topic)
+        except Exception:
+            logger.debug("No se pudo emitir datos al frontend (sala no vinculada o cliente desconectado)")
+
 
 # ---------------------------------------------------------------------------
 # AGENTE 1: Lira - Recepcionista y Triage (Voz femenina Aoede)
@@ -185,8 +199,12 @@ class NexusAgent(BaseEducationalAgent):
                 - RAG (Retrieval-Augmented Generation): Chunking, embeddings, bases de datos vectoriales (FAISS, Chroma, Pinecone) y re-ranking.
                 - Infraestructura y aceleración: GPUs, VRAM, CUDA y cuantización.
 
+                # Herramientas de consulta de la Especialización en Inteligencia Artificial:
+                - Cuando el usuario pregunte por el plan de estudios, materias, créditos, contenidos temáticos, electivas de profundización o guías de la Especialización en Inteligencia Artificial de la UAM, usa SIEMPRE la herramienta `consultas_especializacion_ia`.
+                - Si el estudiante pregunta qué documentos, guías o programas tienes disponibles sobre la especialización, usa la herramienta `listar_documentos_especializacion_ia`.
+
                 # Transferencia a Elian (ESTRICTAMENTE OBLIGATORIA):
-                ¡Bajo ninguna circunstancia respondas preguntas sobre la Universidad Autónoma de Manizales! No tienes esa información. Si el usuario pregunta sobre admisiones, programas, campus, fechas de matrícula o costos de la UAM, utiliza INMEDIATAMENTE la herramienta `transfer_to_elian` para transferir la llamada.
+                ¡Bajo ninguna circunstancia respondas preguntas sobre la administración general de la Universidad Autónoma de Manizales! No tienes esa información. Si el usuario pregunta sobre admisiones generales, campus, pregrados de salud, fechas de matrícula o costos institucionales de la UAM, utiliza INMEDIATAMENTE la herramienta `transfer_to_elian` para transferir la llamada.
 
                 # Reglas estrictas de interacción por voz:
                 1. Idioma: Comunícate SIEMPRE en español técnico, claro y profesional.
@@ -205,7 +223,63 @@ class NexusAgent(BaseEducationalAgent):
             )
 
     @function_tool(
-        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta tú mismo."
+        description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
+    )
+    async def consultas_especializacion_ia(self, context: RunContext, consulta: str) -> str:
+        """Busca en el repositorio de documentos y guías curriculares de la Especialización en IA de la UAM.
+
+        Args:
+            consulta: Pregunta o palabras clave del estudiante (ej: "créditos de computación en la nube", "electivas de profundización").
+        """
+        logger.info("Nexus consultando RAG Especialización en IA: %s", consulta)
+        resultado = await rag_nexus.consultar_especializacion_ia(consulta)
+        if not resultado:
+            return "No encontré detalles específicos sobre ese tema en las guías de la Especialización en Inteligencia Artificial. Sugiero consultar la coordinación académica."
+
+        respuesta = resultado["respuesta"]
+        fuentes = resultado["fuentes"]
+
+        # Emitir las fuentes al frontend en background para trazabilidad gráfica/UI
+        asyncio.create_task(
+            self.emitir_datos_frontend(
+                topic="rag_sources",
+                data={
+                    "agente": "Nexus",
+                    "consulta": consulta,
+                    "fuentes": fuentes,
+                    "respuesta_completa": respuesta,
+                },
+            )
+        )
+
+        return respuesta
+
+    @function_tool(
+        description="Lista los documentos, guías y programas curriculares de la Especialización en Inteligencia Artificial disponibles en el repositorio."
+    )
+    async def listar_documentos_especializacion_ia(self, context: RunContext) -> str:
+        """Retorna el catálogo de documentos oficiales de la Especialización en IA disponibles para consulta."""
+        documentos = rag_nexus.listar_documentos_especializacion()
+        if not documentos:
+            return "Actualmente no hay documentos cargados en el repositorio de la especialización."
+
+        # Emitir catálogo completo al frontend
+        asyncio.create_task(
+            self.emitir_datos_frontend(
+                topic="rag_catalog",
+                data={
+                    "agente": "Nexus",
+                    "total": len(documentos),
+                    "documentos": documentos,
+                },
+            )
+        )
+
+        nombres = [doc["nombre"] for doc in documentos]
+        return f"Tenemos {len(nombres)} documentos disponibles de la Especialización en IA, incluyendo: {', '.join(nombres[:5])} y otros."
+
+    @function_tool(
+        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales general, carreras de pregrado, admisiones o campus. NO intentes responder la pregunta tú mismo."
     )
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
@@ -271,10 +345,21 @@ class ElianAgent(BaseEducationalAgent):
             consulta: Palabras clave o pregunta de lo que necesita el usuario.
         """
         logger.info("Elian consultando la base de conocimiento: %s", consulta)
-        # 1. Búsqueda exacta y contextual en la base de datos oficial SQLite BM25
+                # 1. Búsqueda exacta y contextual en la base de datos oficial SQLite BM25
         try:
             resultados = await asyncio.to_thread(knowledge.buscar, consulta)
             if resultados:
+                fuentes = [r.titulo for r in resultados]
+                asyncio.create_task(
+                    self.emitir_datos_frontend(
+                        topic="rag_sources",
+                        data={
+                            "agente": "Elian",
+                            "consulta": consulta,
+                            "fuentes": fuentes,
+                        },
+                    )
+                )
                 return knowledge.formatear_resultados(resultados)
         except knowledge.IndiceNoDisponibleError:
             logger.warning("El índice de conocimiento todavía no está disponible")
@@ -291,12 +376,45 @@ class ElianAgent(BaseEducationalAgent):
             respuesta_semantica = await rag_llamaindex.consultar_uam_semantico(consulta)
             if respuesta_semantica and len(respuesta_semantica.strip()) > 10:
                 logger.info("LlamaIndex generó respuesta semántica para '%s'", consulta)
+                asyncio.create_task(
+                    self.emitir_datos_frontend(
+                        topic="rag_sources",
+                        data={
+                            "agente": "Elian",
+                            "consulta": consulta,
+                            "fuentes": ["LlamaIndex Semantic RAG (UAM)"],
+                            "respuesta_completa": respuesta_semantica.strip(),
+                        },
+                    )
+                )
                 return f"Información oficial según los documentos de la UAM:\n{respuesta_semantica.strip()}"
         except Exception:
             logger.exception("Error en consulta semántica LlamaIndex")
 
         # 3. Si ninguno encontró resultados
         return knowledge.formatear_resultados([])
+
+    @function_tool(
+        description="Lista los reglamentos, acuerdos, políticas y guías oficiales de la UAM que están registrados en la base de datos."
+    )
+    async def listar_documentos_uam(self, context: RunContext) -> str:
+        """Retorna el catálogo de documentos oficiales de la UAM registrados en el sistema."""
+        docs = knowledge.listar_documentos_oficiales()
+        if not docs:
+            return "No se pudo consultar el listado de documentos en este momento o el índice aún se está sincronizando."
+
+        asyncio.create_task(
+            self.emitir_datos_frontend(
+                topic="rag_catalog",
+                data={
+                    "agente": "Elian",
+                    "total": len(docs),
+                    "documentos": docs[:50],
+                },
+            )
+        )
+        titulos = [d["titulo"] for d in docs]
+        return f"Tenemos {len(titulos)} documentos y guías oficiales de la UAM en la base de conocimiento, entre ellos: {', '.join(titulos[:4])} y reglamentos estudiantiles."
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."

@@ -99,3 +99,16 @@ async def test_elian_buscar_informacion_uam_fallback():
     respuesta = await elian.buscar_informacion_uam(None, "requisitos de matricula")
     assert isinstance(respuesta, str)
     assert len(respuesta) > 0
+
+
+@pytest.mark.asyncio
+async def test_nexus_consultas_especializacion_ia_tool():
+    """Verifica el registro y ejecución de consultas_especializacion_ia en NexusAgent."""
+    nexus = NexusAgent()
+    tool_names = [tool.info.name for tool in nexus._tools]
+    assert "consultas_especializacion_ia" in tool_names
+    assert "listar_documentos_especializacion_ia" in tool_names
+
+    catalogo = await nexus.listar_documentos_especializacion_ia(None)
+    assert isinstance(catalogo, str)
+    assert "documentos disponibles" in catalogo or "especialización" in catalogo

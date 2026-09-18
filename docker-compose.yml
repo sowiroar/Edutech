@@ -137,9 +137,12 @@ services:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-nexus}
       - UV_CACHE_DIR=/tmp/uv-cache
       - KNOWLEDGE_DB=/data/knowledge.db
+      - NEXUS_DOCS_DIR=/data/especializacion_ia
+      - NEXUS_STORAGE_DIR=/data/nexus_storage
     volumes:
       - ./agent-starter-python/src:/app/src
       - ./agent-starter-python/tests:/app/tests
+      - ./data/especializacion_ia:/data/especializacion_ia:ro
       - knowledge_data:/data:ro
     restart: unless-stopped
 

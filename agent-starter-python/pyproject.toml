@@ -19,6 +19,8 @@ dependencies = [
     "livekit-plugins-silero>=1.8.0",
     "mem0ai>=2.0.0",
     "python-dotenv",
+    "pypdf>=5.0.0",
+    "python-docx>=1.1.0",
 ]
 
 [dependency-groups]
