@@ -47,7 +47,9 @@ __pycache__/
 
 # OS and IDE files
 .DS_Store
-Thumbs.db
+# Generated vector storages
+data/*_storage/
+data/knowledge.db
 .vscode/
 .idea/
 

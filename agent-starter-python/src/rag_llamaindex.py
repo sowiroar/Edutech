@@ -94,6 +94,8 @@ def _extraer_texto_archivo_uam(ruta: Path) -> str:
                     try:
                         from google import genai
 
+                        client = genai.Client(api_key=api_key)
+
                         # Evitar UnicodeEncodeError en httpx pasando un archivo temporal con nombre ASCII seguro
                         temp_file = None
                         upload_path = ruta
@@ -245,29 +247,33 @@ def get_or_build_query_engine():
 
 
 async def consultar_uam(consulta: str) -> dict[str, Any] | None:
-    """Ejecuta una consulta asíncrona sobre la base de conocimiento de la UAM."""
+    """Ejecuta una consulta asíncrona sobre la base de conocimiento de la UAM sin bloquear el event loop."""
     if not consulta.strip():
         return None
 
-    engine = get_or_build_query_engine()
+    engine = await asyncio.to_thread(get_or_build_query_engine)
     if engine is None:
         return None
 
-    try:
-        response = await engine.aquery(consulta)
-        fuentes = []
-        for node in getattr(response, "source_nodes", []):
-            archivo = node.metadata.get("archivo") or node.metadata.get("titulo")
-            if archivo and archivo not in fuentes:
-                fuentes.append(archivo)
+    def _sync_query():
+        try:
+            response = engine.query(consulta)
+            fuentes = []
+            if hasattr(response, "source_nodes"):
+                for node in response.source_nodes:
+                    meta = getattr(node.node, "metadata", {})
+                    archivo = meta.get("archivo") or meta.get("titulo")
+                    if archivo and archivo not in fuentes:
+                        fuentes.append(archivo)
+            return {
+                "respuesta": str(response).strip(),
+                "fuentes": fuentes,
+            }
+        except Exception:
+            logger.exception("Error al consultar RAG de la UAM: %s", consulta)
+            return None
 
-        return {
-            "respuesta": str(response).strip(),
-            "fuentes": fuentes,
-        }
-    except Exception:
-        logger.exception("Error al consultar RAG de la UAM: %s", consulta)
-        return None
+    return await asyncio.to_thread(_sync_query)
 
 
 # Alias para compatibilidad

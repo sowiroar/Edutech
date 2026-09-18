@@ -149,8 +149,8 @@ services:
       - ./agent-starter-python/tests:/app/tests
       - ./data/especializacion_ia:/app/data/especializacion_ia:ro
       - ./data/documentos_uam:/app/data/documentos_uam:ro
-      - nexus_storage:/app/data/nexus_storage
-      - uam_storage:/app/data/uam_storage
+      - ./data/nexus_storage:/app/data/nexus_storage
+      - ./data/uam_storage:/app/data/uam_storage
       - knowledge_data:/data:ro
     restart: unless-stopped
 
@@ -179,7 +179,4 @@ volumes:
     name: azimutai_whisper_cache
   knowledge_data:
     name: azimutai_knowledge_data
-  nexus_storage:
-    name: azimutai_nexus_storage
-  uam_storage:
-    name: azimutai_uam_storage
+

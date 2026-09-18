@@ -95,6 +95,8 @@ def _extraer_texto_archivo(ruta: Path) -> str:
                     try:
                         from google import genai
 
+                        client = genai.Client(api_key=api_key)
+
                         # Evitar UnicodeEncodeError en httpx pasando un archivo temporal con nombre ASCII seguro
                         temp_file = None
                         upload_path = ruta
