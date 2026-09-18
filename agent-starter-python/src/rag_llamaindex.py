@@ -110,7 +110,7 @@ def get_or_build_query_engine():
 
         # Configurar Embeddings y LLM de Google
         embed_model = GoogleGenAIEmbedding(
-            model_name="models/gemini-embedding-001",
+            model_name="models/gemini-embedding-2",
             api_key=api_key,
         )
         llm = GoogleGenAI(

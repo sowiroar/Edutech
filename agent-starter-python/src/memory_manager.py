@@ -43,7 +43,7 @@ def _get_mem0_config() -> dict[str, Any]:
         "embedder": {
             "provider": "gemini",
             "config": {
-                "model": "models/gemini-embedding-001",
+                "model": "models/gemini-embedding-2",
                 "api_key": api_key,
                 "embedding_dims": 768,
             },
