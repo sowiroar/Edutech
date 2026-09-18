@@ -87,10 +87,53 @@ def _extraer_texto_archivo(ruta: Path) -> str:
                     paginas_texto.append(t)
             texto = "\n".join(paginas_texto)
 
-            # Si el texto está vacío (PDF escaneado), se anota para trazabilidad
+            # Si el texto está vacío (PDF escaneado), se transcribe automáticamente con Gemini multimodal
             if not texto.strip():
-                logger.warning("PDF escaneado sin capa de texto directo: %s", ruta.name)
-                texto = f"Documento oficial escaneado: {ruta.stem}. Consulte el archivo fuente para mayor detalle gráfico."
+                logger.info("PDF escaneado detectado (%s). Extrayendo texto mediante Gemini multimodal...", ruta.name)
+                api_key = os.getenv("GOOGLE_API_KEY")
+                if api_key and api_key != "mock-key-for-tests":
+                    try:
+                        from google import genai
+
+                        # Evitar UnicodeEncodeError en httpx pasando un archivo temporal con nombre ASCII seguro
+                        temp_file = None
+                        upload_path = ruta
+                        try:
+                            str(ruta.name).encode("ascii")
+                        except UnicodeEncodeError:
+                            import shutil
+                            import tempfile
+
+                            temp_dir = Path(tempfile.gettempdir())
+                            temp_file = temp_dir / f"nexus_doc_{abs(hash(ruta.name))}.pdf"
+                            shutil.copyfile(ruta, temp_file)
+                            upload_path = temp_file
+
+                        try:
+                            uploaded = client.files.upload(file=str(upload_path))
+                        finally:
+                            if temp_file and temp_file.exists():
+                                temp_file.unlink(missing_ok=True)
+
+                        try:
+                            res = client.models.generate_content(
+                                model="gemini-2.5-flash",
+                                contents=[
+                                    uploaded,
+                                    "Transcribe fielmente todo el contenido de este documento oficial respetando títulos, materias, contenidos, créditos y tablas sin omitir nada.",
+                                ],
+                            )
+                            texto = res.text or ""
+                            logger.info("OCR multimodal completado para %s (%d caracteres)", ruta.name, len(texto))
+                        finally:
+                            try:
+                                client.files.delete(name=uploaded.name)
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        logger.warning("Fallo el OCR multimodal con Gemini para %s: %s", ruta.name, e)
+                if not texto.strip():
+                    texto = f"Documento oficial: {ruta.stem}."
         elif sufijo in [".docx", ".doc"]:
             import docx
 

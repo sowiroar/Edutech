@@ -96,6 +96,7 @@ def test_elian_expone_herramienta_de_busqueda():
 
 
 async def test_elian_busca_en_la_base_de_conocimiento(indice, monkeypatch):
+    monkeypatch.setenv("GOOGLE_API_KEY", "mock-key-for-tests")
     monkeypatch.setattr(knowledge, "KNOWLEDGE_DB", str(indice))
 
     respuesta = await ElianAgent().buscar_informacion_uam(
@@ -106,6 +107,7 @@ async def test_elian_busca_en_la_base_de_conocimiento(indice, monkeypatch):
 
 
 async def test_elian_informa_si_el_indice_no_esta_listo(tmp_path, monkeypatch):
+    monkeypatch.setenv("GOOGLE_API_KEY", "mock-key-for-tests")
     monkeypatch.setattr(knowledge, "KNOWLEDGE_DB", str(tmp_path / "pendiente.db"))
 
     respuesta = await ElianAgent().buscar_informacion_uam(

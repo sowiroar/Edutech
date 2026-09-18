@@ -24,7 +24,9 @@ dependencies = [
     { name = "livekit-plugins-silero" },
     { name = "llama-index-core" },
     { name = "llama-index-embeddings-gemini" },
+    { name = "llama-index-embeddings-google-genai" },
     { name = "llama-index-llms-gemini" },
+    { name = "llama-index-llms-google-genai" },
     { name = "mem0ai" },
     { name = "pypdf" },
     { name = "python-docx" },
@@ -47,7 +49,9 @@ requires-dist = [
     { name = "livekit-plugins-silero", specifier = ">=1.8.0" },
     { name = "llama-index-core", specifier = ">=0.11.0" },
     { name = "llama-index-embeddings-gemini" },
+    { name = "llama-index-embeddings-google-genai", specifier = ">=0.6.0" },
     { name = "llama-index-llms-gemini" },
+    { name = "llama-index-llms-google-genai", specifier = ">=0.11.2" },
     { name = "mem0ai", specifier = ">=2.0.0" },
     { name = "pypdf", specifier = ">=5.0.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
@@ -1806,6 +1810,19 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-embeddings-google-genai"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-genai" },
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/20/d614eaf53e5b2402c681f2805016fab127130ec4efd7625d8903e5cdb964/llama_index_embeddings_google_genai-0.6.0.tar.gz", hash = "sha256:e1b74c3b82ab7ba68bb7ac698345a1f383657987d1c8bc1f4c93c11e4c7ee59c", size = 5955, upload-time = "2026-08-29T15:35:31.668Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ce/5d/6cca75db5ed50ba0017d0a3315063e63e0973e67e9f70e0dd5775fe749ed/llama_index_embeddings_google_genai-0.6.0-py3-none-any.whl", hash = "sha256:20f50c92b66ef1353e77d0dd9516f248ea9bd49520858582c21e8a8d37e68c24", size = 5724, upload-time = "2026-08-29T15:35:30.898Z" },
+]
+
+[[package]]
 name = "llama-index-instrumentation"
 version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1830,6 +1847,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/7c/e036bc7f11fb3d79b769306e562d73f6eb0c7adbb66dc09d19e90f3542ae/llama_index_llms_gemini-0.6.2.tar.gz", hash = "sha256:11080b0500b2a5ca37d38ab952a576ced978ef456fdb36f8307dd428333b0466", size = 8402, upload-time = "2026-01-21T13:16:05.236Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/74/1f/162a1f23e51765ede18ec353fda6cb98e43c8ad14d86c0428da91330c4d4/llama_index_llms_gemini-0.6.2-py3-none-any.whl", hash = "sha256:206086a58ed50ebc05893867b4446a4955faac532289023126104a3b0fb1d00f", size = 8673, upload-time = "2026-01-21T13:16:04.422Z" },
+]
+
+[[package]]
+name = "llama-index-llms-google-genai"
+version = "0.11.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-genai" },
+    { name = "llama-index-core" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6a/5d/59d9ded5b75ce5f0115c5292d3b7e8707c15abf258ba46357bf51b514591/llama_index_llms_google_genai-0.11.2.tar.gz", hash = "sha256:939d99030b0fa45c0f11ec8b0c3a2f44ce68b347818073c6d39086794e37b308", size = 14865, upload-time = "2026-09-11T16:29:15.996Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/19/3c/f52a38b1905ddae417d05aaae874e9076882e1b3df63452cb3aafe85d0fa/llama_index_llms_google_genai-0.11.2-py3-none-any.whl", hash = "sha256:61c4517f3d5799cad50cf84d14be6236510de4a8f501288d21237baf23252269", size = 15335, upload-time = "2026-09-11T16:29:14.994Z" },
 ]
 
 [[package]]

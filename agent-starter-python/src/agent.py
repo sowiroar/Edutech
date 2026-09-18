@@ -336,85 +336,86 @@ class ElianAgent(BaseEducationalAgent):
             )
 
     @function_tool(
-        description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas) y en el Portal de Conocimiento (guías de matrícula, grados, IntraUAM, correo, PQRSF y trámites). Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
+        description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
     )
     async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
-        """Busca en la base de conocimiento de la UAM mediante RAG Semántico (LlamaIndex) y fallback léxico.
+        """Busca en la base de conocimiento oficial de la UAM mediante RAG LlamaIndex con Gemini Embedding.
 
         Args:
             consulta: Palabras clave o pregunta de lo que necesita el usuario.
         """
-        logger.info("Elian consultando la base de conocimiento: %s", consulta)
-                # 1. Búsqueda exacta y contextual en la base de datos oficial SQLite BM25
-        try:
-            resultados = await asyncio.to_thread(knowledge.buscar, consulta)
-            if resultados:
-                fuentes = [r.titulo for r in resultados]
-                asyncio.create_task(
-                    self.emitir_datos_frontend(
-                        topic="rag_sources",
-                        data={
-                            "agente": "Elian",
-                            "consulta": consulta,
-                            "fuentes": fuentes,
-                        },
+        logger.info("Elian consultando RAG oficial UAM: %s", consulta)
+        resultado = await rag_llamaindex.consultar_uam(consulta)
+        if not resultado or not resultado.get("respuesta"):
+            # Fallback a knowledge si LlamaIndex no estuviera disponible
+            try:
+                res_bm25 = await asyncio.to_thread(knowledge.buscar, consulta)
+                if res_bm25:
+                    fuentes = [r.titulo for r in res_bm25]
+                    asyncio.create_task(
+                        self.emitir_datos_frontend(
+                            topic="rag_sources",
+                            data={
+                                "agente": "Elian",
+                                "consulta": consulta,
+                                "fuentes": fuentes,
+                            },
+                        )
                     )
+                    return knowledge.formatear_resultados(res_bm25)
+            except knowledge.IndiceNoDisponibleError:
+                return (
+                    "La base de conocimiento de la UAM todavía se está sincronizando. Dile al usuario"
+                    " que por ahora no puedes consultar los documentos oficiales y que lo intente en"
+                    " unos minutos o revise autonoma.edu.co."
                 )
-                return knowledge.formatear_resultados(resultados)
-        except knowledge.IndiceNoDisponibleError:
-            logger.warning("El índice de conocimiento todavía no está disponible")
-            return (
-                "La base de conocimiento de la UAM todavía se está sincronizando. Dile al usuario"
-                " que por ahora no puedes consultar los documentos oficiales y que lo intente en"
-                " unos minutos o revise autonoma.edu.co."
+            except Exception:
+                pass
+            return "No encontré información específica sobre eso en los reglamentos oficiales de la UAM. Te sugiero consultar en autonoma.edu.co o con la coordinación correspondiente."
+
+        respuesta = resultado["respuesta"]
+        fuentes = resultado.get("fuentes", [])
+
+        # Emitir fuentes al frontend vía DataPacket sin interrumpir la síntesis de voz
+        asyncio.create_task(
+            self.emitir_datos_frontend(
+                topic="rag_sources",
+                data={
+                    "agente": "Elian",
+                    "consulta": consulta,
+                    "fuentes": fuentes,
+                    "respuesta_completa": respuesta,
+                },
             )
-        except Exception:
-            logger.exception("Error consultando la base de conocimiento léxica")
+        )
 
-        # 2. RAG semántico con LlamaIndex (útil para preguntas conceptuales, sinónimos o consultas ampliadas)
-        try:
-            respuesta_semantica = await rag_llamaindex.consultar_uam_semantico(consulta)
-            if respuesta_semantica and len(respuesta_semantica.strip()) > 10:
-                logger.info("LlamaIndex generó respuesta semántica para '%s'", consulta)
-                asyncio.create_task(
-                    self.emitir_datos_frontend(
-                        topic="rag_sources",
-                        data={
-                            "agente": "Elian",
-                            "consulta": consulta,
-                            "fuentes": ["LlamaIndex Semantic RAG (UAM)"],
-                            "respuesta_completa": respuesta_semantica.strip(),
-                        },
-                    )
-                )
-                return f"Información oficial según los documentos de la UAM:\n{respuesta_semantica.strip()}"
-        except Exception:
-            logger.exception("Error en consulta semántica LlamaIndex")
-
-        # 3. Si ninguno encontró resultados
-        return knowledge.formatear_resultados([])
+        return respuesta
 
     @function_tool(
         description="Lista los reglamentos, acuerdos, políticas y guías oficiales de la UAM que están registrados en la base de datos."
     )
     async def listar_documentos_uam(self, context: RunContext) -> str:
         """Retorna el catálogo de documentos oficiales de la UAM registrados en el sistema."""
-        docs = knowledge.listar_documentos_oficiales()
-        if not docs:
-            return "No se pudo consultar el listado de documentos en este momento o el índice aún se está sincronizando."
+        documentos = rag_llamaindex.listar_documentos_uam()
+        if not documentos:
+            docs_bm25 = knowledge.listar_documentos_oficiales()
+            if docs_bm25:
+                titulos = [d["titulo"] for d in docs_bm25]
+                return f"Tenemos {len(titulos)} documentos institucionales disponibles, incluyendo: {', '.join(titulos[:4])}."
+            return "Actualmente no se pudieron listar los documentos oficiales de la UAM."
 
         asyncio.create_task(
             self.emitir_datos_frontend(
                 topic="rag_catalog",
                 data={
                     "agente": "Elian",
-                    "total": len(docs),
-                    "documentos": docs[:50],
+                    "total": len(documentos),
+                    "documentos": documentos,
                 },
             )
         )
-        titulos = [d["titulo"] for d in docs]
-        return f"Tenemos {len(titulos)} documentos y guías oficiales de la UAM en la base de conocimiento, entre ellos: {', '.join(titulos[:4])} y reglamentos estudiantiles."
+        nombres = [doc["nombre"] for doc in documentos]
+        return f"Tenemos {len(nombres)} documentos oficiales de la UAM disponibles para consulta, incluyendo: {', '.join(nombres[:5])} y otros."
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."

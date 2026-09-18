@@ -93,8 +93,9 @@ async def test_base_agent_on_user_turn_completed():
 
 
 @pytest.mark.asyncio
-async def test_elian_buscar_informacion_uam_fallback():
+async def test_elian_buscar_informacion_uam_fallback(monkeypatch):
     """Verifica que buscar_informacion_uam devuelva un mensaje coherente ante cualquier consulta."""
+    monkeypatch.setenv("GOOGLE_API_KEY", "mock-key-for-tests")
     elian = ElianAgent()
     respuesta = await elian.buscar_informacion_uam(None, "requisitos de matricula")
     assert isinstance(respuesta, str)
