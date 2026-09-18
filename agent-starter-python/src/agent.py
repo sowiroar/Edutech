@@ -22,74 +22,50 @@ from livekit.agents import (
     inference,
     room_io,
 )
-from livekit.plugins import ai_coustics, openai, silero
+from livekit.plugins import ai_coustics, google, silero
 
 import knowledge
 
 logger = logging.getLogger("agent-multi")
 
 load_dotenv(".env.local")
+load_dotenv(".env")
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-# Configuración dinámica de endpoints locales / Docker
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-KOKORO_BASE_URL = os.getenv("KOKORO_BASE_URL", "http://localhost:8880/v1")
-WHISPER_BASE_URL = os.getenv("WHISPER_BASE_URL", "http://whisper-stt:8000/v1")
-WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
-
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "nexus")
-
-def get_llm_engine(model_name: str | None = None) -> openai.LLM:
-    """Instancia del motor LLM compatible con OpenAI apuntando a Ollama local o nube."""
-    actual_model = model_name or OLLAMA_MODEL
-    
-    # Cliente HTTP con timeout de 60s instanciado dentro del event loop actual
-    ollama_client = py_openai.AsyncClient(
-        base_url=OLLAMA_BASE_URL,
-        api_key="ollama",
-        http_client=httpx.AsyncClient(
-            timeout=httpx.Timeout(connect=15.0, read=60.0, write=15.0, pool=15.0),
-            follow_redirects=True,
-        ),
-    )
-
-    return openai.LLM(
-        model=actual_model,
-        base_url=OLLAMA_BASE_URL,
-        api_key="ollama",
-        client=ollama_client,
-        temperature=0.6,
-
-    )
+# Configuración de Google Gemini Live API
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_LIVE_MODEL = os.getenv("GEMINI_LIVE_MODEL", "gemini-3.8-live")
 
 
-def get_tts_engine(voice: str = "ef_dora") -> openai.TTS:
-    """Retorna el motor local Kokoro TTS (OpenAI-compatible) con la voz en español seleccionada:
-    - ef_dora: Voz femenina cálida en español (Lira - Recepción y Triage).
-    - em_alex: Voz masculina técnica en español (Nexus - Especialista en IA).
-    - em_santa: Voz masculina formal en español (Elian - Especialista UAM).
-    Usa model='tts-1' para activar el streaming binario de audio de LiveKit.
+def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
+    """Instancia del motor Gemini Live API (RealtimeModel).
+    Voces soportadas:
+    - Aoede: Femenina natural y relajada en español/inglés (Lira - Recepción y Triage).
+    - Puck: Masculina dinámica, alegre y técnica (Nexus - Especialista en IA).
+    - Charon: Masculina formal, calmada y profesional (Elian - Especialista UAM).
     """
-    return openai.TTS(
-        model="tts-1",
+    api_key = os.getenv("GOOGLE_API_KEY") or GOOGLE_API_KEY or "mock-key-for-tests"
+    model = os.getenv("GEMINI_LIVE_MODEL") or GEMINI_LIVE_MODEL or "gemini-3.8-live"
+    return google.realtime.RealtimeModel(
+        model=model,
         voice=voice,
-        api_key="not-needed",
-        base_url=KOKORO_BASE_URL,
-        response_format="wav",
+        api_key=api_key,
+        temperature=0.7,
     )
 
 
 # ---------------------------------------------------------------------------
-# AGENTE 1: Lira - Recepcionista y Triage (Voz femenina ef_dora)
+# AGENTE 1: Lira - Recepcionista y Triage (Voz femenina Aoede)
 # ---------------------------------------------------------------------------
 class LiraAgent(Agent):
     """Lira: Recepcionista de bienvenida y enrutamiento inteligente.
-    Voz: ef_dora (Español femenina).
+    Voz: Aoede (Femenina natural bilingüe).
     """
 
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
-            llm=get_llm_engine(),
-            tts=get_tts_engine("ef_dora"),
+            llm=get_realtime_model("Aoede"),
             chat_ctx=chat_ctx,
             instructions=textwrap.dedent(
                 """\
@@ -143,8 +119,7 @@ class NexusAgent(Agent):
 
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
-            llm=get_llm_engine(),
-            tts=get_tts_engine("em_alex"),
+            llm=get_realtime_model("Puck"),
             chat_ctx=chat_ctx,
             instructions=textwrap.dedent(
                 """\
@@ -171,9 +146,10 @@ class NexusAgent(Agent):
 
     async def on_enter(self) -> None:
         """Saluda brevemente confirmando que está listo para abordar el tema de Inteligencia Artificial."""
-        await self.session.generate_reply(
-            instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
-        )
+        if self.session:
+            await self.session.generate_reply(
+                instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
+            )
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta tú mismo."
@@ -194,8 +170,7 @@ class ElianAgent(Agent):
 
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
-            llm=get_llm_engine(),
-            tts=get_tts_engine("em_santa"),
+            llm=get_realtime_model("Charon"),
             chat_ctx=chat_ctx,
             instructions=textwrap.dedent(
                 """\
@@ -228,9 +203,10 @@ class ElianAgent(Agent):
 
     async def on_enter(self) -> None:
         """Saluda brevemente confirmando que atenderá los temas de la Universidad Autónoma de Manizales."""
-        await self.session.generate_reply(
-            instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
-        )
+        if self.session:
+            await self.session.generate_reply(
+                instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
+            )
 
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas) y en el Portal de Conocimiento (guías de matrícula, grados, IntraUAM, correo, PQRSF y trámites). Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
@@ -275,12 +251,12 @@ server = AgentServer(num_idle_processes=1)
 
 
 def prewarm(proc: JobProcess):
-    """Precarga Silero VAD en memoria con tiempos calibrados para rapidez de respuesta sin cortar al usuario."""
+    """Precarga Silero VAD para detección local si es requerida."""
     logger.info("Precargando Silero VAD local...")
     proc.userdata["vad"] = silero.VAD.load(
-        min_silence_duration=0.50,  # 500ms de silencio antes de marcar fin de segmento
-        min_speech_duration=0.08,  # 80ms de voz para filtrar chasquidos o ruidos
-        prefix_padding_duration=0.5,  # 500ms de padding previo para no perder la primera palabra
+        min_silence_duration=0.50,
+        min_speech_duration=0.08,
+        prefix_padding_duration=0.5,
     )
 
 
@@ -293,30 +269,16 @@ async def multiagent_session(ctx: JobContext):
         "room": ctx.room.name,
     }
 
-    whisper_url = os.getenv("WHISPER_BASE_URL", WHISPER_BASE_URL)
-    whisper_mod = os.getenv("WHISPER_MODEL", WHISPER_MODEL)
-
+    model_name = os.getenv("GEMINI_LIVE_MODEL", GEMINI_LIVE_MODEL)
     logger.info(
-        f"Iniciando sesión Multi-Agente (Lira, Nexus, Elian) en sala {ctx.room.name} con STT Whisper ({whisper_mod}) en {whisper_url}"
+        f"Iniciando sesión Multi-Agente (Lira, Nexus, Elian) con Gemini Live API ({model_name}) en sala {ctx.room.name}"
     )
 
-    # Pipeline de voz en streaming 100% local (Silero VAD + Faster-Whisper STT + Ollama LLM + Kokoro TTS)
-    # LiraAgent es el agente inicial activo (voz femenina ef_dora)
+    initial_agent = LiraAgent()
+
+    # Sesión nativa de audio bidireccional con Gemini Live API (RealtimeModel)
     session = AgentSession(
-        llm=get_llm_engine(),
-        vad=ctx.proc.userdata.get("vad")
-        or silero.VAD.load(
-            min_silence_duration=0.50,
-            min_speech_duration=0.08,
-            prefix_padding_duration=0.5,
-        ),
-        stt=openai.STT(
-            base_url=whisper_url,
-            model=whisper_mod,
-            api_key="not-needed",
-            language="es",
-        ),
-        tts=get_tts_engine("ef_dora"),
+        llm=initial_agent.llm,
         turn_handling=TurnHandlingOptions(
             turn_detection=inference.TurnDetector(
                 version="v1-mini",
@@ -335,18 +297,12 @@ async def multiagent_session(ctx: JobContext):
                 "false_interruption_timeout": 2.0,
                 "resume_false_interruption": True,
             },
-            preemptive_generation={
-                "enabled": True,
-                "preemptive_tts": True,
-                "max_speech_duration": 10.0,
-                "max_retries": 3,
-            },
         ),
     )
 
-    # Inicia la sesión asociando el agente Lira y la cancelación de ruido
+    # Inicia la sesión asociando el agente inicial (Lira) y la mejora de audio
     await session.start(
-        agent=LiraAgent(),
+        agent=initial_agent,
         room=ctx.room,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(

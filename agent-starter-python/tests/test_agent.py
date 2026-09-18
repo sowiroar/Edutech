@@ -5,19 +5,19 @@ from agent import ElianAgent, LiraAgent, NexusAgent
 
 
 def test_agent_voices_and_initialization():
-    """Verifica que cada agente se inicialice con su personalidad y voz correspondiente."""
+    """Verifica que cada agente se inicialice con su personalidad y voz correspondiente de Gemini Live."""
     lira = LiraAgent()
     nexus = NexusAgent()
     elian = ElianAgent()
 
     assert "Lira" in lira.instructions
-    assert "ef_dora" in lira.tts._opts.voice
+    assert lira.llm._opts.voice == "Aoede"
 
     assert "Nexus" in nexus.instructions
-    assert "em_alex" in nexus.tts._opts.voice
+    assert nexus.llm._opts.voice == "Puck"
 
     assert "Elian" in elian.instructions
-    assert "em_santa" in elian.tts._opts.voice
+    assert elian.llm._opts.voice == "Charon"
 
 
 def test_lira_handoff_tools_registered():
