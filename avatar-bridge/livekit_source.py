@@ -58,16 +58,33 @@ class RoomFollower:
         self._readers: dict[str, asyncio.Task[None]] = {}
         self._tasks: set[asyncio.Task[None]] = set()
 
+    # El motor de LiveKit (Rust, por debajo de rtc.Room) a veces se queda
+    # reconectando en silencio tras un "ping timeout" y nunca vuelve: room.
+    # connect()/disconnect() se cuelgan para siempre y _step() no regresa,
+    # dejando el bucle entero trabado (sin excepcion que loguear) y al avatar
+    # sin audio indefinidamente. El limite de abajo garantiza que el bucle
+    # siempre avanza: si un paso se demora demasiado, lo cancelamos y
+    # soltamos la sala vieja para volver a intentarlo desde cero en el
+    # siguiente ciclo (Claude, 2026-09-28).
+    _STEP_TIMEOUT = 10.0
+
     async def run(self) -> None:
         async with api.LiveKitAPI(
             url=api_url(self._url), api_key=self._key, api_secret=self._secret
         ) as lkapi:
             while True:
                 try:
-                    await self._step(lkapi)
+                    await asyncio.wait_for(self._step(lkapi), timeout=self._STEP_TIMEOUT)
                 except asyncio.CancelledError:
                     await self._leave()
                     raise
+                except TimeoutError:
+                    logger.warning(
+                        "El seguimiento de la sala no respondio en %ss; "
+                        "se abandona la conexion y se reintenta desde cero",
+                        self._STEP_TIMEOUT,
+                    )
+                    self._force_reset()
                 except Exception:
                     logger.exception("Fallo al seguir la sala de LiveKit")
                 await asyncio.sleep(self._poll)
@@ -143,6 +160,16 @@ class RoomFollower:
             with contextlib.suppress(Exception):
                 await room.disconnect()
             logger.info("Sala liberada")
+
+    def _force_reset(self) -> None:
+        """Como _leave(), pero sin awaits: para cuando la sala ya esta
+        colgada y esperar su respuesta es justo lo que hay que evitar. El
+        objeto Room viejo se abandona (no se cierra activamente) y su
+        limpieza queda para el recolector de basura."""
+        for task in self._readers.values():
+            task.cancel()
+        self._readers.clear()
+        self._room = None
 
     # -- eventos de la sala (llamadas sincronas) ------------------------------------
 
