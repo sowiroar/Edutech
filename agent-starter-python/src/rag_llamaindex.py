@@ -117,22 +117,47 @@ def _extraer_texto_archivo_uam(ruta: Path) -> str:
                                 temp_file.unlink(missing_ok=True)
 
                         try:
-                            res = client.models.generate_content(
-                                model="gemini-2.5-flash",
-                                contents=[
-                                    uploaded,
-                                    "Transcribe fielmente todo el contenido de este documento oficial respetando títulos, artículos, listas, tablas y requisitos sin omitir nada.",
-                                ],
-                            )
-                            texto = res.text or ""
-                            logger.info("Extracción multimodal completada para %s (%d caracteres)", ruta.name, len(texto))
+                            import time
+
+                            intentos_max = 3
+                            for intento in range(1, intentos_max + 1):
+                                try:
+                                    res = client.models.generate_content(
+                                        model="gemini-2.5-flash",
+                                        contents=[
+                                            uploaded,
+                                            "Transcribe fielmente todo el contenido de este documento oficial respetando títulos, artículos, listas, tablas y requisitos sin omitir nada.",
+                                        ],
+                                    )
+                                    texto = res.text or ""
+                                    logger.info(
+                                        "Extracción multimodal completada para %s (%d caracteres, intento %d/%d)",
+                                        ruta.name,
+                                        len(texto),
+                                        intento,
+                                        intentos_max,
+                                    )
+                                    break
+                                except Exception as e:
+                                    if intento == intentos_max:
+                                        raise
+                                    espera = 2**intento
+                                    logger.warning(
+                                        "Extracción multimodal falló para %s (intento %d/%d): %s. Reintentando en %ds...",
+                                        ruta.name,
+                                        intento,
+                                        intentos_max,
+                                        e,
+                                        espera,
+                                    )
+                                    time.sleep(espera)
                         finally:
                             try:
                                 client.files.delete(name=uploaded.name)
                             except Exception:
                                 pass
                     except Exception as e:
-                        logger.warning("Fallo la extracción multimodal con Gemini para %s: %s", ruta.name, e)
+                        logger.warning("Fallo la extracción multimodal con Gemini para %s tras varios reintentos: %s", ruta.name, e)
                 if not texto.strip():
                     texto = f"Documento oficial UAM: {ruta.stem}."
         elif sufijo in [".docx", ".doc"]:

@@ -91,11 +91,18 @@ class BaseEducationalAgent(Agent):
             )
         )
 
-        # 2. Recuperar recuerdos previos relevantes para inyectar al turno actual
+        # 2. Recuperar recuerdos previos relevantes para inyectar al turno actual.
+        # Con timeout corto: una búsqueda lenta en Mem0 no debe frenar el turno
+        # (esto es especialmente crítico en el turno donde el usuario pide algo
+        # que dispara una transferencia de agente, ya lento por la reconexión
+        # del RealtimeModel).
         try:
-            contexto_memoria = await memory_manager.formatear_contexto_memoria(
-                user_id=user_id,
-                consulta=texto_usuario,
+            contexto_memoria = await asyncio.wait_for(
+                memory_manager.formatear_contexto_memoria(
+                    user_id=user_id,
+                    consulta=texto_usuario,
+                ),
+                timeout=0.7,
             )
             if contexto_memoria:
                 logger.info(
@@ -216,10 +223,14 @@ class NexusAgent(BaseEducationalAgent):
         )
 
     async def on_enter(self) -> None:
-        """Saluda brevemente confirmando que está listo para abordar el tema de Inteligencia Artificial."""
+        """Se presenta como Nexus y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         if self.session:
             await self.session.generate_reply(
-                instructions="Saluda brevemente en una sola oración como Nexus, indicando que tomas la palabra para responder la consulta de inteligencia artificial."
+                instructions=(
+                    "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
+                    "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
+                    "hizo a Lira usando el contexto de la conversación."
+                )
             )
 
     @function_tool(
@@ -309,6 +320,9 @@ class ElianAgent(BaseEducationalAgent):
                 Responde SOLO con lo que devuelva la herramienta y menciona el nombre del documento o guía de donde sale. Si no encuentra nada, dilo con honestidad y sugiere contactar a la universidad. NUNCA inventes fechas, costos, requisitos ni números de acuerdos.
                 Si la fuente es una guía privada, indica que se consulta iniciando sesión con la Cuenta UAM en el Portal de Conocimiento.
 
+                # Plataforma de cursos virtuales (respuesta directa, sin necesidad de la herramienta):
+                Si el usuario pregunta dónde ver los cursos virtuales, por la plataforma de educación virtual o similar, responde que se llama VivaUAM y comparte el enlace https://www.autonoma.edu.co/uamvirtual
+
                 Orientación general sobre la oferta académica (verifícala con la herramienta cuando sea posible):
                 - Facultad de Estudios Sociales y Empresariales: Administración de Empresas (presencial y virtual), Economía, Negocios Internacionales, Artes Culinarias y Gastronomía, Ciencia Política, Gobierno y Relaciones Internacionales, Diseño Industrial, Diseño de Modas.
                 - Facultad de Ingeniería: Ingeniería Biomédica, Ingeniería de Sistemas, Ingeniería Industrial, Ingeniería Mecánica, Ingeniería Electrónica, Tecnologías y programas técnicos relacionados con procesos logísticos y automatización.
@@ -329,10 +343,15 @@ class ElianAgent(BaseEducationalAgent):
         )
 
     async def on_enter(self) -> None:
-        """Saluda brevemente confirmando que atenderá los temas de la Universidad Autónoma de Manizales."""
+        """Se presenta como Elian y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         if self.session:
             await self.session.generate_reply(
-                instructions="Saluda brevemente en una sola oración como Elian de la Universidad Autónoma de Manizales, dispuesto a colaborar con la información institucional."
+                instructions=(
+                    "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
+                    "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "
+                    "de inmediato la última pregunta que hizo usando el contexto de la conversación "
+                    "(recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto)."
+                )
             )
 
     @function_tool(

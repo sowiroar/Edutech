@@ -8,8 +8,10 @@ import {
   useTracks,
   useVoiceAssistant,
 } from '@livekit/components-react';
+import { useAvatarStream } from '@/hooks/useAvatarStream';
 import { cn } from '@/lib/shadcn/utils';
 import { AudioVisualizer } from './audio-visualizer';
+import { AvatarStage } from './avatar-stage';
 
 const ANIMATION_TRANSITION: MotionProps['transition'] = {
   type: 'spring',
@@ -102,8 +104,11 @@ export function TileLayout({
   const isScreenShareEnabled = screenShareTrack && !screenShareTrack.publication.isMuted;
   const hasSecondTile = isCameraEnabled || isScreenShareEnabled;
 
+  const avatarStream = useAvatarStream();
+  const showUnrealAvatar = avatarStream.videoUrl !== undefined;
+
   const animationDelay = isChatOpen ? 0 : 0.15;
-  const isAvatar = agentVideoTrack !== undefined;
+  const isAvatar = agentVideoTrack !== undefined && !showUnrealAvatar;
   const videoWidth = agentVideoTrack?.publication.dimensions?.width ?? 0;
   const videoHeight = agentVideoTrack?.publication.dimensions?.height ?? 0;
 
@@ -121,7 +126,23 @@ export function TileLayout({
             ])}
           >
             <AnimatePresence mode="popLayout">
-              {!isAvatar && (
+              {showUnrealAvatar && (
+                // Avatar de Unreal (NEXO) por Pixel Streaming
+                <motion.div
+                  key="unreal-avatar"
+                  layoutId="unreal-avatar"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    ...ANIMATION_TRANSITION,
+                    delay: animationDelay,
+                  }}
+                >
+                  <AvatarStage url={avatarStream.videoUrl!} isChatOpen={isChatOpen} />
+                </motion.div>
+              )}
+
+              {!isAvatar && !showUnrealAvatar && (
                 // Audio Agent
                 <motion.div
                   key="agent"
