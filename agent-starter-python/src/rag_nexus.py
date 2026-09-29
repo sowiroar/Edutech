@@ -26,6 +26,33 @@ _nexus_index: Any = None
 _nexus_query_engine: Any = None
 _nexus_lock = asyncio.Lock()
 
+# Ver rag_llamaindex.py para la razon de esta plantilla: concisa solo cuando
+# aplica, sin tope fijo de longitud ni idioma forzado (Claude, 2026-09-29).
+_QA_TEMPLATE_NEXUS = None
+
+
+def _get_qa_template_nexus():
+    global _QA_TEMPLATE_NEXUS
+    if _QA_TEMPLATE_NEXUS is None:
+        from llama_index.core import PromptTemplate
+
+        _QA_TEMPLATE_NEXUS = PromptTemplate(
+            "La siguiente es información de contexto extraída de las guías curriculares de "
+            "la Especialización en Inteligencia Artificial de la UAM.\n"
+            "---------------------\n"
+            "{context_str}\n"
+            "---------------------\n"
+            "Con base únicamente en esa información (no uses conocimiento previo), responde "
+            "la consulta como si hablaras en una conversación oral: en prosa continua, sin "
+            "markdown, viñetas ni encabezados. Sé conciso cuando la respuesta sea puntual y "
+            "simple; si la pregunta requiere explicar varios puntos, una lista de elementos "
+            "o una comparación, exprésalo con la extensión que haga falta para cubrirlo bien, "
+            "sin omitir información relevante solo por acortar.\n"
+            "Consulta: {query_str}\n"
+            "Respuesta: "
+        )
+    return _QA_TEMPLATE_NEXUS
+
 
 def _get_nexus_storage_dir() -> Path:
     storage_dir = os.getenv("NEXUS_STORAGE_DIR")
@@ -253,7 +280,11 @@ def get_or_build_nexus_query_engine():
             _nexus_index.storage_context.persist(persist_dir=str(storage_dir))
             logger.info("Índice de Nexus persistido exitosamente en %s", storage_dir)
 
-        _nexus_query_engine = _nexus_index.as_query_engine(llm=llm, similarity_top_k=3)
+        _nexus_query_engine = _nexus_index.as_query_engine(
+            llm=llm,
+            similarity_top_k=3,
+            text_qa_template=_get_qa_template_nexus(),
+        )
         return _nexus_query_engine
     except Exception:
         logger.exception("Error al inicializar query_engine de Nexus")

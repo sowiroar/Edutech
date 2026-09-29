@@ -25,6 +25,35 @@ _uam_index: Any = None
 _uam_query_engine: Any = None
 _uam_lock = asyncio.Lock()
 
+# Plantilla de síntesis: pide concisión SOLO cuando la respuesta es puntual, sin
+# imponer un tope de longitud fijo ni forzar el idioma (el modelo ya responde en
+# español porque así se le habla). La latencia de un LLM depende sobre todo de
+# cuánto genera, así que evitar relleno innecesario ayuda sin sacrificar
+# información cuando la pregunta sí la requiere (Claude, 2026-09-29).
+_QA_TEMPLATE_UAM = None
+
+
+def _get_qa_template_uam():
+    global _QA_TEMPLATE_UAM
+    if _QA_TEMPLATE_UAM is None:
+        from llama_index.core import PromptTemplate
+
+        _QA_TEMPLATE_UAM = PromptTemplate(
+            "La siguiente es información de contexto extraída de documentos oficiales de la UAM.\n"
+            "---------------------\n"
+            "{context_str}\n"
+            "---------------------\n"
+            "Con base únicamente en esa información (no uses conocimiento previo), responde "
+            "la consulta como si hablaras en una conversación oral: en prosa continua, sin "
+            "markdown, viñetas ni encabezados. Sé conciso cuando la respuesta sea puntual y "
+            "simple; si la pregunta requiere explicar varios puntos, una lista de elementos "
+            "o una comparación, exprésalo con la extensión que haga falta para cubrirlo bien, "
+            "sin omitir información relevante solo por acortar.\n"
+            "Consulta: {query_str}\n"
+            "Respuesta: "
+        )
+    return _QA_TEMPLATE_UAM
+
 
 def _get_storage_dir() -> Path:
     storage_dir = os.getenv("UAM_STORAGE_DIR") or os.getenv("LLAMAINDEX_STORAGE_DIR")
@@ -264,6 +293,7 @@ def get_or_build_query_engine():
         _uam_query_engine = _uam_index.as_query_engine(
             llm=llm,
             similarity_top_k=4,
+            text_qa_template=_get_qa_template_uam(),
         )
         return _uam_query_engine
     except Exception:

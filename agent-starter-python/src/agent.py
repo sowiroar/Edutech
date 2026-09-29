@@ -42,6 +42,27 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GEMINI_LIVE_MODEL = os.getenv("GEMINI_LIVE_MODEL", "gemini-3.8-live")
 
+# Prefetch de memoria Mem0: la transcripción final llega antes de que el turno
+# se dé por cerrado (el endpointing dinámico espera entre 0.5 y 3s de silencio
+# para confirmar que el usuario terminó). Arrancamos la búsqueda en Mem0 ahí,
+# en paralelo con esa espera, para que on_user_turn_completed casi nunca tenga
+# que esperar sus 0.7s de tope. Una entrada por user_id (la más reciente pisa
+# a la anterior); se consume y se descarta en on_user_turn_completed
+# (Claude, 2026-09-29).
+_memoria_prefetch: dict[str, tuple[str, asyncio.Task]] = {}
+
+
+def _resolver_user_id(session) -> str:
+    user_id = "estudiante_uam"
+    try:
+        if session and hasattr(session, "room_io") and session.room_io:
+            participant = getattr(session.room_io, "participant", None)
+            if participant and getattr(participant, "identity", None):
+                user_id = participant.identity
+    except Exception:
+        pass
+    return user_id
+
 
 def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
     """Instancia del motor Gemini Live API (RealtimeModel).
@@ -69,15 +90,12 @@ class BaseEducationalAgent(Agent):
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
     ) -> None:
-        user_id = "estudiante_uam"
         try:
-            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
-                participant = getattr(self.session.room_io, "participant", None)
-                if participant and getattr(participant, "identity", None):
-                    user_id = participant.identity
+            user_id = _resolver_user_id(self.session)
         except Exception:
+            # self.session lanza RuntimeError si el agente no esta corriendo
+            # dentro de una sesion activa (p.ej. en tests unitarios).
             user_id = "estudiante_uam"
-
         texto_usuario = new_message.text_content
         if not texto_usuario or not texto_usuario.strip():
             return
@@ -92,18 +110,26 @@ class BaseEducationalAgent(Agent):
         )
 
         # 2. Recuperar recuerdos previos relevantes para inyectar al turno actual.
-        # Con timeout corto: una búsqueda lenta en Mem0 no debe frenar el turno
-        # (esto es especialmente crítico en el turno donde el usuario pide algo
-        # que dispara una transferencia de agente, ya lento por la reconexión
-        # del RealtimeModel).
-        try:
-            contexto_memoria = await asyncio.wait_for(
+        # Si ya se disparó un prefetch para este mismo texto (ver
+        # _on_user_transcript en multiagent_session), reusamos esa tarea en vez
+        # de empezar de cero: normalmente ya terminó o le falta poco, porque
+        # viene corriendo desde que el STT dio la transcripción final, en
+        # paralelo con la espera de endpointing. Si no hay prefetch o no
+        # coincide el texto, se cae al comportamiento anterior. Timeout corto
+        # de respaldo: una búsqueda lenta en Mem0 no debe frenar el turno.
+        texto_normalizado = texto_usuario.strip()
+        prefetch = _memoria_prefetch.pop(user_id, None)
+        if prefetch is not None and prefetch[0] == texto_normalizado:
+            tarea_memoria = prefetch[1]
+        else:
+            tarea_memoria = asyncio.create_task(
                 memory_manager.formatear_contexto_memoria(
                     user_id=user_id,
                     consulta=texto_usuario,
-                ),
-                timeout=0.7,
+                )
             )
+        try:
+            contexto_memoria = await asyncio.wait_for(tarea_memoria, timeout=0.7)
             if contexto_memoria:
                 logger.info(
                     "Inyectando memorias previas de Mem0 en el turno para el usuario %s",
@@ -500,6 +526,22 @@ async def multiagent_session(ctx: JobContext):
             },
         ),
     )
+
+    def _on_user_transcript(ev) -> None:
+        """Dispara el prefetch de Mem0 en cuanto el STT da la transcripción
+        final, sin esperar a que el turno se cierre (ver _memoria_prefetch)."""
+        if not ev.is_final:
+            return
+        texto = ev.transcript.strip()
+        if not texto:
+            return
+        user_id = _resolver_user_id(session)
+        tarea = asyncio.create_task(
+            memory_manager.formatear_contexto_memoria(user_id=user_id, consulta=texto)
+        )
+        _memoria_prefetch[user_id] = (texto, tarea)
+
+    session.on("user_input_transcribed", _on_user_transcript)
 
     # Inicia la sesión asociando el agente inicial (Lira) y la mejora de audio
     await session.start(
