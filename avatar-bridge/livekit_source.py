@@ -41,13 +41,16 @@ class RoomFollower:
         url: str,
         api_key: str,
         api_secret: str,
-        # 2s de por medio dejaba que el saludo de Lira (casi instantaneo, por la
-        # optimizacion de latencia) terminara antes de que el puente se uniera a
-        # la sala: el avatar no gesticulaba en el primer turno. Con 0.2s el hueco
-        # es lo bastante chico para alcanzar a suscribirse a tiempo (Claude, 2026-09-28).
-        # Solo pesa mientras espera sala nueva: una vez unido, _step no vuelve a
-        # golpear la API hasta que la sala se libera.
-        poll_seconds: float = 0.2,
+        # Red de seguridad, no el mecanismo principal: la ruta rapida es
+        # hint() (ver mas abajo), que el frontend dispara al crear la sala.
+        # Bajarlo a 0.2s (commit anterior) para que el puente alcanzara a
+        # suscribirse antes de que Lira terminara su saludo funciono, pero
+        # a costa de golpear list_rooms() ~5 veces por segundo todo el dia,
+        # incluso sin ninguna llamada activa — eso agoto el limite de tasa
+        # de LiveKit Cloud y bloqueo el WebSocket real de los usuarios
+        # (error 429 al conectar). Con hint() el poll vuelve a ser solo un
+        # respaldo por si el aviso directo falla (Claude, 2026-09-29).
+        poll_seconds: float = 2.0,
     ) -> None:
         self._bridge = bridge
         self._url = url
@@ -57,6 +60,12 @@ class RoomFollower:
         self._room: rtc.Room | None = None
         self._readers: dict[str, asyncio.Task[None]] = {}
         self._tasks: set[asyncio.Task[None]] = set()
+        self._hint_event = asyncio.Event()
+
+    def hint(self) -> None:
+        """Despierta el bucle de inmediato en vez de esperar al proximo poll.
+        Lo llama el endpoint /hint cuando el frontend crea una sala nueva."""
+        self._hint_event.set()
 
     # El motor de LiveKit (Rust, por debajo de rtc.Room) a veces se queda
     # reconectando en silencio tras un "ping timeout" y nunca vuelve: room.
@@ -87,7 +96,12 @@ class RoomFollower:
                     self._force_reset()
                 except Exception:
                     logger.exception("Fallo al seguir la sala de LiveKit")
-                await asyncio.sleep(self._poll)
+                # Espera hasta self._poll, pero se despierta antes si llega un
+                # hint() — así el caso común (aviso directo) es instantáneo y
+                # el poll de fondo casi nunca se ejecuta de verdad.
+                with contextlib.suppress(TimeoutError):
+                    await asyncio.wait_for(self._hint_event.wait(), timeout=self._poll)
+                self._hint_event.clear()
 
     async def _step(self, lkapi: api.LiveKitAPI) -> None:
         if self._bridge.link is None:

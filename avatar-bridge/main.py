@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import os
+from urllib.parse import urlsplit
 
 from websockets.asyncio.server import ServerConnection, serve
 from websockets.datastructures import Headers
@@ -44,22 +45,36 @@ def make_handler(bridge: Bridge):
     return handler
 
 
-def make_process_request(bridge: Bridge):
-    """Responde `GET /status` por el mismo puerto (lo consulta el frontend)."""
+def make_process_request(bridge: Bridge, follower: RoomFollower):
+    """Responde `GET /status` y `GET /hint` por el mismo puerto.
+
+    /hint es GET (no POST) porque el gancho process_request de la libreria
+    websockets solo deja pasar peticiones GET; cualquier otro metodo se
+    rechaza antes, a nivel del parser HTTP crudo, sin llegar aqui.
+    """
 
     def process_request(connection: ServerConnection, request: Request):
-        if request.path != "/status":
-            return None  # el resto sigue su curso normal (handshake WebSocket)
-        body = json.dumps({"unreal_connected": bridge.link is not None}).encode()
-        headers = Headers(
-            [
-                ("Content-Type", "application/json"),
-                ("Content-Length", str(len(body))),
-                ("Cache-Control", "no-store"),
-                ("Connection", "close"),
-            ]
-        )
-        return Response(200, "OK", headers, body)
+        path = urlsplit(request.path).path
+        if path == "/status":
+            body = json.dumps({"unreal_connected": bridge.link is not None}).encode()
+            headers = Headers(
+                [
+                    ("Content-Type", "application/json"),
+                    ("Content-Length", str(len(body))),
+                    ("Cache-Control", "no-store"),
+                    ("Connection", "close"),
+                ]
+            )
+            return Response(200, "OK", headers, body)
+        if path == "/hint":
+            # El frontend llama esto al crear una sala nueva, para que el
+            # puente se una de inmediato sin esperar al proximo poll (ver
+            # RoomFollower.hint en livekit_source.py). Sin cuerpo que leer:
+            # no hace falta saber el nombre de la sala, solo "hay algo nuevo,
+            # anda a mirar".
+            follower.hint()
+            return Response(204, "No Content", Headers([("Connection", "close")]), b"")
+        return None  # el resto sigue su curso normal (handshake WebSocket)
 
     return process_request
 
@@ -89,7 +104,7 @@ async def main() -> None:
         host,
         port,
         compression=None,
-        process_request=make_process_request(bridge),
+        process_request=make_process_request(bridge, follower),
     ):
         logger.info("Puente VVA1 escuchando en %s:%d", host, port)
         await asyncio.gather(follower.run(), ticker(bridge))

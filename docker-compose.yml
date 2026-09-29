@@ -182,6 +182,7 @@ services:
       - AGENT_NAME=${AGENT_NAME:-nexus}
       - AVATAR_STREAM_URL=${AVATAR_STREAM_URL:-}
       - AVATAR_BRIDGE_STATUS_URL=${AVATAR_BRIDGE_STATUS_URL:-http://avatar-bridge:8766/status}
+      - AVATAR_BRIDGE_HINT_URL=${AVATAR_BRIDGE_HINT_URL:-http://avatar-bridge:8766/hint}
       - AVATAR_MUTE_AGENT_AUDIO=${AVATAR_MUTE_AGENT_AUDIO:-true}
       - ALLOW_INSECURE_ROOM_CREATION=true
       - IS_VERCEL_PREVIEW=true

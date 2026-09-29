@@ -12,6 +12,7 @@ from websockets.exceptions import ConnectionClosed
 
 import link as link_module
 from bridge import Bridge
+from livekit_source import RoomFollower
 from main import make_handler, make_process_request
 from segmenter import Segmenter
 
@@ -26,12 +27,15 @@ def tone_frames(seconds: float, amplitude: int = 8000) -> list[bytes]:
 @pytest.fixture
 async def stack():
     bridge = Bridge(Segmenter(silence_seconds=0.15))
+    # No se conecta a LiveKit de verdad (.run() nunca se llama aqui); solo
+    # hace falta la instancia para que /hint tenga a quien avisarle.
+    follower = RoomFollower(bridge, url="wss://example.invalid", api_key="k", api_secret="s")
     server = await serve(
         make_handler(bridge),
         "127.0.0.1",
         0,
         compression=None,
-        process_request=make_process_request(bridge),
+        process_request=make_process_request(bridge, follower),
     )
     url = f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}"
     yield bridge, url
@@ -219,3 +223,27 @@ async def test_other_plain_http_paths_are_not_served(stack):
     _, url = stack
     status, _, _ = await http_get(url, "/otra-cosa")
     assert status != 200
+
+
+async def test_hint_wakes_the_room_follower_immediately():
+    """GET /hint debe despertar a RoomFollower sin esperar al proximo poll
+    (ver la razon del cambio en livekit_source.py: el poll rapido de antes
+    agotaba el limite de tasa de LiveKit Cloud)."""
+    bridge = Bridge(Segmenter(silence_seconds=0.15))
+    follower = RoomFollower(bridge, url="wss://example.invalid", api_key="k", api_secret="s")
+    server = await serve(
+        make_handler(bridge),
+        "127.0.0.1",
+        0,
+        compression=None,
+        process_request=make_process_request(bridge, follower),
+    )
+    try:
+        url = f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}"
+        assert not follower._hint_event.is_set()
+        status, _, _ = await http_get(url, "/hint")
+        assert status == 204
+        assert follower._hint_event.is_set()
+    finally:
+        server.close()
+        await server.wait_closed()
