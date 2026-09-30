@@ -1,0 +1,3 @@
+[submodule "Avatar"]
+	path = Avatar
+	url = https://github.com/SantiagoGarcia205/Avatar.git
