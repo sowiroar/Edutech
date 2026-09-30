@@ -24,7 +24,7 @@ from livekit.agents import (
     llm,
     room_io,
 )
-from livekit.plugins import ai_coustics, google, silero
+from livekit.plugins import google, silero
 
 import knowledge
 import memory_manager
@@ -482,17 +482,11 @@ async def multiagent_session(ctx: JobContext):
         ),
     )
 
-    # Inicia la sesión asociando el agente inicial (Lira) y la mejora de audio
+    # Inicia la sesión asociando el agente inicial (Lira) con audio WebRTC nativo y Silero VAD
+    logger.info("Iniciando sesión con audio WebRTC nativo y Silero VAD local.")
     await session.start(
         agent=initial_agent,
         room=ctx.room,
-        room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=ai_coustics.audio_enhancement(
-                    model=ai_coustics.EnhancerModel.QUAIL_VF_S
-                ),
-            ),
-        ),
     )
 
     # Conecta al participante a la sala WebRTC
