@@ -42,14 +42,32 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GEMINI_LIVE_MODEL = os.getenv("GEMINI_LIVE_MODEL", "gemini-3.8-live")
 
-# Prefetch de memoria Mem0: la transcripción final llega antes de que el turno
-# se dé por cerrado (el endpointing dinámico espera entre 0.5 y 3s de silencio
-# para confirmar que el usuario terminó). Arrancamos la búsqueda en Mem0 ahí,
-# en paralelo con esa espera, para que on_user_turn_completed casi nunca tenga
-# que esperar sus 0.7s de tope. Una entrada por user_id (la más reciente pisa
-# a la anterior); se consume y se descarta en on_user_turn_completed
-# (Claude, 2026-09-29).
-_memoria_prefetch: dict[str, tuple[str, asyncio.Task]] = {}
+# Prefetch de memoria Mem0.
+#
+# Version anterior (2026-09-29): disparaba la busqueda solo con la
+# transcripcion FINAL, asumiendo que el endpointing dinamico (0.5-3s de
+# silencio) dejaba un hueco antes de que el turno se cerrara. Auditoria del
+# 2026-09-30 encontro que esa suposicion era falsa para este pipeline: Gemini
+# Live usa deteccion de turno del lado del servidor y esta libreria IGNORA
+# por completo nuestro turn_detection/endpointing (log real, repetido en
+# produccion: "turn_detection is a TurnDetector, but the LLM is a
+# RealtimeModel with server-side turn detection enabled, ignoring the
+# turn_detection setting"). Ademas, la transcripcion final y el cierre del
+# turno salen de la MISMA señal de Gemini (turn_complete), asi que casi no
+# hay hueco real que aprovechar ahi.
+#
+# Lo que si existe: Gemini manda la transcripcion en fragmentos progresivos
+# MIENTRAS el usuario habla (is_final=False), no solo al terminar. Ahora se
+# dispara con el PRIMER fragmento de cada turno (identificado por item_id,
+# no por el texto — el texto final nunca es igual al de un fragmento
+# parcial), lo que da una ventana real: todo lo que dura el resto del
+# enunciado del usuario, en vez de milisegundos.
+#
+# Una entrada por user_id: (item_id, tarea). Se consume y descarta en
+# on_user_turn_completed, emparejando por new_message.id (mismo item_id que
+# usa el plugin de Gemini al crear el ChatMessage) en vez de por texto
+# (Claude, 2026-09-30).
+_memoria_prefetch: dict[str, tuple[str | None, asyncio.Task]] = {}
 
 
 def _resolver_user_id(session) -> str:
@@ -110,16 +128,17 @@ class BaseEducationalAgent(Agent):
         )
 
         # 2. Recuperar recuerdos previos relevantes para inyectar al turno actual.
-        # Si ya se disparó un prefetch para este mismo texto (ver
-        # _on_user_transcript en multiagent_session), reusamos esa tarea en vez
-        # de empezar de cero: normalmente ya terminó o le falta poco, porque
-        # viene corriendo desde que el STT dio la transcripción final, en
-        # paralelo con la espera de endpointing. Si no hay prefetch o no
-        # coincide el texto, se cae al comportamiento anterior. Timeout corto
-        # de respaldo: una búsqueda lenta en Mem0 no debe frenar el turno.
-        texto_normalizado = texto_usuario.strip()
+        # Si ya se disparó un prefetch para este mismo turno (ver
+        # _on_user_transcript en multiagent_session — dispara con el primer
+        # fragmento de la transcripción, no el final), reusamos esa tarea en
+        # vez de empezar de cero: viene corriendo desde que el usuario empezó
+        # a hablar, no desde que terminó. Se empareja por id del mensaje
+        # (item_id de Gemini), no por texto: el texto de un fragmento parcial
+        # nunca es igual al texto final. Si no hay prefetch para este id, se
+        # cae al comportamiento anterior. Timeout corto de respaldo: una
+        # búsqueda lenta en Mem0 no debe frenar el turno.
         prefetch = _memoria_prefetch.pop(user_id, None)
-        if prefetch is not None and prefetch[0] == texto_normalizado:
+        if prefetch is not None and prefetch[0] == new_message.id:
             tarea_memoria = prefetch[1]
         else:
             tarea_memoria = asyncio.create_task(
@@ -474,17 +493,39 @@ class ElianAgent(BaseEducationalAgent):
 # ---------------------------------------------------------------------------
 # SERVIDOR Y SESIÓN RTC MULTIAGENTE
 # ---------------------------------------------------------------------------
-server = AgentServer(num_idle_processes=1)
+# initialize_process_timeout (default 10s) no alcanzaba para el prewarm de
+# RAG agregado abajo (~22s medido para el índice de la UAM): el framework
+# mataba el proceso worker por timeout y lo reintentaba en bucle, sin que el
+# prewarm llegara nunca a terminar. 45s da margen real (Claude, 2026-09-30).
+server = AgentServer(num_idle_processes=1, initialize_process_timeout=45.0)
 
 
 def prewarm(proc: JobProcess):
-    """Precarga Silero VAD para detección local si es requerida."""
+    """Precarga VAD e índices de RAG antes de aceptar la primera llamada.
+
+    Medido en vivo (Claude, 2026-09-30): la primera consulta de RAG después
+    de arrancar el contenedor tarda ~27s (carga el índice persistido del
+    disco) contra 2-6s con el índice ya caliente. Sin este prewarm, esos 27s
+    de silencio se los come el primer estudiante real que pregunte algo
+    después de cada despliegue — no un usuario de prueba. get_or_build_*
+    cachean en una variable de módulo, así que esto se reutiliza en todas
+    las llamadas que maneje este mismo proceso worker."""
     logger.info("Precargando Silero VAD local...")
     proc.userdata["vad"] = silero.VAD.load(
         min_silence_duration=0.50,
         min_speech_duration=0.08,
         prefix_padding_duration=0.5,
     )
+    logger.info("Precargando índice RAG de la UAM (Elian)...")
+    try:
+        rag_llamaindex.get_or_build_query_engine()
+    except Exception:
+        logger.exception("No se pudo precargar el índice RAG de la UAM")
+    logger.info("Precargando índice RAG de la Especialización en IA (Nexus)...")
+    try:
+        rag_nexus.get_or_build_nexus_query_engine()
+    except Exception:
+        logger.exception("No se pudo precargar el índice RAG de la especialización")
 
 
 server.setup_fnc = prewarm
@@ -528,18 +569,24 @@ async def multiagent_session(ctx: JobContext):
     )
 
     def _on_user_transcript(ev) -> None:
-        """Dispara el prefetch de Mem0 en cuanto el STT da la transcripción
-        final, sin esperar a que el turno se cierre (ver _memoria_prefetch)."""
-        if not ev.is_final:
-            return
+        """Dispara el prefetch de Mem0 con el PRIMER fragmento de cada turno
+        (identificado por item_id), no con el final — ver _memoria_prefetch
+        para la razon (Gemini Live no deja un hueco real entre transcripción
+        final y cierre de turno, pero sí manda fragmentos progresivos
+        mientras el usuario habla)."""
         texto = ev.transcript.strip()
         if not texto:
             return
         user_id = _resolver_user_id(session)
+        anterior = _memoria_prefetch.get(user_id)
+        if anterior is not None and anterior[0] == ev.item_id:
+            return  # ya hay una búsqueda en curso para este mismo turno
+        if anterior is not None:
+            anterior[1].cancel()  # turno distinto: no dejar tareas viejas sueltas
         tarea = asyncio.create_task(
             memory_manager.formatear_contexto_memoria(user_id=user_id, consulta=texto)
         )
-        _memoria_prefetch[user_id] = (texto, tarea)
+        _memoria_prefetch[user_id] = (ev.item_id, tarea)
 
     session.on("user_input_transcribed", _on_user_transcript)
 
