@@ -22,6 +22,7 @@ load_dotenv(".env")
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 _uam_index: Any = None
+_uam_retriever: Any = None
 _uam_query_engine: Any = None
 _uam_lock = asyncio.Lock()
 
@@ -29,7 +30,17 @@ _uam_lock = asyncio.Lock()
 def _get_storage_dir() -> Path:
     storage_dir = os.getenv("UAM_STORAGE_DIR") or os.getenv("LLAMAINDEX_STORAGE_DIR")
     if not storage_dir:
-        storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage")
+        for candidate in [
+            os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "data", "uam_storage"),
+            "/app/data/uam_storage",
+            "/data/uam_storage",
+        ]:
+            if os.path.exists(candidate) and (Path(candidate) / "docstore.json").exists():
+                storage_dir = candidate
+                break
+        else:
+            storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage")
     p = Path(storage_dir)
     p.mkdir(parents=True, exist_ok=True)
     return p
@@ -182,11 +193,11 @@ def _cargar_documentos_uam():
     return documentos
 
 
-def get_or_build_query_engine():
-    """Inicializa o recupera el query_engine asíncrono de LlamaIndex para Elian."""
-    global _uam_index, _uam_query_engine
-    if _uam_query_engine is not None:
-        return _uam_query_engine
+def get_or_build_retriever():
+    """Inicializa o recupera el retriever directo (sin segundo LLM) de LlamaIndex para Elian."""
+    global _uam_index, _uam_retriever, _uam_query_engine
+    if _uam_retriever is not None:
+        return _uam_retriever
 
     api_key = os.getenv("GOOGLE_API_KEY", "")
     if not api_key or api_key == "mock-key-for-tests":
@@ -195,17 +206,12 @@ def get_or_build_query_engine():
 
     try:
         from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
-        from llama_index.llms.google_genai import GoogleGenAI
 
         embed_model = GoogleGenAIEmbedding(
             model_name="models/gemini-embedding-2",
             api_key=api_key,
-        )
-        llm = GoogleGenAI(
-            model="models/gemini-2.5-flash",
-            api_key=api_key,
-            temperature=0.2,
         )
 
         storage_dir = _get_storage_dir()
@@ -216,7 +222,7 @@ def get_or_build_query_engine():
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
             _uam_index = load_index_from_storage(storage_context, embed_model=embed_model)
         else:
-            logger.info("Construyendo índice de embeddings de la UAM por primera vez...")
+            logger.info("Construyendo índice de embeddings de la UAM con SentenceSplitter(800)...")
             documentos = _cargar_documentos_uam()
             if not documentos:
                 from llama_index.core import Document
@@ -232,48 +238,99 @@ def get_or_build_query_engine():
                     ),
                 ]
 
-            _uam_index = VectorStoreIndex.from_documents(documentos, embed_model=embed_model)
+            splitter = SentenceSplitter(chunk_size=800, chunk_overlap=100)
+            _uam_index = VectorStoreIndex.from_documents(
+                documentos,
+                embed_model=embed_model,
+                transformations=[splitter],
+            )
             _uam_index.storage_context.persist(persist_dir=str(storage_dir))
             logger.info("Índice de la UAM persistido exitosamente en %s", storage_dir)
 
-        _uam_query_engine = _uam_index.as_query_engine(
-            llm=llm,
-            similarity_top_k=4,
-        )
-        return _uam_query_engine
+        _uam_retriever = _uam_index.as_retriever(similarity_top_k=3)
+        _uam_query_engine = _uam_retriever
+        return _uam_retriever
     except Exception:
-        logger.exception("Error al inicializar query_engine de la UAM")
+        logger.exception("Error al inicializar retriever de la UAM")
         return None
+
+
+# Alias para compatibilidad
+get_or_build_query_engine = get_or_build_retriever
 
 
 async def consultar_uam(consulta: str) -> dict[str, Any] | None:
-    """Ejecuta una consulta asíncrona sobre la base de conocimiento de la UAM sin bloquear el event loop."""
-    if not consulta.strip():
+    """Ejecuta una consulta asíncrona híbrida ultra-rápida (BM25 local + Retriever semántico top_k=3) sin segundo LLM."""
+    if not consulta or not consulta.strip():
         return None
 
-    engine = await asyncio.to_thread(get_or_build_query_engine)
-    if engine is None:
-        return None
-
-    def _sync_query():
+    # 1. Búsqueda BM25 local (<5ms en SQLite FTS5)
+    async def _consultar_bm25():
         try:
-            response = engine.query(consulta)
-            fuentes = []
-            if hasattr(response, "source_nodes"):
-                for node in response.source_nodes:
-                    meta = getattr(node.node, "metadata", {})
-                    archivo = meta.get("archivo") or meta.get("titulo")
-                    if archivo and archivo not in fuentes:
-                        fuentes.append(archivo)
-            return {
-                "respuesta": str(response).strip(),
-                "fuentes": fuentes,
-            }
-        except Exception:
-            logger.exception("Error al consultar RAG de la UAM: %s", consulta)
-            return None
+            try:
+                from . import knowledge
+            except ImportError:
+                import knowledge
 
-    return await asyncio.to_thread(_sync_query)
+            return await asyncio.to_thread(knowledge.buscar, consulta, 2)
+        except Exception:
+            return []
+
+    # 2. Búsqueda semántica vectorial directa (~250ms)
+    async def _consultar_semantico():
+        try:
+            retriever = await asyncio.to_thread(get_or_build_retriever)
+            if retriever is None:
+                return []
+            return await asyncio.to_thread(retriever.retrieve, consulta)
+        except Exception:
+            logger.exception("Error al recuperar nodos vectoriales de la UAM")
+            return []
+
+    # Ejecutar en paralelo sin añadir latencia extra
+    resultados_bm25, nodos_vectoriales = await asyncio.gather(
+        _consultar_bm25(),
+        _consultar_semantico(),
+    )
+
+    if not resultados_bm25 and not nodos_vectoriales:
+        return None
+
+    fuentes: list[str] = []
+    fragmentos: list[str] = []
+    titulos_vistos: set[str] = set()
+
+    # Priorizar nodo semántico principal y entrelazar con BM25
+    candidatos: list[dict[str, str]] = []
+    for node in nodos_vectoriales:
+        meta = getattr(node.node, "metadata", {})
+        archivo = meta.get("archivo") or meta.get("titulo") or "documento.pdf"
+        titulo = meta.get("titulo") or meta.get("archivo") or "Documento UAM"
+        texto = node.node.get_content().strip()
+        candidatos.append({"titulo": titulo, "archivo": str(archivo), "texto": texto})
+
+    for r in resultados_bm25:
+        candidatos.append({
+            "titulo": r.titulo,
+            "archivo": getattr(r, "url", "") or f"{r.titulo}.pdf",
+            "texto": r.texto.strip(),
+        })
+
+    for elem in candidatos:
+        clave = elem["titulo"].lower().strip()
+        if clave in titulos_vistos:
+            continue
+        titulos_vistos.add(clave)
+        if elem["archivo"] and elem["archivo"] not in fuentes:
+            fuentes.append(elem["archivo"])
+        fragmentos.append(f"[{elem['titulo']}]:\n{elem['texto']}")
+        if len(fragmentos) >= 3:
+            break
+
+    return {
+        "respuesta": "\n\n".join(fragmentos),
+        "fuentes": fuentes,
+    }
 
 
 # Alias para compatibilidad

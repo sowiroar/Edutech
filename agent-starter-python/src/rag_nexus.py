@@ -23,6 +23,7 @@ load_dotenv(".env")
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 _nexus_index: Any = None
+_nexus_retriever: Any = None
 _nexus_query_engine: Any = None
 _nexus_lock = asyncio.Lock()
 
@@ -178,11 +179,11 @@ def _cargar_documentos_especializacion():
     return documentos
 
 
-def get_or_build_nexus_query_engine():
-    """Inicializa una sola vez y persiste el índice de la Especialización en IA."""
-    global _nexus_index, _nexus_query_engine
-    if _nexus_query_engine is not None:
-        return _nexus_query_engine
+def get_or_build_nexus_retriever():
+    """Inicializa una sola vez y persiste el índice de la Especialización en IA con retriever directo."""
+    global _nexus_index, _nexus_retriever, _nexus_query_engine
+    if _nexus_retriever is not None:
+        return _nexus_retriever
 
     api_key = os.getenv("GOOGLE_API_KEY", "")
     if not api_key or api_key == "mock-key-for-tests":
@@ -191,17 +192,12 @@ def get_or_build_nexus_query_engine():
 
     try:
         from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
-        from llama_index.llms.google_genai import GoogleGenAI
 
         embed_model = GoogleGenAIEmbedding(
             model_name="models/gemini-embedding-2",
             api_key=api_key,
-        )
-        llm = GoogleGenAI(
-            model="models/gemini-2.5-flash",
-            api_key=api_key,
-            temperature=0.2,
         )
 
         storage_dir = _get_nexus_storage_dir()
@@ -212,7 +208,7 @@ def get_or_build_nexus_query_engine():
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
             _nexus_index = load_index_from_storage(storage_context, embed_model=embed_model)
         else:
-            logger.info("Construyendo índice de embeddings de Nexus por primera vez...")
+            logger.info("Construyendo índice de embeddings de Nexus con SentenceSplitter(800)...")
             documentos = _cargar_documentos_especializacion()
             if not documentos:
                 from llama_index.core import Document
@@ -224,43 +220,62 @@ def get_or_build_nexus_query_engine():
                     )
                 ]
 
-            _nexus_index = VectorStoreIndex.from_documents(documentos, embed_model=embed_model)
+            splitter = SentenceSplitter(chunk_size=800, chunk_overlap=100)
+            _nexus_index = VectorStoreIndex.from_documents(
+                documentos,
+                embed_model=embed_model,
+                transformations=[splitter],
+            )
             _nexus_index.storage_context.persist(persist_dir=str(storage_dir))
             logger.info("Índice de Nexus persistido exitosamente en %s", storage_dir)
 
-        _nexus_query_engine = _nexus_index.as_query_engine(llm=llm, similarity_top_k=3)
-        return _nexus_query_engine
+        _nexus_retriever = _nexus_index.as_retriever(similarity_top_k=3)
+        _nexus_query_engine = _nexus_retriever
+        return _nexus_retriever
     except Exception:
-        logger.exception("Error al inicializar query_engine de Nexus")
+        logger.exception("Error al inicializar retriever de Nexus")
         return None
+
+
+# Alias para compatibilidad
+get_or_build_nexus_query_engine = get_or_build_nexus_retriever
 
 
 async def consultar_especializacion_ia(consulta: str) -> dict[str, Any] | None:
-    """Ejecuta consulta sobre la Especialización en IA retornando la respuesta y las fuentes utilizadas."""
+    """Ejecuta consulta ultra-rápida sobre la Especialización en IA mediante retriever directo (top_k=3) sin segundo LLM."""
     if not consulta or not consulta.strip():
         return None
 
-    engine = get_or_build_nexus_query_engine()
-    if engine is None:
+    retriever = await asyncio.to_thread(get_or_build_nexus_retriever)
+    if retriever is None:
         return None
 
-    def _sync_query():
+    def _sync_retrieve():
         try:
-            response = engine.query(consulta)
-            fuentes = []
-            if hasattr(response, "source_nodes"):
-                for node in response.source_nodes:
-                    meta = getattr(node.node, "metadata", {})
-                    archivo = meta.get("archivo") or meta.get("titulo")
-                    if archivo and archivo not in fuentes:
-                        fuentes.append(str(archivo))
+            nodes = retriever.retrieve(consulta)
+            fuentes: list[str] = []
+            fragmentos: list[str] = []
+            titulos_vistos: set[str] = set()
+
+            for node in nodes:
+                meta = getattr(node.node, "metadata", {})
+                archivo = meta.get("archivo") or meta.get("titulo") or "documento.pdf"
+                titulo = meta.get("titulo") or meta.get("archivo") or "Documento IA"
+                clave = titulo.lower().strip()
+                if clave in titulos_vistos:
+                    continue
+                titulos_vistos.add(clave)
+                if archivo and str(archivo) not in fuentes:
+                    fuentes.append(str(archivo))
+                fragmentos.append(f"[{titulo}]:\n{node.node.get_content().strip()}")
+
             return {
-                "respuesta": str(response),
+                "respuesta": "\n\n".join(fragmentos),
                 "fuentes": fuentes,
             }
         except Exception:
-            logger.exception("Error consultando RAG de Nexus para query: %s", consulta)
+            logger.exception("Error recuperando nodos de Nexus para query: %s", consulta)
             return None
 
-    return await asyncio.to_thread(_sync_query)
+    return await asyncio.to_thread(_sync_retrieve)
 
