@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { TokenSource } from 'livekit-client';
+import { Room, TokenSource } from 'livekit-client';
 import { type UseSessionReturn, useSession } from '@livekit/components-react';
 import { WarningIcon } from '@phosphor-icons/react/dist/ssr';
 import { AgentSessionProvider } from '@/components/agents-ui/agent-session-provider';
@@ -49,7 +49,28 @@ interface AppProps {
 export function App({ agentName = 'nexus' }: AppProps) {
   const tokenSource = useMemo(() => TokenSource.endpoint('/api/token'), []);
 
-  const session = useSession(tokenSource, { agentName });
+  // Room propio (en vez de dejar que useSession cree el suyo por defecto)
+  // solo para poder pedir voiceIsolation además de lo que ya viene activado
+  // por defecto en livekit-client (noiseSuppression, echoCancellation,
+  // autoGainControl — se repiten explícitos para no depender de que ese
+  // default no cambie). voiceIsolation es una supresión de ruido más fuerte
+  // que noiseSuppression, estándar de WebRTC, gratis y local (corre en el
+  // navegador); hoy solo la soportan navegadores basados en Chromium, en
+  // los demás simplemente no aplica, sin error (Claude, 2026-10-08).
+  const room = useMemo(
+    () =>
+      new Room({
+        audioCaptureDefaults: {
+          noiseSuppression: true,
+          echoCancellation: true,
+          autoGainControl: true,
+          voiceIsolation: true,
+        },
+      }),
+    []
+  );
+
+  const session = useSession(tokenSource, { agentName, room });
 
   return (
     <AvatarStreamProvider>
