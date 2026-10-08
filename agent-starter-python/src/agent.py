@@ -9,6 +9,7 @@ import textwrap
 import httpx
 import openai as py_openai
 from dotenv import load_dotenv
+from google.genai import types as genai_types
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -24,7 +25,7 @@ from livekit.agents import (
     llm,
     room_io,
 )
-from livekit.plugins import google, silero
+from livekit.plugins import google
 
 import knowledge
 import memory_manager
@@ -96,6 +97,19 @@ def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
         voice=voice,
         api_key=api_key,
         temperature=0.7,
+        # Gemini Live detecta el inicio/fin de turno del lado del servidor y
+        # (confirmado por auditoria del 2026-09-30) ignora por completo
+        # nuestro turn_detection/VAD local, asi que la unica perilla real
+        # para "detecta voz donde no hay" es esta. START_SENSITIVITY_LOW
+        # exige una señal de voz mas clara antes de activar el turno —
+        # menos falsos positivos con ruido de fondo (Claude, 2026-10-08).
+        # Si en vez de eso reportan que corta al usuario a mitad de frase,
+        # el siguiente dial es end_of_speech_sensitivity.
+        realtime_input_config=genai_types.RealtimeInputConfig(
+            automatic_activity_detection=genai_types.AutomaticActivityDetection(
+                start_of_speech_sensitivity=genai_types.StartSensitivity.START_SENSITIVITY_LOW,
+            ),
+        ),
     )
 
 
@@ -509,13 +523,15 @@ def prewarm(proc: JobProcess):
     de silencio se los come el primer estudiante real que pregunte algo
     después de cada despliegue — no un usuario de prueba. get_or_build_*
     cachean en una variable de módulo, así que esto se reutiliza en todas
-    las llamadas que maneje este mismo proceso worker."""
-    logger.info("Precargando Silero VAD local...")
-    proc.userdata["vad"] = silero.VAD.load(
-        min_silence_duration=0.50,
-        min_speech_duration=0.08,
-        prefix_padding_duration=0.5,
-    )
+    las llamadas que maneje este mismo proceso worker.
+
+    Nota (Claude, 2026-10-08): antes se precargaba aquí un Silero VAD que
+    nunca se usaba — el RealtimeModel de Gemini Live hace su propia
+    detección de turno del lado del servidor e ignora cualquier VAD/
+    turn_detection local mientras esa detección este activa (confirmado
+    en logs reales: "ignoring the turn_detection setting"). Se quitó ese
+    código muerto; el control real de sensibilidad de voz ahora vive en
+    get_realtime_model() via realtime_input_config."""
     logger.info("Precargando índice RAG de la UAM (Elian)...")
     try:
         rag_llamaindex.get_or_build_query_engine()
@@ -590,8 +606,8 @@ async def multiagent_session(ctx: JobContext):
 
     session.on("user_input_transcribed", _on_user_transcript)
 
-    # Inicia la sesión asociando el agente inicial (Lira) con audio WebRTC nativo y Silero VAD
-    logger.info("Iniciando sesión con audio WebRTC nativo y Silero VAD local.")
+    # Inicia la sesión asociando el agente inicial (Lira) con audio WebRTC nativo
+    logger.info("Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini).")
     await session.start(
         agent=initial_agent,
         room=ctx.room,
