@@ -174,6 +174,58 @@ class BaseEducationalAgent(Agent):
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
+    async def generar_respuesta_confiable(self, instructions: str, timeout: float = 6.0) -> None:
+        """generate_reply() con reintento si no se detecta habla.
+
+        Encontrado revisando logs reales el 2026-10-08: una llamada entera
+        (1.5 min) se quedó completamente muda desde el primer saludo, sin
+        ninguna excepción — solo un warning de la librería de Gemini Live:
+        "received server content but no active generation". Es una
+        condición de carrera real en livekit-plugins-google: el audio de
+        la respuesta puede llegar antes de que el estado interno de la
+        librería esté listo para recibirlo, y en ese caso lo descarta
+        en silencio (ni excepción ni reintento de su parte). El usuario
+        no tiene ninguna señal de que algo falló — la sesión parece viva
+        pero Lira/Nexus/Elian nunca llegan a decir una palabra.
+
+        Esto no se puede arreglar desde nuestro código tocando la causa
+        (vive dentro del plugin), así que se blinda por el síntoma: si
+        generate_reply() no deriva en agent_state == "speaking" dentro de
+        `timeout` segundos, se reintenta una vez más (para entonces la
+        condición de carrera ya pasó)."""
+        if not self.session:
+            return
+
+        empezo_a_hablar = asyncio.Event()
+
+        def _on_state(ev) -> None:
+            if ev.new_state == "speaking":
+                empezo_a_hablar.set()
+
+        self.session.on("agent_state_changed", _on_state)
+        try:
+            for intento in (1, 2):
+                empezo_a_hablar.clear()
+                await self.session.generate_reply(instructions=instructions)
+                try:
+                    await asyncio.wait_for(empezo_a_hablar.wait(), timeout=timeout)
+                    return  # habló — listo
+                except TimeoutError:
+                    if intento == 1:
+                        logger.warning(
+                            "No se detectó habla %ss después de generate_reply "
+                            "(posible condición de carrera conocida del plugin "
+                            "de Gemini Live); reintentando una vez",
+                            timeout,
+                        )
+                    else:
+                        logger.error(
+                            "Segundo intento de generate_reply tampoco produjo "
+                            "habla; la sesión puede haber quedado muda"
+                        )
+        finally:
+            self.session.off("agent_state_changed", _on_state)
+
     async def emitir_datos_frontend(self, topic: str, data: dict[str, Any]) -> None:
         """Emite datos estructurados (como fuentes de RAG) al frontend vía LiveKit DataPacket."""
         try:
@@ -220,8 +272,8 @@ class LiraAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Saludo inicial breve de bienvenida."""
-        await self.session.generate_reply(
-            instructions="Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
+        await self.generar_respuesta_confiable(
+            "Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
         )
 
     @function_tool(
@@ -282,14 +334,11 @@ class NexusAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Se presenta como Nexus y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
-        if self.session:
-            await self.session.generate_reply(
-                instructions=(
-                    "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
-                    "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
-                    "hizo a Lira usando el contexto de la conversación."
-                )
-            )
+        await self.generar_respuesta_confiable(
+            "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
+            "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
+            "hizo a Lira usando el contexto de la conversación."
+        )
 
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
@@ -402,15 +451,12 @@ class ElianAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Se presenta como Elian y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
-        if self.session:
-            await self.session.generate_reply(
-                instructions=(
-                    "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
-                    "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "
-                    "de inmediato la última pregunta que hizo usando el contexto de la conversación "
-                    "(recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto)."
-                )
-            )
+        await self.generar_respuesta_confiable(
+            "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
+            "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "
+            "de inmediato la última pregunta que hizo usando el contexto de la conversación "
+            "(recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto)."
+        )
 
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
