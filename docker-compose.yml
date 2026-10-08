@@ -129,6 +129,21 @@ services:
       - "7882:7882/udp"
     restart: unless-stopped
 
+  # Mem0 usaba Qdrant en modo local (un archivo en disco) — bug real
+  # encontrado el 2026-10-08: ese modo toma un lock exclusivo del archivo,
+  # asi que en cuanto hay una llamada real activa y LiveKit levanta un
+  # segundo proceso worker (num_idle_processes=1 deja uno de repuesto
+  # listo para la siguiente llamada), el segundo proceso no puede abrir el
+  # mismo storage y Mem0 se rompe justo cuando hay actividad real. Qdrant
+  # server si soporta multiples procesos concurrentes (lo sugiere el
+  # propio error de Qdrant). Gratis, local, open source — mismo criterio
+  # que LiveKit self-hosted.
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
   voice-agent:
     build:
       context: ./agent-starter-python
@@ -137,6 +152,8 @@ services:
       knowledge-sync:
         condition: service_started
       livekit:
+        condition: service_started
+      qdrant:
         condition: service_started
     environment:
       - LIVEKIT_URL=${LIVEKIT_URL_INTERNAL:-ws://livekit:7880}
@@ -155,7 +172,8 @@ services:
       - NEXUS_STORAGE_DIR=/app/data/nexus_storage
       - UAM_DOCS_DIR=/app/data/documentos_uam
       - UAM_STORAGE_DIR=/app/data/uam_storage
-      - MEM0_DIR=/app/data/mem0
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
     volumes:
       - ./agent-starter-python/src:/app/src
       - ./agent-starter-python/tests:/app/tests
@@ -163,12 +181,6 @@ services:
       - ./data/documentos_uam:/app/data/documentos_uam:ro
       - ./data/nexus_storage:/app/data/nexus_storage
       - ./data/uam_storage:/app/data/uam_storage
-      # Nunca tuvo volumen montado (bug encontrado el 2026-10-08): sin esto,
-      # mem0 vive dentro de /app/data (de root, de la imagen), donde appuser
-      # no puede crear el subdirectorio -> PermissionError en CADA turno,
-      # reintentando la inicializacion completa de Mem0 (incluida una
-      # importacion pesada que bloquea el event loop ~1s) una y otra vez.
-      - ./data/mem0:/app/data/mem0
       - knowledge_data:/data:ro
     restart: unless-stopped
 
@@ -223,4 +235,6 @@ volumes:
     name: azimutai_whisper_cache
   knowledge_data:
     name: azimutai_knowledge_data
+  qdrant_data:
+    name: azimutai_qdrant_data
 

@@ -1,6 +1,6 @@
 """Gestor de memoria de largo plazo con Mem0 para agentes de voz LiveKit.
 
-Utiliza Mem0 en modo local con Qdrant embebido y Google Gemini (LLM + Embeddings)
+Utiliza Mem0 con Qdrant (servidor, no embebido) y Google Gemini (LLM + Embeddings)
 para almacenar y recuperar recuerdos, preferencias y contexto del estudiante entre turnos y sesiones.
 """
 
@@ -10,7 +10,6 @@ import asyncio
 import logging
 import os
 import time
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("memory-manager")
@@ -32,14 +31,23 @@ _FALLO_COOLDOWN_SEGUNDOS = 30.0
 
 def _get_mem0_config() -> dict[str, Any]:
     api_key = os.getenv("GOOGLE_API_KEY", "")
-    data_dir = os.getenv("MEM0_DIR", os.path.join(os.path.dirname(__file__), "..", "data", "mem0"))
-    Path(data_dir).mkdir(parents=True, exist_ok=True)
 
     return {
         "vector_store": {
             "provider": "qdrant",
             "config": {
-                "path": data_dir,
+                # Servidor Qdrant, no el modo local/embebido (bug real
+                # encontrado el 2026-10-08: el modo local toma un lock
+                # exclusivo del archivo de storage — en cuanto hay una
+                # llamada real activa, LiveKit levanta un segundo proceso
+                # worker (num_idle_processes=1 deja uno de repuesto listo
+                # para la siguiente llamada) y ese segundo proceso no podia
+                # abrir el mismo storage: "already accessed by another
+                # instance of Qdrant client". El servidor si soporta
+                # multiples procesos concurrentes, que es justo lo que
+                # este despliegue necesita.
+                "host": os.getenv("QDRANT_HOST", "qdrant"),
+                "port": int(os.getenv("QDRANT_PORT", "6333")),
                 "embedding_model_dims": 768,
             },
         },
