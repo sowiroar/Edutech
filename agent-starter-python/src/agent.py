@@ -21,7 +21,6 @@ from livekit.agents import (
     TurnHandlingOptions,
     cli,
     function_tool,
-    inference,
     llm,
     room_io,
 )
@@ -542,6 +541,16 @@ def prewarm(proc: JobProcess):
         rag_nexus.get_or_build_nexus_query_engine()
     except Exception:
         logger.exception("No se pudo precargar el índice RAG de la especialización")
+    # Mem0 import pesado (qdrant_client) medido bloqueando el event loop
+    # ~1s la primera vez que se usaba a mitad de una llamada real — el
+    # mismo problema que resolvió el prewarm de RAG, aplicado aquí tras
+    # encontrar y corregir el bug de permisos de /app/data/mem0
+    # (Claude, 2026-10-08).
+    logger.info("Precargando Mem0 (memoria persistente)...")
+    try:
+        memory_manager.get_memory_instance()
+    except Exception:
+        logger.exception("No se pudo precargar Mem0")
 
 
 server.setup_fnc = prewarm
@@ -563,23 +572,21 @@ async def multiagent_session(ctx: JobContext):
     # Sesión nativa de audio bidireccional con Gemini Live API (RealtimeModel)
     session = AgentSession(
         llm=initial_agent.llm,
+        # turn_detection (TurnDetector) e interruption quitados aqui
+        # (Claude, 2026-10-08): con el RealtimeModel de Gemini Live y su
+        # deteccion de turno del lado del servidor activa, el framework los
+        # ignora/deshabilita siempre y lo loguea en cada llamada
+        # ("a non-default turn detection threshold was provided... the
+        # server provides calibrated defaults"; "interruption_detection is
+        # provided, but it's not compatible... and will be disabled") — no
+        # hacian nada, solo generaban ruido en el log. endpointing se deja
+        # (no aparece en esos warnings, efecto real sin confirmar del todo).
         turn_handling=TurnHandlingOptions(
-            turn_detection=inference.TurnDetector(
-                version="v1-mini",
-                unlikely_threshold=0.55,
-            ),
             endpointing={
                 "mode": "dynamic",
                 "min_delay": 0.5,
                 "max_delay": 3.0,
                 "alpha": 0.85,
-            },
-            interruption={
-                "enabled": True,
-                "mode": "adaptive",
-                "min_duration": 0.45,
-                "false_interruption_timeout": 2.0,
-                "resume_false_interruption": True,
             },
         ),
     )

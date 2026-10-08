@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,17 @@ logger = logging.getLogger("memory-manager")
 
 _memory_instance: Any = None
 _init_lock = asyncio.Lock()
+
+# Bug real encontrado el 2026-10-08: /app/data/mem0 nunca tuvo volumen
+# montado (ver docker-compose.yml), asi que get_memory_instance() fallaba
+# por permisos en CADA llamada — y como solo cacheaba el EXITO, reintentaba
+# la inicializacion completa (incluida la importacion de qdrant_client, que
+# por si sola bloquea el event loop ~1s) en cada turno de cada llamada.
+# Ya se corrigio el volumen, pero se cachea tambien el fallo (con
+# enfriamiento, no permanente) para que un problema futuro no vuelva a
+# convertirse en ~1s de bloqueo repetido por turno.
+_ultimo_fallo: float = 0.0
+_FALLO_COOLDOWN_SEGUNDOS = 30.0
 
 
 def _get_mem0_config() -> dict[str, Any]:
@@ -53,9 +65,12 @@ def _get_mem0_config() -> dict[str, Any]:
 
 def get_memory_instance():
     """Retorna la instancia singleton de Mem0 Memory."""
-    global _memory_instance
+    global _memory_instance, _ultimo_fallo
     if _memory_instance is not None:
         return _memory_instance
+
+    if _ultimo_fallo and (time.monotonic() - _ultimo_fallo) < _FALLO_COOLDOWN_SEGUNDOS:
+        return None  # fallo reciente: no reintentar la inicializacion pesada todavia
 
     api_key = os.getenv("GOOGLE_API_KEY", "")
     if not api_key or api_key == "mock-key-for-tests":
@@ -71,6 +86,7 @@ def get_memory_instance():
         return _memory_instance
     except Exception:
         logger.exception("Error al inicializar la instancia de Mem0")
+        _ultimo_fallo = time.monotonic()
         return None
 
 

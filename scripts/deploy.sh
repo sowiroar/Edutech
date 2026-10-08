@@ -36,7 +36,20 @@ if grep -Eq '^LIVEKIT_(URL|API_KEY|API_SECRET)=(|.*<.*>.*)$' .env; then
   exit 0
 fi
 
+# Bug real encontrado el 2026-10-08: si estas carpetas no existen todavia,
+# Docker las crea como root al montarlas — y el "appuser" (uid 10001,
+# grupo "users") del contenedor no puede escribir ahi. Mem0 fallaba por
+# esto en CADA turno de CADA llamada, reintentando una importacion pesada
+# que bloqueaba ~1s. Se provisionan con el grupo correcto antes de
+# levantar los contenedores, para que nadie mas vuelva a pisar esto en un
+# clon nuevo del repo.
+for dir in data/mem0 data/nexus_storage data/uam_storage; do
+  mkdir -p "$dir"
+  chgrp users "$dir" 2>/dev/null || log "Aviso: no se pudo poner el grupo 'users' en $dir (¿no existe ese grupo en este host?); si falla Mem0/RAG por permisos, ajusta el dueño de $dir a mano."
+  chmod g+w "$dir" 2>/dev/null || true
+done
+
 log "Construyendo imágenes y actualizando contenedores (docker compose up -d --build)..."
 docker compose up -d --build --remove-orphans
 docker compose ps
-log "Stack actualizado. Frontend: http://localhost:3000"
+log "Stack actualizado. Frontend: http://localhost:3500"
