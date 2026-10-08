@@ -497,7 +497,7 @@ class ElianAgent(BaseEducationalAgent):
 # RAG agregado abajo (~22s medido para el índice de la UAM): el framework
 # mataba el proceso worker por timeout y lo reintentaba en bucle, sin que el
 # prewarm llegara nunca a terminar. 45s da margen real (Claude, 2026-09-30).
-server = AgentServer(num_idle_processes=1, initialize_process_timeout=45.0)
+server = AgentServer(num_idle_processes=1, initialize_process_timeout=600.0)
 
 
 def prewarm(proc: JobProcess):
