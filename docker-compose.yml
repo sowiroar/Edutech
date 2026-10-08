@@ -120,6 +120,15 @@ services:
       start_period: 30m
     restart: unless-stopped
 
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    restart: unless-stopped
+
   voice-agent:
     build:
       context: ./agent-starter-python
@@ -127,10 +136,12 @@ services:
     depends_on:
       knowledge-sync:
         condition: service_started
+      livekit:
+        condition: service_started
     environment:
-      - LIVEKIT_URL=${LIVEKIT_URL}
-      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
-      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_URL=${LIVEKIT_URL_INTERNAL:-ws://livekit:7880}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - GEMINI_LIVE_MODEL=${GEMINI_LIVE_MODEL:-gemini-3.8-live}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434/v1}
@@ -160,10 +171,15 @@ services:
     build:
       context: ./avatar-bridge
       dockerfile: Dockerfile
+    depends_on:
+      livekit:
+        condition: service_started
     environment:
-      - LIVEKIT_URL=${LIVEKIT_URL}
-      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
-      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      # Igual que voice-agent: dentro de la red de Docker se habla con el
+      # LiveKit self-hosted por su nombre de servicio, no por localhost.
+      - LIVEKIT_URL=${LIVEKIT_URL_INTERNAL:-ws://livekit:7880}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
     ports:
       # Solo loopback: el receptor de Unreal rechaza cualquier otro host.
       - "127.0.0.1:8766:8766"
@@ -173,12 +189,14 @@ services:
     build:
       context: ./agent-starter-react
       dockerfile: Dockerfile
+    depends_on:
+      - livekit
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3500}:3000"
     environment:
-      - LIVEKIT_URL=${LIVEKIT_URL}
-      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
-      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_URL=${LIVEKIT_URL:-ws://localhost:7880}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - AGENT_NAME=${AGENT_NAME:-nexus}
       - AVATAR_STREAM_URL=${AVATAR_STREAM_URL:-}
       - AVATAR_BRIDGE_STATUS_URL=${AVATAR_BRIDGE_STATUS_URL:-http://avatar-bridge:8766/status}

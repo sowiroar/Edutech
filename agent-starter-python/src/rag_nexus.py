@@ -231,7 +231,12 @@ def _cargar_documentos_especializacion():
 
 
 def get_or_build_nexus_query_engine():
-    """Inicializa una sola vez y persiste el índice de la Especialización en IA."""
+    """Inicializa una sola vez y persiste el índice de la Especialización en IA.
+
+    Ver nota de fusión equivalente en rag_llamaindex.py: se mantiene la
+    síntesis con LLM (decisión explícita del usuario) sobre la alternativa
+    de Ernesto (retriever directo, sin segundo LLM); sí se adoptó su
+    chunking explícito (SentenceSplitter)."""
     global _nexus_index, _nexus_query_engine
     if _nexus_query_engine is not None:
         return _nexus_query_engine
@@ -243,6 +248,7 @@ def get_or_build_nexus_query_engine():
 
     try:
         from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
         from llama_index.llms.google_genai import GoogleGenAI
 
@@ -264,7 +270,7 @@ def get_or_build_nexus_query_engine():
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
             _nexus_index = load_index_from_storage(storage_context, embed_model=embed_model)
         else:
-            logger.info("Construyendo índice de embeddings de Nexus por primera vez...")
+            logger.info("Construyendo índice de embeddings de Nexus con SentenceSplitter(800)...")
             documentos = _cargar_documentos_especializacion()
             if not documentos:
                 from llama_index.core import Document
@@ -276,7 +282,12 @@ def get_or_build_nexus_query_engine():
                     )
                 ]
 
-            _nexus_index = VectorStoreIndex.from_documents(documentos, embed_model=embed_model)
+            splitter = SentenceSplitter(chunk_size=800, chunk_overlap=100)
+            _nexus_index = VectorStoreIndex.from_documents(
+                documentos,
+                embed_model=embed_model,
+                transformations=[splitter],
+            )
             _nexus_index.storage_context.persist(persist_dir=str(storage_dir))
             logger.info("Índice de Nexus persistido exitosamente en %s", storage_dir)
 

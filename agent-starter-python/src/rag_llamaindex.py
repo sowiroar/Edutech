@@ -58,7 +58,17 @@ def _get_qa_template_uam():
 def _get_storage_dir() -> Path:
     storage_dir = os.getenv("UAM_STORAGE_DIR") or os.getenv("LLAMAINDEX_STORAGE_DIR")
     if not storage_dir:
-        storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage")
+        for candidate in [
+            os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "data", "uam_storage"),
+            "/app/data/uam_storage",
+            "/data/uam_storage",
+        ]:
+            if os.path.exists(candidate) and (Path(candidate) / "docstore.json").exists():
+                storage_dir = candidate
+                break
+        else:
+            storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage")
     p = Path(storage_dir)
     p.mkdir(parents=True, exist_ok=True)
     return p
@@ -237,7 +247,15 @@ def _cargar_documentos_uam():
 
 
 def get_or_build_query_engine():
-    """Inicializa o recupera el query_engine asíncrono de LlamaIndex para Elian."""
+    """Inicializa o recupera el query_engine de LlamaIndex para Elian.
+
+    Nota de fusión (Claude, 2026-10-08): Ernesto propuso en paralelo una
+    versión sin este segundo LLM (retriever directo + BM25, ver PR de
+    feature/gemini-live-api) que es más rápida pero deja que Nexus/Elian
+    arme la respuesta final en vivo a partir de fragmentos crudos sin
+    filtrar. Se decidió mantener la síntesis (decisión explícita del
+    usuario, "prioriza calidad") — sí se adoptó su chunking explícito
+    (SentenceSplitter) y la búsqueda de storage_dir más robusta."""
     global _uam_index, _uam_query_engine
     if _uam_query_engine is not None:
         return _uam_query_engine
@@ -249,6 +267,7 @@ def get_or_build_query_engine():
 
     try:
         from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
         from llama_index.llms.google_genai import GoogleGenAI
 
@@ -270,7 +289,7 @@ def get_or_build_query_engine():
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
             _uam_index = load_index_from_storage(storage_context, embed_model=embed_model)
         else:
-            logger.info("Construyendo índice de embeddings de la UAM por primera vez...")
+            logger.info("Construyendo índice de embeddings de la UAM con SentenceSplitter(800)...")
             documentos = _cargar_documentos_uam()
             if not documentos:
                 from llama_index.core import Document
@@ -286,7 +305,12 @@ def get_or_build_query_engine():
                     ),
                 ]
 
-            _uam_index = VectorStoreIndex.from_documents(documentos, embed_model=embed_model)
+            splitter = SentenceSplitter(chunk_size=800, chunk_overlap=100)
+            _uam_index = VectorStoreIndex.from_documents(
+                documentos,
+                embed_model=embed_model,
+                transformations=[splitter],
+            )
             _uam_index.storage_context.persist(persist_dir=str(storage_dir))
             logger.info("Índice de la UAM persistido exitosamente en %s", storage_dir)
 
@@ -303,7 +327,7 @@ def get_or_build_query_engine():
 
 async def consultar_uam(consulta: str) -> dict[str, Any] | None:
     """Ejecuta una consulta asíncrona sobre la base de conocimiento de la UAM sin bloquear el event loop."""
-    if not consulta.strip():
+    if not consulta or not consulta.strip():
         return None
 
     engine = await asyncio.to_thread(get_or_build_query_engine)
@@ -329,9 +353,5 @@ async def consultar_uam(consulta: str) -> dict[str, Any] | None:
             return None
 
     return await asyncio.to_thread(_sync_query)
-
-
-# Alias para compatibilidad
-consultar_uam_semantico = consultar_uam
 
 
