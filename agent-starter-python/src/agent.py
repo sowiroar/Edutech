@@ -87,7 +87,11 @@ def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
     Voces soportadas:
     - Aoede: Femenina natural y relajada en español/inglés (Lira - Recepción y Triage).
     - Puck: Masculina dinámica, alegre y técnica (Nexus - Especialista en IA).
-    - Charon: Masculina formal, calmada y profesional (Elian - Especialista UAM).
+    - Kore: Femenina formal, calmada y profesional (Elian - Especialista UAM).
+      Antes era Charon (masculina): se cambió el 2026-10-09 al integrar el
+      personaje visual ELIAN de la Familia VIVA, que es femenino — Charon
+      no calzaba con el avatar. Verificado en vivo que Kore conecta
+      correctamente con la API real antes de este cambio.
     """
     api_key = os.getenv("GOOGLE_API_KEY") or GOOGLE_API_KEY or "mock-key-for-tests"
     model = os.getenv("GEMINI_LIVE_MODEL") or GEMINI_LIVE_MODEL or "gemini-3.8-live"
@@ -415,7 +419,7 @@ class ElianAgent(BaseEducationalAgent):
 
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
-            llm=get_realtime_model("Charon"),
+            llm=get_realtime_model("Kore"),
             chat_ctx=chat_ctx,
             instructions=textwrap.dedent(
                 """\

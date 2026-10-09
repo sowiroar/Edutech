@@ -17,7 +17,9 @@ def test_agent_voices_and_initialization():
     assert nexus.llm._opts.voice == "Puck"
 
     assert "Elian" in elian.instructions
-    assert elian.llm._opts.voice == "Charon"
+    # Kore (femenina), no Charon: cambiada el 2026-10-09 al integrar el
+    # personaje visual ELIAN de la Familia VIVA, que es femenino.
+    assert elian.llm._opts.voice == "Kore"
 
 
 def test_lira_handoff_tools_registered():
