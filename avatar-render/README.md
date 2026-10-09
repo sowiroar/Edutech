@@ -3,9 +3,10 @@
 Pone el avatar de Unreal (video) en el frontend web, sin Pixel Streaming
 (nunca llegó a verse bien en el navegador, ver historial del proyecto).
 En su lugar: el juego empaquetado de Unreal corre en este contenedor contra
-una pantalla virtual (Xvfb) con aceleración de GPU real, y ffmpeg manda lo
-que se ve ahí como MJPEG por HTTP — un `<img>` del navegador lo muestra
-directo, sin códecs ni JS de video.
+una pantalla virtual (Xvfb) con aceleración de GPU real, y `mjpeg_server.py`
+(lanza ffmpeg internamente, lee sus frames) manda lo que se ve ahí como
+MJPEG por HTTP — un `<img>` del navegador lo muestra directo, sin códecs ni
+JS de video.
 
 Probado en vivo el 2026-10-09: con `--gpus all` + `NVIDIA_DRIVER_CAPABILITIES=all`,
 el driver de NVIDIA presenta Vulkan (el RHI que usa Unreal 5 en Linux) directo
@@ -65,7 +66,7 @@ puertos publicados** — el stream MJPEG se expone en el puerto de
 | `RENDER_WIDTH`/`RENDER_HEIGHT` | 854/480 | Resolución de Xvfb y del juego. |
 | `STREAM_FRAMERATE` | 12 | FPS del MJPEG (no el FPS del juego). |
 | `STREAM_QUALITY` | 10 | Calidad JPEG de ffmpeg (2 mejor .. 31 peor). Más alta = más ancho de banda. |
-| `STREAM_PORT` | 8080 | Puerto donde ffmpeg sirve `/stream`. |
+| `STREAM_PORT` | 8080 | Puerto donde `mjpeg_server.py` sirve `/stream`. |
 
 MJPEG no comprime entre frames (cada uno es un JPEG independiente, a diferencia de un
 códec real como H.264). Con los defaults (480p/calidad 10/12fps), probado en vivo:
@@ -79,15 +80,30 @@ después de que arranca el contenedor (o de que se conecta el primer espectador 
 rato sin ninguno) salen con una ráfaga de frames más rápida de lo normal mientras drena un
 colchón interno de ffmpeg; se estabiliza solo al ritmo configurado en unos 10-15s.
 
-## Limitación conocida: un solo espectador a la vez
+## Por qué `mjpeg_server.py` y no el servidor HTTP de ffmpeg directo
 
-`ffmpeg -listen 1` acepta una sola conexión HTTP a la vez; una segunda pestaña/usuario
-viendo `/api/avatar/stream` al mismo tiempo se quedaría esperando o sin conectar. Coherente
-con el resto del sistema (`avatar-bridge` también está pensado para una sola persona a la
-vez, ver su README), así que no se resolvió aquí. Si hace falta más de un espectador
-simultáneo, la forma correcta es que `/api/avatar/stream` (el proxy del frontend) mantenga
-una sola conexión hacia avatar-render y la reparta a varios navegadores, no que cada
-navegador abra su propia conexión contra ffmpeg.
+El primer intento usaba `ffmpeg -f mpjpeg -listen 1 http://0.0.0.0:8080/stream`
+directo, sin nada más — funcionaba para una sola conexión manual, pero falló en
+vivo con el frontend real:
+
+- `-listen 1` (el valor documentado como "modo servidor") solo acepta **una
+  conexión en toda la vida del proceso**: la segunda pestaña/recarga del
+  frontend se encontró con `Connection refused`.
+- `-listen 2` (el valor que la ayuda de ffmpeg documenta como modo
+  multi-cliente) acepta la conexión TCP pero se queda colgado sin escribir
+  nada — confirmado en vivo, 0 bytes en varios segundos.
+- Un bucle de bash relanzando ffmpeg por cada cliente tampoco resultó
+  confiable: ffmpeg no siempre termina limpio cuando el cliente se
+  desconecta.
+
+`mjpeg_server.py` evita todo esto: lanza ffmpeg **una sola vez** para toda la
+vida del contenedor (sin `-listen`, solo `-f mjpeg pipe:1`), lee sus frames
+por stdin, y un servidor HTTP propio (`http.server.ThreadingHTTPServer`, un
+hilo por conexión) los reparte a cuantos clientes se conecten — simultáneos o
+en serie, sin el límite de "un cliente a la vez" de arriba. Coherente con el
+resto del sistema de todas formas (`avatar-bridge` sigue pensado para una
+sola persona usando la app a la vez, ver su README), pero ya no es una
+limitación extra de esta pieza en particular.
 
 ## Verificación manual
 

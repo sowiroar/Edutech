@@ -1,13 +1,14 @@
 FROM ubuntu:22.04
 
-# Xvfb + ffmpeg (con el muxer mpjpeg para servir MJPEG por HTTP directo) + las
-# librerias de runtime que pide el binario empaquetado de Unreal para Linux.
-# No hace falta VirtualGL: probado en vivo (2026-10-09) que el driver de
-# NVIDIA presenta Vulkan directamente contra Xvfb sin el, con --gpus all +
-# NVIDIA_DRIVER_CAPABILITIES=all.
+# Xvfb + ffmpeg (mjpeg_server.py lo usa como fuente de frames, leyendo su
+# stdout) + python3 (para mjpeg_server.py: ver ahi por que no se usa el
+# propio servidor HTTP de ffmpeg) + las librerias de runtime que pide el
+# binario empaquetado de Unreal para Linux. No hace falta VirtualGL:
+# probado en vivo (2026-10-09) que el driver de NVIDIA presenta Vulkan
+# directamente contra Xvfb sin el, con --gpus all + NVIDIA_DRIVER_CAPABILITIES=all.
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    xvfb ffmpeg \
+    xvfb ffmpeg python3 \
     libasound2 libpulse0 libsdl2-2.0-0 \
     libxrandr2 libxinerama1 libxcursor1 libxi6 libxv1 libxtst6 \
     libgl1 libglx-mesa0 \
@@ -22,6 +23,7 @@ RUN mkdir -p /home/render && chmod 777 /home/render
 ENV HOME=/home/render
 
 COPY entrypoint.sh /entrypoint.sh
+COPY mjpeg_server.py /mjpeg_server.py
 RUN chmod +x /entrypoint.sh
 
 # El paquete de Unreal (Avatar-Package*/Linux, ~2GB) se monta como volumen en
