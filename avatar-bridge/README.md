@@ -1,17 +1,19 @@
-# avatar-bridge · voz del agente → avatar NEXO (Unreal)
+# avatar-bridge · voz del agente → avatar (Unreal, Familia VIVA)
 
 Le entrega a Unreal el audio del agente que esté hablando (Lira, Nexus o Elian) para que
-el avatar NEXO mueva los labios, y le dice a la web cuándo el avatar está disponible.
+el avatar correspondiente (LIRA, NEXO o ELIAN, ver Fase 2 más abajo) mueva los labios, y
+le dice a la web cuándo el avatar está disponible.
 
 ```
- Navegador ── LiveKit Cloud ── voice-agent (Gemini Live)
+ Navegador ── LiveKit self-hosted ── voice-agent (Gemini Live)
                    │
-                   │ audio + estado del agente (participante oculto, solo lectura)
+                   │ audio + estado/personaje del agente (participante oculto, solo lectura)
                    ▼
-             avatar-bridge ══ ws://127.0.0.1:8766 (VVA1) ══► Unreal (VivaAvatarReceiver)
-                   ▲                                              │ Pixel Streaming (WebRTC)
-                   │ GET /status                                   ▼
-             frontend (/api/avatar) ◄──────────────────── iframe con el avatar
+             avatar-bridge ══ ws://127.0.0.1:8766 (VVA1) ══► Unreal (VivaAvatarReceiver,
+                   ▲                                          en avatar-render/, misma red)
+                   │ GET /status                                    │ MJPEG (x11grab+ffmpeg)
+                   │                                                ▼
+             frontend (/api/avatar) ◄── /api/avatar/stream ── avatar-bridge:8080/stream
 ```
 
 ## Piezas
@@ -47,44 +49,47 @@ Verificado aquí:
 - De extremo a extremo con audio real: un usuario de prueba entró a una sala, Lira saludó con
   Gemini Live y el simulado recibió ese saludo intacto, sin violaciones de protocolo.
 
-**Sin verificar** (necesita Unreal instalado): que el receptor real y su modelo de animación
-acepten esta transmisión, la sincronía labios/audio, y todo lo de Pixel Streaming.
+Verificado también contra Unreal real (no solo el simulado): el receptor acepta la
+transmisión, el modelo de animación de habla funciona, y el cambio de personaje en vivo
+(Fase 2) y el video por MJPEG (Fase 3) — ver `avatar-render/README.md`.
 
-## Lado Unreal (lo que falta)
+## Lado Unreal
 
-El proyecto está en `Avatar/` (Unreal Engine 5.8.2, personaje MetaHuman `NEXO`).
+El proyecto está en `Avatar/` (Unreal Engine 5.8, Familia VIVA: NEXO, LIRA, ELIAN, más
+ATLAS/NOA sin voz todavía — ver `Avatar/FAMILIA_VIVA.md`). Ya hecho, no hace falta repetirlo:
 
-1. **Instalar Unreal Engine 5.8 para Linux** desde Epic (cuenta y EULA de Epic; no se puede
-   automatizar). Con los plugins MetaHuman y Python habilitados.
-2. **Assets reales**: el repo usa Git LFS (`git lfs install && git lfs pull --exclude="Binaries,Intermediate,DerivedDataCache,Saved"`, ≈1.7 GB).
-   `Binaries/` e `Intermediate/` son de macOS/Apple Silicon y no sirven en Linux.
-3. **Compilar el plugin `VivaAvatar` para Linux** (solo trae binarios de Mac). Depende de los
-   módulos `SpeechAnimationSolver`, `MetaHumanCoreTech`, `NNE` y del plugin `StreamingADA`.
-4. **Añadir el receptor al actor NEXO**: ningún asset del proyecto usa hoy `VivaAvatarReceiver`
-   (el `VivaVoiceReceiver` que menciona `Avatar/AGENTS.md` no está en el repositorio).
-   Agregar el componente `VivaAvatarReceiver` al actor `NEXO` con:
-   `BridgeURL = ws://127.0.0.1:8766`, `bEnableSpeechAnimation = true`, `LiveLinkSubject = VivaNexo`.
-5. **Pixel Streaming**: habilitar el plugin y lanzar el juego/editor con transmisión.
-   Los parámetros de arranque y el servidor de señalización cambian entre versiones de Unreal:
-   seguir la documentación de Epic de la versión instalada.
-6. **Conectar la web**: poner en `.env` `AVATAR_STREAM_URL=<página del reproductor de Pixel Streaming>`
-   (alcanzable desde el navegador) y `docker compose up -d frontend`. El avatar aparece solo
-   cuando Unreal está conectado al puente.
+- El componente `VivaAvatarReceiver` (plugin `VivaAvatar`, módulos `SpeechAnimationSolver`,
+  `MetaHumanCoreTech`, `NNE`) está en el actor `NEXO_Delicate_Review` de `NewMap_NEXO_Lite`
+  (nombre de instancia `VivaVoiceReceiver`), con `BridgeURL = ws://127.0.0.1:8766`,
+  `bEnableSpeechAnimation = true`, `LiveLinkSubject = VivaNexo`.
+- Fase 2 (2026-10-09): el mismo receptor cambia de personaje en tiempo real por el mensaje
+  VVA1 `character_changed` (ver `vva1.py`), buscando el actor por Tag (`NEXO`/`LIRA`/`ELIAN`,
+  ya puestos y guardados) en vez de estar fijo al actor dueño. Verificado en vivo en
+  Play-In-Editor: LIRA→ELIAN→NEXO→LIRA, cada uno reenlazó cara/animación sin errores.
+- Fase 3 (2026-10-09): `avatar-render/` reemplaza Pixel Streaming (nunca llegó a verse en el
+  navegador — ICE no completaba) por MJPEG: el juego empaquetado corre headless contra Xvfb
+  con GPU real, y ffmpeg manda los frames por HTTP. Ver `avatar-render/README.md`, incluye
+  cómo generar el paquete (`RunUAT.sh BuildCookRun`, manual, ~2GB, no vive en git).
 
 ## Audio: quién suena
 
-Con el avatar en vivo, el audio lo emite Unreal por Pixel Streaming y el de LiveKit se
-silencia (`AVATAR_MUTE_AGENT_AUDIO=true`), para que la voz no salga duplicada y los labios
-queden sincronizados. Si el navegador bloquea la reproducción automática del avatar, hará
-falta un clic sobre él. Con `AVATAR_MUTE_AGENT_AUDIO=false` se mantiene el audio de LiveKit y
-los labios irán algo desfasados (el receptor retiene el audio hasta tener animación lista).
+Con el avatar en vivo, el audio lo emite Unreal (se escucha a través del contenedor, no del
+MJPEG: el video no lleva audio) y el de LiveKit se silencia
+(`AVATAR_MUTE_AGENT_AUDIO=true`), para que la voz no salga duplicada y los labios queden
+sincronizados. Con `AVATAR_MUTE_AGENT_AUDIO=false` se mantiene el audio de LiveKit y los
+labios irán algo desfasados (el receptor retiene el audio hasta tener animación lista).
 
 ## Limitaciones conocidas
 
-- Un solo Unreal a la vez (una conexión nueva reemplaza a la anterior).
+- Un solo Unreal a la vez (una conexión nueva reemplaza a la anterior) — un solo personaje
+  visible a la vez incluso con varios usuarios conectados.
 - Elige la sala más reciente que tenga un agente y una persona; pensado para una sola persona
   usando la app a la vez.
-- El receptor exige loopback (`ws://127.0.0.1:…`): Unreal y este puente deben estar en la
-  misma máquina. El puerto solo se publica en `127.0.0.1`.
+- El receptor exige loopback (`ws://127.0.0.1:…`). Ya no implica "misma máquina física": desde
+  la Fase 3, `avatar-render` comparte el namespace de red de este contenedor
+  (`network_mode: service:avatar-bridge`) precisamente para seguir cumpliendo esto sin estar
+  literalmente en el mismo proceso/máquina.
 - Cada cambio de agente reconecta su sesión de Gemini Live, y el receptor añade su propio
   retraso: la voz por el avatar llega algo después que la de LiveKit.
+- El MJPEG no lleva audio (es solo video); el audio real sigue siendo el de LiveKit/Unreal
+  descrito arriba, no algo que el navegador reciba del stream de video.

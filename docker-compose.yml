@@ -202,6 +202,66 @@ services:
     ports:
       # Solo loopback: el receptor de Unreal rechaza cualquier otro host.
       - "127.0.0.1:8766:8766"
+      # Stream MJPEG de avatar-render (ver mas abajo: comparte esta red).
+      # El frontend lo alcanza por dentro de la red de Docker
+      # (avatar-bridge:8080), esto es solo para poder probarlo a mano desde
+      # el host.
+      - "127.0.0.1:${AVATAR_STREAM_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  # Hace correr el juego empaquetado de Unreal (avatar NEXO/Familia VIVA)
+  # headless contra una pantalla virtual, y manda lo que se ve por MJPEG.
+  # Reemplaza el intento anterior con Pixel Streaming, que nunca llego a
+  # verse en el navegador. Ver avatar-render/README.md para el detalle
+  # completo (incluye por que comparte red con avatar-bridge en vez de
+  # tener la suya) y como generar AVATAR_PACKAGE_DIR.
+  #
+  # Si AVATAR_PACKAGE_DIR no existe todavia (nadie genero el paquete, ver
+  # el README) o la maquina no tiene GPU NVIDIA, este servicio entra en
+  # crash-loop (restart: unless-stopped) sin tumbar el resto del stack:
+  # nada mas depende de el. "docker compose ps" lo mostrara reiniciando
+  # seguido; es esperado hasta que se genere el paquete.
+  avatar-render:
+    build:
+      context: ./avatar-render
+      dockerfile: Dockerfile
+    # Comparte el loopback de avatar-bridge: VivaAvatarReceiver (C++, en el
+    # juego) solo acepta BridgeURL=ws://127.0.0.1:*, por diseno (rechaza
+    # cualquier host remoto). Sin esto, "127.0.0.1" adentro del contenedor
+    # no seria avatar-bridge y la conexion nunca se establece.
+    network_mode: "service:avatar-bridge"
+    depends_on:
+      avatar-bridge:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      # MJPEG no comprime entre frames (cada uno es un JPEG independiente): a
+      # 1280x720/q6/15fps probado en vivo salian ~1.2 MB/s sostenidos, pesado
+      # para un recuadro de avatar de fondo. 480p/q10/12fps baja bastante
+      # eso a costa de nitidez; subir si el ancho de banda no es problema.
+      - RENDER_WIDTH=${AVATAR_RENDER_WIDTH:-854}
+      - RENDER_HEIGHT=${AVATAR_RENDER_HEIGHT:-480}
+      - STREAM_FRAMERATE=${AVATAR_STREAM_FRAMERATE:-12}
+      - STREAM_QUALITY=${AVATAR_STREAM_QUALITY:-10}
+      - STREAM_PORT=8080
+    # Debe ser el dueno real (en el host) de AVATAR_PACKAGE_DIR: el juego
+    # escribe logs/config ahi en runtime, y ademas se niega a correr como
+    # root. Default 1000:1000 (el usuario habitual en una sola maquina).
+    user: "${AVATAR_UID:-1000}:${AVATAR_GID:-1000}"
+    volumes:
+      # Paquete de Unreal generado a mano (~2GB, no vive en git). Ver
+      # avatar-render/README.md para como regenerarlo. NO usar :ro: el
+      # Avatar1.sh que genera UE hace `chmod +x` al propio binario en cada
+      # arranque (aunque ya sea ejecutable, el chmod en si falla sobre un
+      # bind mount de solo lectura -- confirmado en vivo el 2026-10-09).
+      - ${AVATAR_PACKAGE_DIR:-../Avatar-Package/Linux}:/avatar
     restart: unless-stopped
 
   frontend:
@@ -217,7 +277,9 @@ services:
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - AGENT_NAME=${AGENT_NAME:-nexus}
-      - AVATAR_STREAM_URL=${AVATAR_STREAM_URL:-}
+      # avatar-render comparte red con avatar-bridge (ver avatar-render/README.md), por
+      # eso el MJPEG se alcanza como avatar-bridge:8080, no avatar-render:8080.
+      - AVATAR_STREAM_SOURCE_URL=${AVATAR_STREAM_SOURCE_URL:-http://avatar-bridge:8080/stream}
       - AVATAR_BRIDGE_STATUS_URL=${AVATAR_BRIDGE_STATUS_URL:-http://avatar-bridge:8766/status}
       - AVATAR_BRIDGE_HINT_URL=${AVATAR_BRIDGE_HINT_URL:-http://avatar-bridge:8766/hint}
       - AVATAR_MUTE_AGENT_AUDIO=${AVATAR_MUTE_AGENT_AUDIO:-true}

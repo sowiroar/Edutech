@@ -1,15 +1,19 @@
 import { cn } from '@/lib/shadcn/utils';
 
 interface AvatarStageProps {
-  /** Página de Pixel Streaming del avatar de Unreal. */
+  /** /api/avatar/stream: MJPEG (multipart/x-mixed-replace) de avatar-render. */
   url: string;
   isChatOpen: boolean;
   className?: string;
 }
 
 /**
- * Muestra al avatar (NEXO) transmitido por Pixel Streaming. Unreal lo anima con la voz del
- * agente que esté hablando; con el chat abierto se reduce a una miniatura.
+ * Muestra al avatar (NEXO/Familia VIVA) vía MJPEG — reemplaza al Pixel Streaming de
+ * Unreal, que nunca llegó a verse en el navegador (ver avatar-render/README.md). Un
+ * <img> normal basta: multipart/x-mixed-replace es un formato que el navegador ya sabe
+ * mostrar como si fueran frames de video, sin códecs ni JS de por medio. Unreal anima al
+ * avatar con la voz del agente que esté hablando; con el chat abierto se reduce a una
+ * miniatura.
  */
 export function AvatarStage({ url, isChatOpen, className }: AvatarStageProps) {
   return (
@@ -20,12 +24,8 @@ export function AvatarStage({ url, isChatOpen, className }: AvatarStageProps) {
         className
       )}
     >
-      <iframe
-        src={url}
-        title="Avatar NEXO"
-        allow="autoplay; fullscreen"
-        className="size-full border-0"
-      />
+      {/* eslint-disable-next-line @next/next/no-img-element -- MJPEG no es un <Image> de next/image: es un stream infinito, no un archivo que optimizar. */}
+      <img src={url} alt="Avatar" className="size-full object-cover" />
     </div>
   );
 }

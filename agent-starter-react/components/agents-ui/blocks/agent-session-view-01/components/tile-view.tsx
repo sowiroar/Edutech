@@ -127,7 +127,7 @@ export function TileLayout({
           >
             <AnimatePresence mode="popLayout">
               {showUnrealAvatar && (
-                // Avatar de Unreal (NEXO) por Pixel Streaming
+                // Avatar de Unreal (NEXO/Familia VIVA) por MJPEG (avatar-render)
                 <motion.div
                   key="unreal-avatar"
                   layoutId="unreal-avatar"
