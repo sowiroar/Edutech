@@ -23,6 +23,7 @@ TICK = 0.02
 PRIME_SAMPLES = 1920
 STALL_SECONDS = 5.0
 VALID_STATES = vva1.VALID_STATES
+VALID_CHARACTERS = vva1.VALID_CHARACTERS
 
 
 class FakeUnreal:
@@ -31,6 +32,7 @@ class FakeUnreal:
         self.play_speed = play_speed  # 1.0 = tiempo real
         self.violations: list[str] = []
         self.states: list[str] = []
+        self.characters: list[str] = []
         self.finished: list[tuple[uuid.UUID, int]] = []
         self.cleared: list[uuid.UUID] = []
         self.audio: dict[uuid.UUID, bytearray] = {}
@@ -156,6 +158,11 @@ class FakeUnreal:
                 return await self._fail("Invalid state")
             if obj["state"] != "speaking":
                 self.states.append(obj["state"])
+            return
+        if kind == "character_changed":
+            if obj.get("name") not in VALID_CHARACTERS:
+                return await self._fail("Invalid character")
+            self.characters.append(obj["name"])
             return
         try:
             utterance = uuid.UUID(obj["utterance_id"])

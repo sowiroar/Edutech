@@ -22,6 +22,25 @@ def test_agent_voices_and_initialization():
     assert elian.llm._opts.voice == "Kore"
 
 
+def test_agent_avatar_character_mapping():
+    """Verifica el personaje de la Familia VIVA (Fase 2) asociado a cada
+    agente: Lira->LIRA y Elian->ELIAN coinciden por nombre; Nexus->NEXO
+    (no ATLAS) porque NEXO es el único con animación de habla verificada
+    (ver Avatar/FAMILIA_VIVA.md)."""
+    assert LiraAgent().AVATAR_CHARACTER == "LIRA"
+    assert NexusAgent().AVATAR_CHARACTER == "NEXO"
+    assert ElianAgent().AVATAR_CHARACTER == "ELIAN"
+
+
+@pytest.mark.asyncio
+async def test_anunciar_personaje_avatar_is_a_safe_noop_without_a_session():
+    """Fuera de una sesión real (como en estas pruebas), self.session no
+    existe: anunciar_personaje_avatar debe tragarse eso sin lanzar, igual
+    que ya hace emitir_datos_frontend."""
+    lira = LiraAgent()
+    await lira.anunciar_personaje_avatar()  # no debe lanzar excepción
+
+
 def test_lira_handoff_tools_registered():
     """Verifica que Lira exponga las herramientas de enrutamiento a Nexus y Elian."""
     lira = LiraAgent()

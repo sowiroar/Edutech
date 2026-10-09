@@ -125,6 +125,33 @@ async def test_agent_state_forwarded_and_deferred_while_speaking(stack):
     await fake.stop()
 
 
+async def test_agent_character_forwarded_and_deferred_while_speaking(stack):
+    bridge, url = stack
+    fake = await connect_unreal(bridge, url, play_speed=1.0)
+    await bridge.on_agent_character("LIRA")
+    await fake.wait_for(lambda: fake.characters == ["LIRA"])
+    for frame in tone_frames(0.5):
+        await bridge.on_frame(frame)
+    await bridge.on_agent_character("ELIAN")  # el enunciado de LIRA aun suena
+    await asyncio.sleep(0.1)
+    assert fake.characters == ["LIRA"]  # se difiere: no cambia a media frase
+    await asyncio.sleep(0.25)
+    await bridge.on_tick()
+    await fake.wait_for(lambda: fake.characters == ["LIRA", "ELIAN"])
+    assert fake.violations == []
+    await fake.stop()
+
+
+async def test_unknown_agent_character_is_ignored(stack):
+    bridge, url = stack
+    fake = await connect_unreal(bridge, url)
+    await bridge.on_agent_character("SKYNET")
+    await asyncio.sleep(0.1)
+    assert fake.characters == []
+    assert fake.violations == []  # nunca llego a Unreal: no hay como violar el protocolo
+    await fake.stop()
+
+
 async def test_cancel_clears_playback_and_allows_next_utterance(stack):
     bridge, url = stack
     fake = await connect_unreal(bridge, url, play_speed=1.0)

@@ -67,6 +67,7 @@ def test_control_envelopes():
     for text, kind in [
         (vva1.ready(SESSION), "ready"),
         (vva1.state_changed(SESSION, "listening"), "state_changed"),
+        (vva1.character_changed(SESSION, "LIRA"), "character_changed"),
         (vva1.audio_start(SESSION, UTTERANCE), "audio_start"),
         (vva1.audio_end(SESSION, UTTERANCE, 4800), "audio_end"),
         (vva1.cancel(SESSION, UTTERANCE), "cancel"),
@@ -87,3 +88,18 @@ def test_control_envelopes():
 def test_state_changed_rejects_unknown_state():
     with pytest.raises(ValueError):
         vva1.state_changed(SESSION, "dancing")
+
+
+def test_character_changed_envelope():
+    message = json.loads(vva1.character_changed(SESSION, "ELIAN"))
+    assert message["name"] == "ELIAN"
+
+
+@pytest.mark.parametrize("name", vva1.VALID_CHARACTERS)
+def test_character_changed_accepts_every_known_character(name):
+    assert json.loads(vva1.character_changed(SESSION, name))["name"] == name
+
+
+def test_character_changed_rejects_unknown_character():
+    with pytest.raises(ValueError):
+        vva1.character_changed(SESSION, "SKYNET")

@@ -122,6 +122,38 @@ def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
 class BaseEducationalAgent(Agent):
     """Clase base para agentes que registra y consulta memoria persistente de usuario vía Mem0."""
 
+    # Fase 2 de la integración Familia VIVA (2026-10-09): qué personaje
+    # visual del avatar (Avatar/Content/UniversityVirtualAssistant/
+    # FamiliaVIVA) debe mostrarse/hablar mientras este agente está activo.
+    # Cada subclase lo sobreescribe; None = no anunciar ningún cambio
+    # (agentes que no tienen avatar asociado, p.ej. en pruebas).
+    # NEXO es el personaje original, el único con animación de habla ya
+    # verificada en vivo; ATLAS/LIRA/ELIAN/NOA son los nuevos — ver
+    # Avatar/FAMILIA_VIVA.md ("Voz y lip sync no se probaron en esta
+    # entrega visual"). Nexus se mapea a NEXO (no a ATLAS) por eso mismo.
+    AVATAR_CHARACTER: str | None = None
+
+    async def anunciar_personaje_avatar(self) -> None:
+        """Avisa al avatar-bridge (vía atributo de participante de LiveKit)
+        qué personaje debe mostrarse/hablar ahora. Si no hay sesión real
+        (pruebas unitarias) o AVATAR_CHARACTER es None, no hace nada."""
+        if not self.AVATAR_CHARACTER:
+            return
+        try:
+            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+                room = getattr(self.session.room_io, "room", None)
+                if room and hasattr(room, "local_participant") and room.local_participant:
+                    room.local_participant.set_attributes(
+                        {"avatar.character": self.AVATAR_CHARACTER}
+                    )
+                    logger.info(
+                        "Personaje de avatar anunciado: %s", self.AVATAR_CHARACTER
+                    )
+        except Exception:
+            logger.debug(
+                "No se pudo anunciar el personaje de avatar (sala no vinculada o cliente desconectado)"
+            )
+
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
     ) -> None:
@@ -251,6 +283,8 @@ class LiraAgent(BaseEducationalAgent):
     Voz: Aoede (Femenina natural bilingüe).
     """
 
+    AVATAR_CHARACTER = "LIRA"
+
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
             llm=get_realtime_model("Aoede"),
@@ -276,6 +310,7 @@ class LiraAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Saludo inicial breve de bienvenida."""
+        await self.anunciar_personaje_avatar()
         await self.generar_respuesta_confiable(
             "Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
         )
@@ -304,6 +339,10 @@ class NexusAgent(BaseEducationalAgent):
     """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning.
     Voz: em_alex (Español masculina).
     """
+
+    # NEXO (no ATLAS): es el personaje original de la Familia VIVA, el
+    # único con animación de habla ya verificada en vivo.
+    AVATAR_CHARACTER = "NEXO"
 
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
@@ -338,6 +377,7 @@ class NexusAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Se presenta como Nexus y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
+        await self.anunciar_personaje_avatar()
         await self.generar_respuesta_confiable(
             "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
             "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
@@ -417,6 +457,8 @@ class ElianAgent(BaseEducationalAgent):
     Voz: em_santa (Español masculina formal).
     """
 
+    AVATAR_CHARACTER = "ELIAN"
+
     def __init__(self, chat_ctx: ChatContext | None = None) -> None:
         super().__init__(
             llm=get_realtime_model("Kore"),
@@ -455,6 +497,7 @@ class ElianAgent(BaseEducationalAgent):
 
     async def on_enter(self) -> None:
         """Se presenta como Elian y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
+        await self.anunciar_personaje_avatar()
         await self.generar_respuesta_confiable(
             "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
             "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "

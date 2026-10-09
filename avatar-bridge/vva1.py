@@ -3,7 +3,9 @@
 Portado de `Plugins/VivaAvatar/Source/VivaAvatar/Private/VivaAvatarReceiver.cpp`:
 
 * Mensajes de control: texto JSON (<= 4096 caracteres) con `version` = 1 y el
-  `session_id` del saludo `ready`.
+  `session_id` del saludo `ready`. `character_changed` es la extension de la
+  Fase 2 (integracion voz -> avatar, 2026-10-09): indica que personaje de la
+  Familia VIVA debe mostrarse/hablar.
 * Audio: tramos binarios con cabecera de 44 bytes
   ``b"VVA1" | session(16) | utterance(16) | offset_en_muestras(u64 BE)``
   seguida de PCM s16le, 48 kHz, mono.
@@ -43,6 +45,13 @@ VALID_STATES = frozenset(
         "escalating",
     }
 )
+
+# Personajes de la Familia VIVA que el receptor sabe mostrar/ocultar (Fase 2:
+# integracion voz -> avatar, 2026-10-09). NEXO es el original, ya con
+# animacion de habla verificada; ATLAS, LIRA, ELIAN y NOA son los nuevos
+# (ver Avatar/FAMILIA_VIVA.md). El nombre viaja tal cual como Tag del actor
+# en el mapa de Unreal: debe coincidir exactamente.
+VALID_CHARACTERS = frozenset({"NEXO", "ATLAS", "LIRA", "ELIAN", "NOA"})
 
 
 def encode_audio_packet(
@@ -103,6 +112,18 @@ def state_changed(session: uuid.UUID, state: str) -> str:
     if state not in VALID_STATES:
         raise ValueError(f"estado invalido: {state}")
     return _control("state_changed", session, state=state)
+
+
+def character_changed(session: uuid.UUID, name: str) -> str:
+    """Le dice a Unreal cual personaje de la Familia VIVA debe mostrar/hablar.
+
+    El receptor lo aplica solo en reposo (como `state_changed`): si hay un
+    enunciado en curso, Unreal lo difiere hasta que termine, para no cambiar
+    de cara a media frase.
+    """
+    if name not in VALID_CHARACTERS:
+        raise ValueError(f"personaje invalido: {name}")
+    return _control("character_changed", session, name=name)
 
 
 def audio_start(session: uuid.UUID, utterance: uuid.UUID) -> str:

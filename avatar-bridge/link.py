@@ -44,6 +44,7 @@ class UnrealLink:
         self._idle.set()
         self._progress = asyncio.Event()
         self._deferred_state: str | None = None
+        self._deferred_character: str | None = None
         self._tasks: set[asyncio.Task[None]] = set()
 
     @property
@@ -94,15 +95,22 @@ class UnrealLink:
         self._utterance = None
         self._idle.set()
         self._progress.set()
-        if self._deferred_state is not None:
-            self._spawn(self._flush_state())
+        if self._deferred_state is not None or self._deferred_character is not None:
+            self._spawn(self._flush_deferred())
 
     def _spawn(self, coro) -> None:
         task = asyncio.create_task(coro)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
-    async def _flush_state(self) -> None:
+    async def _flush_deferred(self) -> None:
+        # El personaje se cambia antes del estado: si ambos quedaron en
+        # espera, Unreal debe terminar viendo la cara correcta ya puesta en
+        # su pose de reposo, no al reves.
+        name, self._deferred_character = self._deferred_character, None
+        if name is not None:
+            with contextlib.suppress(Exception):
+                await self.ws.send(vva1.character_changed(self.session, name))
         state, self._deferred_state = self._deferred_state, None
         if state is not None:
             with contextlib.suppress(Exception):
@@ -123,6 +131,18 @@ class UnrealLink:
             self._deferred_state = state
             return
         await self.ws.send(vva1.state_changed(self.session, state))
+
+    async def set_character(self, name: str) -> None:
+        """Cambia que personaje de la Familia VIVA se muestra/habla.
+
+        Igual que `set_state`: si Unreal todavia esta reproduciendo el
+        enunciado anterior, se difiere hasta que termine (no tiene sentido
+        cambiar de cara a mitad de una frase ya en curso).
+        """
+        if self.active:
+            self._deferred_character = name
+            return
+        await self.ws.send(vva1.character_changed(self.session, name))
 
     async def open_utterance(self) -> None:
         try:

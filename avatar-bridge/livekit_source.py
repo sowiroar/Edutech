@@ -21,6 +21,10 @@ logger = logging.getLogger("avatar-bridge.livekit")
 
 BRIDGE_IDENTITY = "avatar-bridge"
 ATTRIBUTE_AGENT_STATE = "lk.agent.state"
+# Fase 2 (integracion voz -> avatar, 2026-10-09): el agente (agent.py) pone
+# este atributo al entrar cada personaje (Lira/Nexus/Elian) para indicar cual
+# cara de la Familia VIVA debe mostrarse/hablar en Unreal.
+ATTRIBUTE_CHARACTER = "avatar.character"
 AGENT = rtc.ParticipantKind.PARTICIPANT_KIND_AGENT
 STANDARD = rtc.ParticipantKind.PARTICIPANT_KIND_STANDARD
 
@@ -164,6 +168,7 @@ class RoomFollower:
         for participant in room.remote_participants.values():
             if participant.kind == AGENT:
                 self._forward_state(participant)
+                self._forward_character(participant)
 
     async def _leave(self) -> None:
         room, self._room = self._room, None
@@ -202,6 +207,7 @@ class RoomFollower:
             return
         logger.info("Audio del agente %s suscrito", participant.identity)
         self._forward_state(participant)
+        self._forward_character(participant)
         self._readers[track.sid] = asyncio.create_task(self._read_audio(track))
 
     def _on_track_unsubscribed(
@@ -217,13 +223,22 @@ class RoomFollower:
     def _on_attributes_changed(
         self, changed: dict[str, str], participant: rtc.Participant
     ) -> None:
-        if participant.kind == AGENT and ATTRIBUTE_AGENT_STATE in changed:
+        if participant.kind != AGENT:
+            return
+        if ATTRIBUTE_AGENT_STATE in changed:
             self._forward_state(participant)
+        if ATTRIBUTE_CHARACTER in changed:
+            self._forward_character(participant)
 
     def _forward_state(self, participant: rtc.Participant) -> None:
         state = participant.attributes.get(ATTRIBUTE_AGENT_STATE)
         if state:
             self._spawn(self._bridge.on_agent_state(state))
+
+    def _forward_character(self, participant: rtc.Participant) -> None:
+        name = participant.attributes.get(ATTRIBUTE_CHARACTER)
+        if name:
+            self._spawn(self._bridge.on_agent_character(name))
 
     async def _read_audio(self, track: rtc.Track) -> None:
         stream = rtc.AudioStream(

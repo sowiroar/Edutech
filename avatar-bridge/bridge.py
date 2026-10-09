@@ -11,6 +11,7 @@ from websockets.exceptions import ConnectionClosed
 
 from link import UnrealLink
 from segmenter import End, Pcm, Segmenter, Start
+from vva1 import VALID_CHARACTERS
 
 logger = logging.getLogger("avatar-bridge")
 
@@ -67,6 +68,21 @@ class Bridge:
             return
         try:
             await link.set_state(avatar_state)
+        except ConnectionClosed:
+            self.detach(link)
+
+    async def on_agent_character(self, name: str) -> None:
+        """Personaje de la Familia VIVA (atributo `avatar.character` del
+        agente en LiveKit). Un nombre fuera de VALID_CHARACTERS se ignora en
+        vez de romper el puente: podria venir de un agente mas nuevo con un
+        personaje que este puente todavia no conoce."""
+        link = self.link
+        if name not in VALID_CHARACTERS or link is None:
+            if name not in VALID_CHARACTERS:
+                logger.warning("Personaje de avatar desconocido: %s", name)
+            return
+        try:
+            await link.set_character(name)
         except ConnectionClosed:
             self.detach(link)
 
