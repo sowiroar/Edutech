@@ -63,6 +63,15 @@ export async function POST(req: Request) {
       roomConfig
     );
 
+    // Avisa al puente del avatar que hay una sala nueva, para que se una de
+    // inmediato en vez de esperar a su siguiente poll (ver RoomFollower.hint
+    // en avatar-bridge/livekit_source.py). Si el puente no está disponible o
+    // tarda, no debe frenar el inicio de la llamada: se limita el tiempo de
+    // espera (300ms) y cualquier error se ignora en silencio. Se espera
+    // (await) porque en Next.js una promesa sin await puede quedar cortada
+    // apenas la función retorna la respuesta (Claude, 2026-09-29).
+    await hintAvatarBridge();
+
     // Return connection details
     const data: ConnectionDetails = {
       serverUrl: LIVEKIT_URL,
@@ -79,6 +88,20 @@ export async function POST(req: Request) {
       console.error(error);
       return new NextResponse(error.message, { status: 500 });
     }
+  }
+}
+
+async function hintAvatarBridge(): Promise<void> {
+  const hintUrl = process.env.AVATAR_BRIDGE_HINT_URL || 'http://avatar-bridge:8766/hint';
+  try {
+    // GET, no POST: el servidor websockets de Python (avatar-bridge) solo
+    // acepta GET en su gancho process_request (rechaza cualquier otro
+    // método antes de que nuestro código lo vea).
+    await fetch(hintUrl, { method: 'GET', signal: AbortSignal.timeout(300) });
+  } catch {
+    // El avatar es opcional: si el puente no responde a tiempo o no está
+    // levantado, la llamada sigue igual (el puente cae de vuelta a su poll
+    // de respaldo).
   }
 }
 

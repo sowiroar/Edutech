@@ -187,3 +187,27 @@ def formatear_resultados(resultados: list[Resultado], max_caracteres: int = 700)
                 texto = texto[:max_caracteres].rsplit(" ", 1)[0] + "..."
             partes.append(f"{encabezado} {texto}")
     return "\n".join(partes)
+
+
+def listar_documentos_oficiales(ruta_db: str | Path | None = None) -> list[dict[str, str]]:
+    """Devuelve la lista completa de documentos y guías oficiales registrados en la base de datos."""
+    ruta = Path(ruta_db or KNOWLEDGE_DB).resolve()
+    if not ruta.is_file():
+        return []
+
+    conexion = sqlite3.connect(f"{ruta.as_uri()}?mode=ro", uri=True)
+    try:
+        filas = conexion.execute(
+            "SELECT DISTINCT titulo, fuente, categoria, url FROM fragmentos ORDER BY fuente, titulo"
+        ).fetchall()
+        return [
+            {
+                "titulo": titulo,
+                "fuente": fuente,
+                "categoria": categoria or "",
+                "url": url or "",
+            }
+            for titulo, fuente, categoria, url in filas
+        ]
+    finally:
+        conexion.close()
