@@ -19,7 +19,7 @@ histórico de `feature/avatar-bridge` con la integración actual.
 
 El pin de partida es `156d2d8190bedb2e58fa66671bf6a31d161e192c`, la versión de
 Santiago con familia VIVA y selección de personaje. La rama de diseño conserva
-ese commit como ancestro; no elimina sus avances. La revisión candidata es **92869b31e6d8fce835d0e2bd961f94e4cd770a24**; el
+ese commit como ancestro; no elimina sus avances. La revisión candidata es **30a29f7836053bb466ca6d8a1f4058acccb8d3bf**; el
 gitlink solo se actualiza después de confirmar que existe en el remoto Avatar. No usar el nombre de una rama móvil para identificar una entrega.
 
 Para revisar el pin sin descargar los assets:
@@ -162,3 +162,13 @@ y perfil Mac studio. La licencia del recurso está en `Avatar/THIRD_PARTY.md`.
 Dos ciclos WAV completos y cancelación pasaron tras el ajuste. En el Editor Mac,
 la comparación final registró 9585,30 MB standard y 9035,35 MB studio; el pico no
 se redujo. Esto no mide el servidor ni hace definitiva la candidata estética.
+
+## Actualización autorizada de main y base compartida
+
+Avatar PR #1 ya se fusionó en main, revisión `30a29f7`; este pin incluye también
+CI de PRs, 25 pruebas y flujo de nuevas features desde main. Los nuevos
+workflows de Avatar no despliegan UAM. Protección main requiere al propietario.
+Continuar agentes/frontend sobre `feature/gemini-live-api+MVP`; ver
+[SINCRONIZAR_TRABAJO_UAM.md](SINCRONIZAR_TRABAJO_UAM.md) para conservar primero
+los cambios que Jacobo reportó solo en el servidor. El CI del agente tiene
+fallos preexistentes documentados allí; este pin no los corrige ni los oculta.
