@@ -12,8 +12,8 @@ interface SpeakingAnimationProps {
 }
 
 // NEXO = Nexus (especialización en IA) -> verde agua. ELIAN = Elian (administrativo
-// UAM) -> azul/amarillo degradado. LIRA (recepción) y cualquier otro caso usan el color
-// por defecto — no se pidió un color propio para ella.
+// UAM) -> naranja (antes azul/amarillo degradado, corregido 2026-10-16). LIRA
+// (recepción) y cualquier otro caso usan el color por defecto — no se pidió uno propio.
 const SOURCE_BY_CHARACTER: Record<string, string> = {
   NEXO: '/animaciones-viva/viva-uam-voz-nexus.mp4',
   ELIAN: '/animaciones-viva/viva-uam-voz-elian.mp4',
