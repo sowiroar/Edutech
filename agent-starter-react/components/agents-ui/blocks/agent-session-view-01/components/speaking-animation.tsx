@@ -17,6 +17,14 @@ interface SpeakingAnimationProps {
  *
  * - Hablando: en loop (el clip dura 4s, menos que la mayoría de locuciones).
  * - En espera (idle/listening/thinking): en pausa, congelado en el frame donde se quedó.
+ *
+ * El archivo original (viva_uam_voz_transparente.webm) traía el fondo negro quemado en
+ * los píxeles, pese al nombre — no tenía canal alfa de verdad (yuv420p, confirmado con
+ * ffprobe). Se recodificó quitando ese negro por color-key y componiendo sobre blanco
+ * sólido (2026-10-16), en vez de depender de alfa real en WebM/VP9: evita cualquier duda
+ * de soporte de navegador y es lo que se pidió ("que el fondo sea blanco"), no
+ * transparencia. El fondo del contenedor de abajo también es blanco, por si el video no
+ * llena el recuadro entero (framing distinto a su aspect ratio).
  */
 export function SpeakingAnimation({ isSpeaking, isChatOpen, className }: SpeakingAnimationProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,7 +45,7 @@ export function SpeakingAnimation({ isSpeaking, isChatOpen, className }: Speakin
   return (
     <div
       className={cn(
-        'pointer-events-auto overflow-hidden rounded-xl bg-black drop-shadow-xl/80',
+        'pointer-events-auto overflow-hidden rounded-xl bg-white drop-shadow-xl/80',
         isChatOpen ? 'h-[120px] w-[213px]' : 'aspect-video w-[min(100vw-2rem,42rem)]',
         className
       )}
