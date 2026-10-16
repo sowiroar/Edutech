@@ -1,19 +1,39 @@
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/shadcn/utils';
 
 interface SpeakingAnimationProps {
+  /** true: reproduce en loop (el agente está hablando). false: en pausa (en espera). */
+  isSpeaking: boolean;
   isChatOpen: boolean;
   className?: string;
 }
 
 /**
- * Animación obligatoria mientras el agente está hablando (estado "speaking" de
- * useVoiceAssistant), sin importar cuál agente sea ni si hay avatar de Unreal
- * conectado: reemplaza a cualquiera de los dos (ver tile-view.tsx, que la hace
- * mutuamente excluyente con "Avatar de Unreal", "Audio Agent" y "Avatar Agent").
- * Clip corto (4s, sin audio) en loop — dura lo que dure la locución real, que
- * casi nunca coincide con esos 4s.
+ * Visual obligatorio del agente — reemplaza por completo al avatar de Unreal, al
+ * visualizador de audio y al video de agente que había antes (ver tile-view.tsx): un
+ * único <video>, siempre montado, que solo cambia entre reproducir y pausar. Nunca se
+ * desmonta entre estados: así no hay que recargar el archivo ni se nota un salto al
+ * cambiar, solo play()/pause() sobre el mismo elemento.
+ *
+ * - Hablando: en loop (el clip dura 4s, menos que la mayoría de locuciones).
+ * - En espera (idle/listening/thinking): en pausa, congelado en el frame donde se quedó.
  */
-export function SpeakingAnimation({ isChatOpen, className }: SpeakingAnimationProps) {
+export function SpeakingAnimation({ isSpeaking, isChatOpen, className }: SpeakingAnimationProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isSpeaking) {
+      // play() devuelve una promesa que puede rechazarse (p.ej. autoplay bloqueado
+      // antes de cualquier interacción del usuario); no hay nada más que hacer si
+      // falla, así que se ignora en vez de dejar un rechazo sin atrapar.
+      void video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isSpeaking]);
+
   return (
     <div
       className={cn(
@@ -23,8 +43,8 @@ export function SpeakingAnimation({ isChatOpen, className }: SpeakingAnimationPr
       )}
     >
       <video
+        ref={videoRef}
         src="/animaciones-viva/viva-uam-voz.webm"
-        autoPlay
         loop
         muted
         playsInline
