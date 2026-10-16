@@ -12,19 +12,19 @@ interface SpeakingAnimationProps {
 }
 
 // NEXO = Nexus (especialización en IA) -> verde agua. ELIAN = Elian (administrativo
-// UAM) -> naranja (antes azul/amarillo degradado, corregido 2026-10-16). LIRA
-// (recepción) y cualquier otro caso usan el color por defecto — no se pidió uno propio.
+// UAM) -> naranja. LIRA (recepción) y cualquier otro caso usan el color por defecto —
+// no se pidió uno propio.
 //
-// El nombre del archivo de Elian lleva el color (viva-uam-voz-elian-naranja.mp4, no
-// solo "...-elian.mp4"): cuando cambió de azul/amarillo a naranja manteniendo el mismo
-// nombre, el navegador siguió sirviendo el video viejo desde su caché — el <video> ya
-// tenía esa URL cargada, y un Cache-Control normal (max-age=0, revalida con ETag) no
-// evita que el caché de medios de algunos navegadores reuse el recurso dentro de la
-// misma pestaña sin pedirlo de nuevo. Cambiar el nombre del archivo cuando cambia el
-// contenido es la forma confiable de evitarlo (Claude, 2026-10-16).
+// El sufijo -v2 (2026-10-16): el contenido de estos dos se re-encodó para que tuvieran
+// el mismo encuadre 1000x562 que viva-uam-voz.mp4 (las fuentes originales venían casi
+// cuadradas, ~960x754 — con object-cover eso se ve "ampliado" frente al video por
+// defecto, que sí es panorámico). Cambiar el nombre del archivo al cambiar el contenido
+// es necesario, no cosmético: ya pasó una vez (ver historial) que mantener el mismo
+// nombre dejaba el navegador sirviendo el contenido viejo desde su caché de medios, sin
+// que un Cache-Control normal (max-age=0 + ETag) lo evitara dentro de la misma pestaña.
 const SOURCE_BY_CHARACTER: Record<string, string> = {
-  NEXO: '/animaciones-viva/viva-uam-voz-nexus.mp4',
-  ELIAN: '/animaciones-viva/viva-uam-voz-elian-naranja.mp4',
+  NEXO: '/animaciones-viva/viva-uam-voz-nexus-v2.mp4',
+  ELIAN: '/animaciones-viva/viva-uam-voz-elian-naranja-v2.mp4',
 };
 const DEFAULT_SOURCE = '/animaciones-viva/viva-uam-voz.mp4';
 
