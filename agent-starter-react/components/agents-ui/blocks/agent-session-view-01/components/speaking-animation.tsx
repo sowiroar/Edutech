@@ -14,9 +14,17 @@ interface SpeakingAnimationProps {
 // NEXO = Nexus (especialización en IA) -> verde agua. ELIAN = Elian (administrativo
 // UAM) -> naranja (antes azul/amarillo degradado, corregido 2026-10-16). LIRA
 // (recepción) y cualquier otro caso usan el color por defecto — no se pidió uno propio.
+//
+// El nombre del archivo de Elian lleva el color (viva-uam-voz-elian-naranja.mp4, no
+// solo "...-elian.mp4"): cuando cambió de azul/amarillo a naranja manteniendo el mismo
+// nombre, el navegador siguió sirviendo el video viejo desde su caché — el <video> ya
+// tenía esa URL cargada, y un Cache-Control normal (max-age=0, revalida con ETag) no
+// evita que el caché de medios de algunos navegadores reuse el recurso dentro de la
+// misma pestaña sin pedirlo de nuevo. Cambiar el nombre del archivo cuando cambia el
+// contenido es la forma confiable de evitarlo (Claude, 2026-10-16).
 const SOURCE_BY_CHARACTER: Record<string, string> = {
   NEXO: '/animaciones-viva/viva-uam-voz-nexus.mp4',
-  ELIAN: '/animaciones-viva/viva-uam-voz-elian.mp4',
+  ELIAN: '/animaciones-viva/viva-uam-voz-elian-naranja.mp4',
 };
 const DEFAULT_SOURCE = '/animaciones-viva/viva-uam-voz.mp4';
 
