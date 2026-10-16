@@ -94,7 +94,11 @@ export function TileLayout({
   audioVisualizerGridColumnCount,
   audioVisualizerWaveLineWidth,
 }: TileLayoutProps) {
-  const { state: agentState } = useVoiceAssistant();
+  const { state: agentState, agentAttributes } = useVoiceAssistant();
+  // Personaje activo (NEXO/LIRA/ELIAN), el mismo atributo que agent.py pone en
+  // anunciar_personaje_avatar() (Fase 2) para el avatar de Unreal — se reutiliza aquí
+  // para elegir el color de animaciones_viva, sin inventar una señal nueva.
+  const character = agentAttributes?.['avatar.character'];
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -136,7 +140,11 @@ export function TileLayout({
                   delay: animationDelay,
                 }}
               >
-                <SpeakingAnimation isSpeaking={isSpeaking} isChatOpen={isChatOpen} />
+                <SpeakingAnimation
+                  isSpeaking={isSpeaking}
+                  isChatOpen={isChatOpen}
+                  character={character}
+                />
               </motion.div>
             </AnimatePresence>
           </div>

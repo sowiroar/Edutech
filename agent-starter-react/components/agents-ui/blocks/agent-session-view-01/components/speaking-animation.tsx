@@ -5,8 +5,20 @@ interface SpeakingAnimationProps {
   /** true: reproduce en loop (el agente está hablando). false: en pausa (en espera). */
   isSpeaking: boolean;
   isChatOpen: boolean;
+  /** Personaje activo (atributo `avatar.character` del agente: NEXO/LIRA/ELIAN, ver
+   * agent.py). Elige el color del clip; cualquier otro valor usa el por defecto. */
+  character?: string;
   className?: string;
 }
+
+// NEXO = Nexus (especialización en IA) -> verde agua. ELIAN = Elian (administrativo
+// UAM) -> azul/amarillo degradado. LIRA (recepción) y cualquier otro caso usan el color
+// por defecto — no se pidió un color propio para ella.
+const SOURCE_BY_CHARACTER: Record<string, string> = {
+  NEXO: '/animaciones-viva/viva-uam-voz-nexus.mp4',
+  ELIAN: '/animaciones-viva/viva-uam-voz-elian.mp4',
+};
+const DEFAULT_SOURCE = '/animaciones-viva/viva-uam-voz.mp4';
 
 /**
  * Visual obligatorio del agente — reemplaza por completo al avatar de Unreal, al
@@ -15,18 +27,40 @@ interface SpeakingAnimationProps {
  * desmonta entre estados: así no hay que recargar el archivo ni se nota un salto al
  * cambiar, solo play()/pause() sobre el mismo elemento.
  *
- * - Hablando: en loop (el clip dura 4s, menos que la mayoría de locuciones).
+ * - Hablando: en loop (los clips duran 4-12s, menos que la mayoría de locuciones).
  * - En espera (idle/listening/thinking): en pausa, congelado en el frame donde se quedó.
  *
- * viva-uam-voz.mp4 (de animaciones viva/viva_uam_voz.mp4, 2026-10-16) ya trae fondo
- * blanco de origen, sin el recorte de color que hizo falta con la versión anterior
- * (viva_uam_voz_transparente.webm, que pese al nombre no tenía canal alfa real). H264/MP4
- * en vez de VP9/WebM: incluso más compatible entre navegadores, y no hace falta alfa
- * aquí. El fondo blanco del contenedor de abajo se deja de todos modos, por si el video
- * no llena el recuadro entero (framing distinto a su aspect ratio).
+ * Al cambiar de personaje (Lira transfiere a Nexus/Elian) sí hay que recargar el
+ * elemento: es un archivo distinto, no algo que resuelva play()/pause(). Queda pausado
+ * en el frame 0 del clip nuevo hasta que vuelva a hablar — más simple que guardar la
+ * posición exacta de cada clip, y no es perceptible porque el cambio de personaje real
+ * casi siempre coincide con el agente nuevo presentándose (isSpeaking pasa a true casi
+ * enseguida).
  */
-export function SpeakingAnimation({ isSpeaking, isChatOpen, className }: SpeakingAnimationProps) {
+export function SpeakingAnimation({
+  isSpeaking,
+  isChatOpen,
+  character,
+  className,
+}: SpeakingAnimationProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const src = (character && SOURCE_BY_CHARACTER[character]) || DEFAULT_SOURCE;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    // load() relee el src actual del elemento (ya actualizado por React antes de este
+    // efecto) y dispara la recarga; sin esto, algunos navegadores no refrescan el frame
+    // mostrado hasta el próximo play().
+    video.load();
+    if (isSpeaking) {
+      void video.play().catch(() => {});
+    }
+    // isSpeaking también en las dependencias: si cambia mientras el src es el mismo
+    // (el caso normal, hablando <-> en espera del mismo personaje) no hace falta
+    // recargar el archivo, solo play()/pause() — ver el efecto de abajo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -49,14 +83,7 @@ export function SpeakingAnimation({ isSpeaking, isChatOpen, className }: Speakin
         className
       )}
     >
-      <video
-        ref={videoRef}
-        src="/animaciones-viva/viva-uam-voz.mp4"
-        loop
-        muted
-        playsInline
-        className="size-full object-cover"
-      />
+      <video ref={videoRef} src={src} loop muted playsInline className="size-full object-cover" />
     </div>
   );
 }
