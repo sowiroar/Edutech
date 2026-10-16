@@ -79,7 +79,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 className="hidden size-6 dark:block"
               />
             </a>
-            <span className="text-foreground font-mono text-xs font-bold tracking-wider uppercase">
+            <span className="font-mono text-xs font-bold tracking-wider text-white uppercase">
               Built with{' '}
               <a
                 target="_blank"
