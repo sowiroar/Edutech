@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import pytest
 from livekit.agents import ChatContext
 
@@ -39,6 +42,34 @@ async def test_anunciar_personaje_avatar_is_a_safe_noop_without_a_session():
     que ya hace emitir_datos_frontend."""
     lira = LiraAgent()
     await lira.anunciar_personaje_avatar()  # no debe lanzar excepción
+
+
+@pytest.mark.asyncio
+async def test_anunciar_personaje_avatar_awaits_set_attributes(monkeypatch):
+    """Regresión de un bug real (2026-10-16): set_attributes() del SDK de LiveKit es
+    `async def` (confirmado leyendo su código fuente, no solo su firma —
+    inspect.signature() no marca async). La llamada original no tenía `await`: la
+    corrutina se creaba y se descartaba sin ejecutarse nunca, así que
+    'avatar.character' jamás salía hacia LiveKit pese al log de "anunciado" (que solo
+    confirma que se llegó a esa línea, no que el envío ocurrió). Por eso el video de
+    animaciones_viva en el frontend nunca cambiaba de personaje.
+
+    AsyncMock().assert_awaited_once_with(...) es justo la aserción que distingue
+    "se llamó" de "se esperó": si se vuelve a quitar el await, call_count sigue en 1
+    pero await_count queda en 0, y esta prueba falla donde `pytest tests/` ya pasaba
+    con el bug presente (nunca lanzaba excepción, por eso no se notó antes)."""
+    nexus = NexusAgent()
+    set_attributes = AsyncMock()
+    fake_session = SimpleNamespace(
+        room_io=SimpleNamespace(
+            room=SimpleNamespace(local_participant=SimpleNamespace(set_attributes=set_attributes))
+        )
+    )
+    monkeypatch.setattr(NexusAgent, "session", property(lambda self: fake_session))
+
+    await nexus.anunciar_personaje_avatar()
+
+    set_attributes.assert_awaited_once_with({"avatar.character": "NEXO"})
 
 
 def test_lira_handoff_tools_registered():

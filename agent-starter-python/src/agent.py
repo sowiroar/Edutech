@@ -143,7 +143,14 @@ class BaseEducationalAgent(Agent):
             if self.session and hasattr(self.session, "room_io") and self.session.room_io:
                 room = getattr(self.session.room_io, "room", None)
                 if room and hasattr(room, "local_participant") and room.local_participant:
-                    room.local_participant.set_attributes(
+                    # set_attributes() es async def en el SDK de LiveKit (confirmado leyendo
+                    # su código fuente en vivo: no se ve en inspect.signature(), que no marca
+                    # async). Sin este await, la llamada solo crea la corrutina y la descarta
+                    # sin ejecutarla — el atributo nunca salía hacia LiveKit, ni una vez,
+                    # desde que se escribió esto (bug real encontrado el 2026-10-16: el video
+                    # de animaciones_viva en el frontend nunca cambiaba de personaje porque
+                    # agentAttributes nunca traía 'avatar.character').
+                    await room.local_participant.set_attributes(
                         {"avatar.character": self.AVATAR_CHARACTER}
                     )
                     logger.info(
