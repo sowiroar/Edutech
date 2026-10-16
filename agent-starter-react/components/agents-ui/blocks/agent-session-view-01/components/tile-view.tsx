@@ -12,6 +12,7 @@ import { useAvatarStream } from '@/hooks/useAvatarStream';
 import { cn } from '@/lib/shadcn/utils';
 import { AudioVisualizer } from './audio-visualizer';
 import { AvatarStage } from './avatar-stage';
+import { SpeakingAnimation } from './speaking-animation';
 
 const ANIMATION_TRANSITION: MotionProps['transition'] = {
   type: 'spring',
@@ -96,7 +97,7 @@ export function TileLayout({
   audioVisualizerGridColumnCount,
   audioVisualizerWaveLineWidth,
 }: TileLayoutProps) {
-  const { videoTrack: agentVideoTrack } = useVoiceAssistant();
+  const { videoTrack: agentVideoTrack, state: agentState } = useVoiceAssistant();
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -106,6 +107,9 @@ export function TileLayout({
 
   const avatarStream = useAvatarStream();
   const showUnrealAvatar = avatarStream.videoUrl !== undefined;
+  // Obligatoria mientras el agente habla, sin importar cuál (Lira/Nexus/Elian) ni si hay
+  // avatar de Unreal: reemplaza a los tres estados de abajo, no se combina con ninguno.
+  const isSpeaking = agentState === 'speaking';
 
   const animationDelay = isChatOpen ? 0 : 0.15;
   const isAvatar = agentVideoTrack !== undefined && !showUnrealAvatar;
@@ -126,7 +130,24 @@ export function TileLayout({
             ])}
           >
             <AnimatePresence mode="popLayout">
-              {showUnrealAvatar && (
+              {isSpeaking && (
+                // Animación de voz (animaciones_viva): obligatoria mientras el agente
+                // habla, por encima de cualquiera de los otros tres estados.
+                <motion.div
+                  key="speaking-animation"
+                  layoutId="speaking-animation"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    ...ANIMATION_TRANSITION,
+                    delay: animationDelay,
+                  }}
+                >
+                  <SpeakingAnimation isChatOpen={isChatOpen} />
+                </motion.div>
+              )}
+
+              {!isSpeaking && showUnrealAvatar && (
                 // Avatar de Unreal (NEXO/Familia VIVA) por MJPEG (avatar-render)
                 <motion.div
                   key="unreal-avatar"
@@ -142,7 +163,7 @@ export function TileLayout({
                 </motion.div>
               )}
 
-              {!isAvatar && !showUnrealAvatar && (
+              {!isSpeaking && !isAvatar && !showUnrealAvatar && (
                 // Audio Agent
                 <motion.div
                   key="agent"
@@ -184,7 +205,7 @@ export function TileLayout({
                 </motion.div>
               )}
 
-              {isAvatar && (
+              {!isSpeaking && isAvatar && (
                 // Avatar Agent
                 <motion.div
                   key="avatar"
