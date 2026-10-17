@@ -22,7 +22,13 @@ Abrir http://localhost:3500 en el mismo equipo, conceder micrófono y comenzar.
 El modelo debe ser el ID habilitado de Jacobo/UAM o uno verificado para esta cuenta;
 no se considera válido un default solo porque figure en el repositorio.
 Gemini Live incluye audio; no necesita la GPU NVIDIA local para inferencia.
-La primera indexación/RAG puede tardar; revisar antes de mostrar la demo.
+La primera indexación/RAG puede superar diez minutos por extracción de PDFs.
+`rag-init` la prepara antes de iniciar el worker y persiste los índices. `up`
+espera su salida correcta; no detener/reiniciar repetidamente mientras prepara.
+`ps` debe mostrar rag-init `Exited (0)` y voice-agent activo antes de probar voz.
+Si rag-init falla, el worker no arranca: revisar el error de proveedor o permisos
+localmente y conservar volúmenes. No borrar índices ni omitir esta dependencia
+para aparentar éxito. En arranques posteriores carga los índices persistidos.
 
 Ver [CONFIGURACION.md](CONFIGURACION.md) para el inventario de variables y APIs.
 El portal permite usuario/contraseña opcionales en `.env.voice`; no copiar la
