@@ -51,3 +51,13 @@ La preparación inicial de RAG puede enviar documentos institucionales al provee
 Google y consume su API, según la implementación existente de Jacobo. Los índices
 se guardan en volúmenes locales y `down` los conserva. Consultar VALIDACION.md
 para separar resultados reales de servicios simplemente arrancados.
+
+## Preparación RAG antes del worker
+
+Se observó un timeout real a los 600 segundos del worker en la primera carga de
+51 PDFs, 19 escaneados; no había índice persistido y el worker repetía la extracción.
+El perfil local ahora prepara ambos índices en `rag-init`, con la misma imagen,
+modelos y funciones RAG existentes, y el worker depende de su salida correcta.
+Esto cambia el orden del arranque local, no los prompts ni el Compose de UAM.
+Referencia: [condiciones de arranque de Compose](https://docs.docker.com/compose/how-tos/startup-order).
+Una preparación completa no sustituye la evaluación de calidad de las respuestas.

@@ -79,3 +79,16 @@ El resultado de CI se consulta en PR Edutech #5, no se infiere de pruebas locale
 
 La prueba directa valida acceso al proveedor, no micrófono, conversación WebRTC,
 handoffs, respuesta fundamentada, memoria útil ni sincronía del avatar.
+
+## Fallo encontrado en el primer arranque con Google
+
+La precarga RAG superó el límite de inicialización de 600 segundos del worker.
+A las 23:05:53 UTC se cerró el proceso y comenzó a repetir OCR; se detuvo el agente
+local para cortar el ciclo. La primera prueba del saludo obtuvo token HTTP 200 y
+conexión RTC, pero cero audio y timeout: se conserva como fallo, no como aceptación.
+
+El perfil local incorpora ahora `rag-init`, ejecutado antes del worker mediante
+`service_completed_successfully`. Usa los dos constructores RAG originales y los
+mismos volúmenes. Si alguno devuelve None, termina con error y bloquea el worker.
+No cambia código del agente ni modelos. Revalidación nativa en curso; no inferir
+que un Compose válido demuestra arranque completo ni voz.

@@ -1,5 +1,28 @@
 # Desarrollo local de voz. No combinar con docker-compose.yml mediante -f.
 # Mantiene el código de Jacobo; no inicia CUDA, Unreal ni el puente de avatar.
+x-agent-runtime: &agent-runtime
+  build: ./agent-starter-python
+  image: edutech-voice-local-voice-agent
+  environment:
+    LIVEKIT_URL: ws://livekit:7880
+    LIVEKIT_API_KEY: devkey
+    LIVEKIT_API_SECRET: secret
+    GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-}
+    QDRANT_HOST: qdrant
+    QDRANT_PORT: "6333"
+    KNOWLEDGE_DB: /data/knowledge.db
+    NEXUS_DOCS_DIR: /app/data/especializacion_ia
+    NEXUS_STORAGE_DIR: /app/data/nexus_storage
+    UAM_DOCS_DIR: /app/data/documentos_uam
+    UAM_STORAGE_DIR: /app/data/uam_storage
+  volumes:
+    - ./data/especializacion_ia:/app/data/especializacion_ia:ro
+    - ./data/documentos_uam:/app/data/documentos_uam:ro
+    - nexus:/app/data/nexus_storage
+    - uam:/app/data/uam_storage
+    - knowledge:/data:ro
+
 services:
   livekit:
     image: livekit/livekit-server:latest
@@ -33,8 +56,31 @@ services:
       PORTAL_CONOCIMIENTO_APP_PASSWORD: ${PORTAL_CONOCIMIENTO_APP_PASSWORD:-}
     volumes:
       - knowledge:/data
+  # Cold OCR/indexing can exceed the worker's 600-second initialization limit.
+  # Build once outside the worker, then load the persisted indexes there.
+  rag-init:
+    <<: *agent-runtime
+    restart: "no"
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    command:
+      - uv
+      - run
+      - python
+      - -c
+      - |
+        import logging, sys
+        sys.path.insert(0, "src")
+        logging.basicConfig(level=logging.INFO)
+        from rag_llamaindex import get_or_build_query_engine
+        from rag_nexus import get_or_build_nexus_query_engine
+        for load in (get_or_build_query_engine, get_or_build_nexus_query_engine):
+            if load() is None:
+                raise SystemExit("RAG preparation failed; voice worker not started")
+        print("RAG preparation complete", flush=True)
   voice-agent:
-    build: ./agent-starter-python
+    <<: *agent-runtime
     depends_on:
       livekit:
         condition: service_started
@@ -44,25 +90,8 @@ services:
         condition: service_started
       storage-init:
         condition: service_completed_successfully
-    environment:
-      LIVEKIT_URL: ws://livekit:7880
-      LIVEKIT_API_KEY: devkey
-      LIVEKIT_API_SECRET: secret
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-}
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: "6333"
-      KNOWLEDGE_DB: /data/knowledge.db
-      NEXUS_DOCS_DIR: /app/data/especializacion_ia
-      NEXUS_STORAGE_DIR: /app/data/nexus_storage
-      UAM_DOCS_DIR: /app/data/documentos_uam
-      UAM_STORAGE_DIR: /app/data/uam_storage
-    volumes:
-      - ./data/especializacion_ia:/app/data/especializacion_ia:ro
-      - ./data/documentos_uam:/app/data/documentos_uam:ro
-      - nexus:/app/data/nexus_storage
-      - uam:/app/data/uam_storage
-      - knowledge:/data:ro
+      rag-init:
+        condition: service_completed_successfully
   frontend:
     build: ./agent-starter-react
     depends_on:
