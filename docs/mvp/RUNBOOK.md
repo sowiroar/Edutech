@@ -24,6 +24,10 @@ no se considera válido un default solo porque figure en el repositorio.
 Gemini Live incluye audio; no necesita la GPU NVIDIA local para inferencia.
 La primera indexación/RAG puede tardar; revisar antes de mostrar la demo.
 
+Ver [CONFIGURACION.md](CONFIGURACION.md) para el inventario de variables y APIs.
+El portal permite usuario/contraseña opcionales en `.env.voice`; no copiar la
+configuración remota de LiveKit a esta demo local.
+
 El proyecto Compose `edutech-voice-local` tiene volúmenes propios. No comparte los
 volúmenes `azimutai_*` de UAM. Puertos 3500,7880,7881,7882 ligados a loopback;
 no es un despliegue público ni configuración para móviles en otra red.

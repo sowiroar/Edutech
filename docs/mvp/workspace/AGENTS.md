@@ -20,7 +20,8 @@ Memoria medida antes corresponde al proceso Mac, no VRAM ni escalabilidad UAM.
 archive/Edutech-legacy conserva la rama antigua y archivos locales; su .git contiene
 metadatos de worktrees activos. NO BORRAR ni mover archive a ciegas. Las carpetas
 Avatares y Edutech-integracion de la raíz son enlaces de compatibilidad, no clones.
-tmp contiene worktrees históricos registrados: conservar. No git clean/reset.
+Los worktrees tmp históricos se retiraron por petición del usuario, después de
+respaldar y verificar sus archivos en archive/tmp-backup-20261017. No git clean/reset.
 El bridge grabado histórico sigue separado del bridge Gemini vigente.
 La app Mac del 12 octubre solo incluye tres escenas, no las seis ni Gemini.
 
