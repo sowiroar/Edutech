@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -64,11 +65,16 @@ def _get_storage_dir() -> Path:
             "/app/data/uam_storage",
             "/data/uam_storage",
         ]:
-            if os.path.exists(candidate) and (Path(candidate) / "docstore.json").exists():
+            if (
+                os.path.exists(candidate)
+                and (Path(candidate) / "docstore.json").exists()
+            ):
                 storage_dir = candidate
                 break
         else:
-            storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "uam_storage")
+            storage_dir = os.path.join(
+                os.path.dirname(__file__), "..", "data", "uam_storage"
+            )
     p = Path(storage_dir)
     p.mkdir(parents=True, exist_ok=True)
     return p
@@ -87,7 +93,9 @@ def _get_uam_docs_dir() -> Path:
             p = Path(p_str).resolve()
             if p.is_dir() and any(p.iterdir()):
                 return p
-    return Path(os.path.join(os.path.dirname(__file__), "..", "data", "documentos_uam")).resolve()
+    return Path(
+        os.path.join(os.path.dirname(__file__), "..", "data", "documentos_uam")
+    ).resolve()
 
 
 def listar_documentos_uam() -> list[dict[str, Any]]:
@@ -127,7 +135,10 @@ def _extraer_texto_archivo_uam(ruta: Path) -> str:
 
             # Si el texto está vacío (PDF escaneado), se extrae automáticamente con Gemini multimodal
             if not texto.strip():
-                logger.info("PDF escaneado detectado (%s). Extrayendo texto mediante Gemini multimodal...", ruta.name)
+                logger.info(
+                    "PDF escaneado detectado (%s). Extrayendo texto mediante Gemini multimodal...",
+                    ruta.name,
+                )
                 api_key = os.getenv("GOOGLE_API_KEY")
                 if api_key and api_key != "mock-key-for-tests":
                     try:
@@ -191,12 +202,14 @@ def _extraer_texto_archivo_uam(ruta: Path) -> str:
                                     )
                                     time.sleep(espera)
                         finally:
-                            try:
+                            with suppress(Exception):
                                 client.files.delete(name=uploaded.name)
-                            except Exception:
-                                pass
                     except Exception as e:
-                        logger.warning("Fallo la extracción multimodal con Gemini para %s tras varios reintentos: %s", ruta.name, e)
+                        logger.warning(
+                            "Fallo la extracción multimodal con Gemini para %s tras varios reintentos: %s",
+                            ruta.name,
+                            e,
+                        )
                 if not texto.strip():
                     texto = f"Documento oficial UAM: {ruta.stem}."
         elif sufijo in [".docx", ".doc"]:
@@ -224,9 +237,18 @@ def _cargar_documentos_uam():
         return []
 
     archivos = sorted(
-        [f for f in docs_dir.iterdir() if f.is_file() and f.suffix.lower() in [".pdf", ".docx", ".doc", ".txt", ".md"]]
+        [
+            f
+            for f in docs_dir.iterdir()
+            if f.is_file()
+            and f.suffix.lower() in [".pdf", ".docx", ".doc", ".txt", ".md"]
+        ]
     )
-    logger.info("Cargando %d archivos institucionales de la UAM desde %s", len(archivos), docs_dir)
+    logger.info(
+        "Cargando %d archivos institucionales de la UAM desde %s",
+        len(archivos),
+        docs_dir,
+    )
 
     for ruta in archivos:
         contenido = _extraer_texto_archivo_uam(ruta)
@@ -266,7 +288,11 @@ def get_or_build_query_engine():
         return None
 
     try:
-        from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core import (
+            StorageContext,
+            VectorStoreIndex,
+            load_index_from_storage,
+        )
         from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
         from llama_index.llms.google_genai import GoogleGenAI
@@ -287,9 +313,13 @@ def get_or_build_query_engine():
         if docstore_file.exists():
             logger.info("Cargando índice persistente de la UAM desde %s", storage_dir)
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
-            _uam_index = load_index_from_storage(storage_context, embed_model=embed_model)
+            _uam_index = load_index_from_storage(
+                storage_context, embed_model=embed_model
+            )
         else:
-            logger.info("Construyendo índice de embeddings de la UAM con SentenceSplitter(800)...")
+            logger.info(
+                "Construyendo índice de embeddings de la UAM con SentenceSplitter(800)..."
+            )
             documentos = _cargar_documentos_uam()
             if not documentos:
                 from llama_index.core import Document
@@ -297,11 +327,17 @@ def get_or_build_query_engine():
                 documentos = [
                     Document(
                         text="La Universidad Autónoma de Manizales (UAM) ofrece programas de pregrado en Fisioterapia, Odontología, Ingeniería Biomédica, Ingeniería de Sistemas, Ingeniería Industrial, Administración de Empresas, Economía, Negocios Internacionales y Diseño Industrial.",
-                        metadata={"titulo": "Oferta Académica UAM", "archivo": "oferta-academica.pdf"},
+                        metadata={
+                            "titulo": "Oferta Académica UAM",
+                            "archivo": "oferta-academica.pdf",
+                        },
                     ),
                     Document(
                         text="El Estatuto Profesoral de la UAM reglamenta el escalafón docente en cuatro categorías: Profesor Auxiliar, Profesor Asistente, Profesor Asociado y Profesor Titular. Para ser profesor auxiliar se requiere título profesional, 1 año de experiencia en la UAM, evaluación satisfactoria, inducción docente y TIC. Para profesor asistente se requiere título de posgrado y mínimo 2 años de experiencia como auxiliar.",
-                        metadata={"titulo": "Estatuto Profesoral UAM", "archivo": "estatuto_profesoral_uam.pdf"},
+                        metadata={
+                            "titulo": "Estatuto Profesoral UAM",
+                            "archivo": "estatuto_profesoral_uam.pdf",
+                        },
                     ),
                 ]
 
@@ -353,5 +389,3 @@ async def consultar_uam(consulta: str) -> dict[str, Any] | None:
             return None
 
     return await asyncio.to_thread(_sync_query)
-
-

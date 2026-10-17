@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, "feature/**", "bugfix/**", "release/**", "hotfix/**"]
+    branches: [main, develop, backp-fase1, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, backp-fase1]
 
 permissions:
   contents: read
@@ -14,6 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workspace:
+    name: Flujo compartido y voz local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s scripts/tests -v
+      - run: python scripts/voice_demo.py init
+      - run: python scripts/voice_demo.py config
+
   agent:
     name: Agente Python (ruff + pytest)
     runs-on: ubuntu-latest
@@ -80,7 +92,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: agent-starter-react/package-lock.json
 
@@ -93,7 +105,7 @@ jobs:
   docker:
     name: Docker Compose (config + imágenes)
     runs-on: ubuntu-latest
-    needs: [agent, knowledge-sync, frontend]
+    needs: [workspace, agent, knowledge-sync, frontend]
     steps:
       - uses: actions/checkout@v4
 

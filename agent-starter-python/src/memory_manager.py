@@ -82,7 +82,9 @@ def get_memory_instance():
 
     api_key = os.getenv("GOOGLE_API_KEY", "")
     if not api_key or api_key == "mock-key-for-tests":
-        logger.warning("GOOGLE_API_KEY no disponible o mock; memoria persistente desactivada.")
+        logger.warning(
+            "GOOGLE_API_KEY no disponible o mock; memoria persistente desactivada."
+        )
         return None
 
     try:
@@ -98,7 +100,9 @@ def get_memory_instance():
         return None
 
 
-async def guardar_memoria_usuario(user_id: str, mensaje: str, metadata: dict[str, Any] | None = None) -> None:
+async def guardar_memoria_usuario(
+    user_id: str, mensaje: str, metadata: dict[str, Any] | None = None
+) -> None:
     """Guarda un recuerdo o interacción relevante del usuario en memoria persistente."""
     if not user_id or not mensaje.strip():
         return
@@ -116,12 +120,16 @@ async def guardar_memoria_usuario(user_id: str, mensaje: str, metadata: dict[str
             )
             logger.info("Recuerdo guardado con éxito para usuario %s", user_id)
         except Exception:
-            logger.exception("Error al guardar memoria en Mem0 para usuario %s", user_id)
+            logger.exception(
+                "Error al guardar memoria en Mem0 para usuario %s", user_id
+            )
 
     await asyncio.to_thread(_sync_add)
 
 
-async def buscar_memorias_usuario(user_id: str, consulta: str, limite: int = 5) -> list[str]:
+async def buscar_memorias_usuario(
+    user_id: str, consulta: str, limite: int = 5
+) -> list[str]:
     """Busca recuerdos existentes del usuario relevantes para la consulta dada."""
     if not user_id or not consulta.strip():
         return []
@@ -155,7 +163,9 @@ async def buscar_memorias_usuario(user_id: str, consulta: str, limite: int = 5) 
                     recuerdos.append(item)
             return recuerdos
         except Exception:
-            logger.exception("Error al buscar memorias en Mem0 para usuario %s", user_id)
+            logger.exception(
+                "Error al buscar memorias en Mem0 para usuario %s", user_id
+            )
             return []
 
     return await asyncio.to_thread(_sync_search)

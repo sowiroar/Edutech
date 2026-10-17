@@ -62,7 +62,9 @@ async def test_anunciar_personaje_avatar_awaits_set_attributes(monkeypatch):
     set_attributes = AsyncMock()
     fake_session = SimpleNamespace(
         room_io=SimpleNamespace(
-            room=SimpleNamespace(local_participant=SimpleNamespace(set_attributes=set_attributes))
+            room=SimpleNamespace(
+                local_participant=SimpleNamespace(set_attributes=set_attributes)
+            )
         )
     )
     monkeypatch.setattr(NexusAgent, "session", property(lambda self: fake_session))
@@ -135,9 +137,13 @@ async def test_lira_transfer_to_elian_execution():
 async def test_base_agent_on_user_turn_completed():
     """Verifica que on_user_turn_completed se ejecute de forma segura sin excepciones."""
     from livekit.agents import llm
+
     nexus = NexusAgent()
     turn_ctx = llm.ChatContext()
-    message = llm.ChatMessage(role="user", content=["Hola, mi nombre es Daniel y estudio Ingeniería de Sistemas."])
+    message = llm.ChatMessage(
+        role="user",
+        content=["Hola, mi nombre es Daniel y estudio Ingeniería de Sistemas."],
+    )
 
     # Debe ejecutarse sin lanzar excepciones
     await nexus.on_user_turn_completed(turn_ctx, message)

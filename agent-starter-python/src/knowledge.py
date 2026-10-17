@@ -189,7 +189,9 @@ def formatear_resultados(resultados: list[Resultado], max_caracteres: int = 700)
     return "\n".join(partes)
 
 
-def listar_documentos_oficiales(ruta_db: str | Path | None = None) -> list[dict[str, str]]:
+def listar_documentos_oficiales(
+    ruta_db: str | Path | None = None,
+) -> list[dict[str, str]]:
     """Devuelve la lista completa de documentos y guías oficiales registrados en la base de datos."""
     ruta = Path(ruta_db or KNOWLEDGE_DB).resolve()
     if not ruta.is_file():
