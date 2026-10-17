@@ -38,3 +38,21 @@ un informe fechado; nunca cambiar pendientes a exitosos sin ejecutar el ensayo.
 
 Avatar PR #8 integrado en main a204705fca64f012b5c66c605ea34dc11ee3de43;
 checks repository/tests/required aprobados. Edutech fija ese SHA para reproducción.
+
+## Construcción y transporte local adicionales
+
+Las tres imágenes de compose.voice.yml (voice-agent, knowledge-sync, frontend)
+se construyeron correctamente en Docker arm64 de esta Mac, con Node 24. Frontend
+Docker devuelve HTTP 200; POST /api/token 200 y conexión/desconexión RTC correctas.
+No se publica micrófono ni hay inferencia en este ensayo. El inicializador de
+volúmenes sale 0; escritura de índices RAG desde el usuario de la imagen comprobada.
+El volumen de conocimiento también se inicializa con UID 10001, incluso si otro
+contenedor lo creó antes; no se reutilizan datos/volúmenes de UAM.
+
+La comprobación editor_mac.command check --avatar lira --profile efficient pasó
+tras mover el workspace; no abrió el Editor. El bridge grabado se resuelve al
+histórico y la nueva rama Avatar feature/avatar-presentation ya está publicada.
+
+El frontend local puede abrirse en http://localhost:3500 mientras están activos
+los servicios de prueba; sin GOOGLE_API_KEY/modelo no hay agente que responda.
+El resultado de CI se consulta en PR Edutech #5, no se infiere de pruebas locales.
