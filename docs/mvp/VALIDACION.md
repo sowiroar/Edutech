@@ -1,6 +1,7 @@
 # Validación de preparación — 17 octubre 2026
 
-No equivale a aceptación del MVP ni prueba real de Gemini/UAM.
+No equivale a aceptación del MVP ni prueba UAM. Ver la actualización de
+configuración al final: hubo una prueba directa real de Gemini Live.
 
 ## Comprobado
 
@@ -20,9 +21,9 @@ No equivale a aceptación del MVP ni prueba real de Gemini/UAM.
   No se publicó micrófono ni se ejecutó un agente en esa prueba.
   Otros contenedores existentes no se modificaron.
 
-## Límites y bloqueo real
+## Bloqueo inicial (resuelto para configuración Google)
 
-El checkout no tenía .env/.env.local. Se creó .env.voice excluido de Git con
+Al comienzo, el checkout no tenía .env/.env.local. Se creó .env.voice excluido de Git con
 GOOGLE_API_KEY y GEMINI_LIVE_MODEL vacíos. Deben configurarse localmente; el doctor
 los detecta sin imprimir valores. No se llamó a Google, no se midió voz conversacional,
 RAG/Mem0 con proveedor ni gasto real. El ID histórico del modelo no se certifica.
@@ -54,5 +55,27 @@ tras mover el workspace; no abrió el Editor. El bridge grabado se resuelve al
 histórico y la nueva rama Avatar feature/avatar-presentation ya está publicada.
 
 El frontend local puede abrirse en http://localhost:3500 mientras están activos
-los servicios de prueba; sin GOOGLE_API_KEY/modelo no hay agente que responda.
+los servicios de prueba. El estado actualizado de configuración se registra abajo.
 El resultado de CI se consulta en PR Edutech #5, no se infiere de pruebas locales.
+
+## Actualización: configuración recibida de Jacobo y limpieza
+
+- Google configurado en `.env.voice`, privado y excluido de Git; fuente fuera
+  de los repos. Modelo `gemini-3.8-live` probado con una frase sintética directa:
+  84002 bytes de audio, fin de turno confirmado. Sin grabación ni tokens guardados.
+- `.env.example` y las plantillas de agente/frontend revisadas. Los secretos
+  reales permanecen vacíos en las plantillas; devkey/secret son valores públicos
+  del LiveKit de desarrollo. Ver CONFIGURACION.md para servicios usados por modo.
+- Variables opcionales de portal conectadas al Compose local. Knowledge-sync
+  completó 51 documentos UAM y 137 entradas de portal (77 privadas, solo título),
+  índice de 188 registros/2608 fragmentos. No prueba la pertinencia de respuestas.
+- Servicios locales iniciados con las imágenes arm64 ya construidas; sin tocar
+  servicios ajenos ni UAM. El agente comienza precarga RAG/Mem0.
+- Retirados dos worktrees temporales de septiembre, por solicitud del usuario,
+  después de respaldar 250 y 216 archivos y verificar SHA-256 de cada archivo
+  regular dentro de sus tar. Diffs y generador PDF conservados en archive local.
+  No se incorporó su código experimental a Gemini. Antigravity global intacto.
+- Dos tests del lanzador, Compose quiet y diff check correctos tras los cambios.
+
+La prueba directa valida acceso al proveedor, no micrófono, conversación WebRTC,
+handoffs, respuesta fundamentada, memoria útil ni sincronía del avatar.

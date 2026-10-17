@@ -27,8 +27,10 @@ services:
         condition: service_completed_successfully
     environment:
       DATA_DIR: /data
-      SYNC_INTERVAL_HOURS: "24"
-      PORTAL_CONOCIMIENTO_URL: https://portalconocimiento.autonoma.edu.co
+      SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-24}
+      PORTAL_CONOCIMIENTO_URL: ${PORTAL_CONOCIMIENTO_URL:-https://portalconocimiento.autonoma.edu.co}
+      PORTAL_CONOCIMIENTO_USER: ${PORTAL_CONOCIMIENTO_USER:-}
+      PORTAL_CONOCIMIENTO_APP_PASSWORD: ${PORTAL_CONOCIMIENTO_APP_PASSWORD:-}
     volumes:
       - knowledge:/data
   voice-agent:

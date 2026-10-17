@@ -10,7 +10,8 @@
 Carpetas activas: **Avatar/** y **Edutech/**. `archive/` conserva repositorios
 anteriores, modificaciones locales y sus metadatos Git; no borrar. `Avatares/`
 y `Edutech-integracion/` son enlaces de compatibilidad, no copias. `docs/`
-conserva especificaciones institucionales; `tmp/` contiene worktrees históricos;
+conserva especificaciones institucionales; el antiguo `tmp/` fue retirado tras
+respaldarlo y verificarlo en `archive/tmp-backup-20261017/`;
 `output/` conserva informes anteriores. Leer AGENTS.md / CLAUDE.md antes de editar.
 
 Para compartir el workspace, clonar los dos repositorios, no copiar este árbol

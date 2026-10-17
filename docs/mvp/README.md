@@ -24,6 +24,7 @@ el framework a Pipecat ni se copian los prompts/dominio médico de NeoIPS.
 3. [SPEC_TELEMETRY.md](SPEC_TELEMETRY.md): Juan, `feature/telemetry`.
 4. [SPEC_AVATAR_PRESENTATION.md](SPEC_AVATAR_PRESENTATION.md): Santiago.
 5. [ACEPTACION.md](ACEPTACION.md): demostración, pruebas y evidencia.
+6. [CONFIGURACION.md](CONFIGURACION.md): variables, APIs y prueba Google local.
 
 ## Prioridad hasta el martes
 
