@@ -5,9 +5,8 @@ import json
 import logging
 import os
 import textwrap
+from typing import Any
 
-import httpx
-import openai as py_openai
 from dotenv import load_dotenv
 from google.genai import types as genai_types
 from livekit.agents import (
@@ -22,7 +21,6 @@ from livekit.agents import (
     cli,
     function_tool,
     llm,
-    room_io,
 )
 from livekit.plugins import google
 
@@ -30,6 +28,7 @@ import knowledge
 import memory_manager
 import rag_llamaindex
 import rag_nexus
+from background_tasks import spawn_background
 
 logger = logging.getLogger("agent-multi")
 
@@ -140,10 +139,25 @@ class BaseEducationalAgent(Agent):
         if not self.AVATAR_CHARACTER:
             return
         try:
-            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+            if (
+                self.session
+                and hasattr(self.session, "room_io")
+                and self.session.room_io
+            ):
                 room = getattr(self.session.room_io, "room", None)
-                if room and hasattr(room, "local_participant") and room.local_participant:
-                    room.local_participant.set_attributes(
+                if (
+                    room
+                    and hasattr(room, "local_participant")
+                    and room.local_participant
+                ):
+                    # set_attributes() es async def en el SDK de LiveKit (confirmado leyendo
+                    # su código fuente en vivo: no se ve en inspect.signature(), que no marca
+                    # async). Sin este await, la llamada solo crea la corrutina y la descarta
+                    # sin ejecutarla — el atributo nunca salía hacia LiveKit, ni una vez,
+                    # desde que se escribió esto (bug real encontrado el 2026-10-16: el video
+                    # de animaciones_viva en el frontend nunca cambiaba de personaje porque
+                    # agentAttributes nunca traía 'avatar.character').
+                    await room.local_participant.set_attributes(
                         {"avatar.character": self.AVATAR_CHARACTER}
                     )
                     logger.info(
@@ -168,7 +182,7 @@ class BaseEducationalAgent(Agent):
             return
 
         # 1. Almacenar el mensaje/turno en memoria persistente de Mem0 en background
-        asyncio.create_task(
+        spawn_background(
             memory_manager.guardar_memoria_usuario(
                 user_id=user_id,
                 mensaje=texto_usuario,
@@ -206,11 +220,16 @@ class BaseEducationalAgent(Agent):
                 if isinstance(new_message.content, list):
                     new_message.content.append(f"\n{contexto_memoria}")
                 else:
-                    new_message.content = [str(new_message.content), f"\n{contexto_memoria}"]
+                    new_message.content = [
+                        str(new_message.content),
+                        f"\n{contexto_memoria}",
+                    ]
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
-    async def generar_respuesta_confiable(self, instructions: str, timeout: float = 6.0) -> None:
+    async def generar_respuesta_confiable(
+        self, instructions: str, timeout: float = 6.0
+    ) -> None:
         """generate_reply() con reintento si no se detecta habla.
 
         Encontrado revisando logs reales el 2026-10-08: una llamada entera
@@ -265,14 +284,24 @@ class BaseEducationalAgent(Agent):
     async def emitir_datos_frontend(self, topic: str, data: dict[str, Any]) -> None:
         """Emite datos estructurados (como fuentes de RAG) al frontend vía LiveKit DataPacket."""
         try:
-            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+            if (
+                self.session
+                and hasattr(self.session, "room_io")
+                and self.session.room_io
+            ):
                 room = getattr(self.session.room_io, "room", None)
-                if room and hasattr(room, "local_participant") and room.local_participant:
+                if (
+                    room
+                    and hasattr(room, "local_participant")
+                    and room.local_participant
+                ):
                     payload = json.dumps({"topic": topic, "payload": data})
                     await room.local_participant.publish_data(payload.encode("utf-8"))
                     logger.info("Datos emitidos al frontend: topic=%s", topic)
         except Exception:
-            logger.debug("No se pudo emitir datos al frontend (sala no vinculada o cliente desconectado)")
+            logger.debug(
+                "No se pudo emitir datos al frontend (sala no vinculada o cliente desconectado)"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -387,7 +416,9 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
     )
-    async def consultas_especializacion_ia(self, context: RunContext, consulta: str) -> str:
+    async def consultas_especializacion_ia(
+        self, context: RunContext, consulta: str
+    ) -> str:
         """Busca en el repositorio de documentos y guías curriculares de la Especialización en IA de la UAM.
 
         Args:
@@ -402,7 +433,7 @@ class NexusAgent(BaseEducationalAgent):
         fuentes = resultado["fuentes"]
 
         # Emitir las fuentes al frontend en background para trazabilidad gráfica/UI
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_sources",
                 data={
@@ -426,7 +457,7 @@ class NexusAgent(BaseEducationalAgent):
             return "Actualmente no hay documentos cargados en el repositorio de la especialización."
 
         # Emitir catálogo completo al frontend
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_catalog",
                 data={
@@ -522,7 +553,7 @@ class ElianAgent(BaseEducationalAgent):
                 res_bm25 = await asyncio.to_thread(knowledge.buscar, consulta)
                 if res_bm25:
                     fuentes = [r.titulo for r in res_bm25]
-                    asyncio.create_task(
+                    spawn_background(
                         self.emitir_datos_frontend(
                             topic="rag_sources",
                             data={
@@ -547,7 +578,7 @@ class ElianAgent(BaseEducationalAgent):
         fuentes = resultado.get("fuentes", [])
 
         # Emitir fuentes al frontend vía DataPacket sin interrumpir la síntesis de voz
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_sources",
                 data={
@@ -572,9 +603,11 @@ class ElianAgent(BaseEducationalAgent):
             if docs_bm25:
                 titulos = [d["titulo"] for d in docs_bm25]
                 return f"Tenemos {len(titulos)} documentos institucionales disponibles, incluyendo: {', '.join(titulos[:4])}."
-            return "Actualmente no se pudieron listar los documentos oficiales de la UAM."
+            return (
+                "Actualmente no se pudieron listar los documentos oficiales de la UAM."
+            )
 
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_catalog",
                 data={
@@ -707,7 +740,9 @@ async def multiagent_session(ctx: JobContext):
     session.on("user_input_transcribed", _on_user_transcript)
 
     # Inicia la sesión asociando el agente inicial (Lira) con audio WebRTC nativo
-    logger.info("Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini).")
+    logger.info(
+        "Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini)."
+    )
     await session.start(
         agent=initial_agent,
         room=ctx.room,

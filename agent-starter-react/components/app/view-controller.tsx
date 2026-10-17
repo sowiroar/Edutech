@@ -38,7 +38,7 @@ export function ViewController() {
         <MotionWelcomeView
           key="welcome"
           {...VIEW_MOTION_PROPS}
-          startButtonText="Start call"
+          startButtonText="Iniciar llamada"
           onStartCall={start}
         />
       )}

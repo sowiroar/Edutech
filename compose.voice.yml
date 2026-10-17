@@ -1,0 +1,83 @@
+# Desarrollo local de voz. No combinar con docker-compose.yml mediante -f.
+# Mantiene el código de Jacobo; no inicia CUDA, Unreal ni el puente de avatar.
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant:/qdrant/storage
+  storage-init:
+    image: alpine:3.21
+    command: [sh, -c, "chown 10001:10001 /nexus /uam /knowledge"]
+    volumes:
+      - nexus:/nexus
+      - uam:/uam
+      - knowledge:/knowledge
+    restart: "no"
+  knowledge-sync:
+    build: ./knowledge-sync
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    environment:
+      DATA_DIR: /data
+      SYNC_INTERVAL_HOURS: "24"
+      PORTAL_CONOCIMIENTO_URL: https://portalconocimiento.autonoma.edu.co
+    volumes:
+      - knowledge:/data
+  voice-agent:
+    build: ./agent-starter-python
+    depends_on:
+      livekit:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      knowledge-sync:
+        condition: service_started
+      storage-init:
+        condition: service_completed_successfully
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-}
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      KNOWLEDGE_DB: /data/knowledge.db
+      NEXUS_DOCS_DIR: /app/data/especializacion_ia
+      NEXUS_STORAGE_DIR: /app/data/nexus_storage
+      UAM_DOCS_DIR: /app/data/documentos_uam
+      UAM_STORAGE_DIR: /app/data/uam_storage
+    volumes:
+      - ./data/especializacion_ia:/app/data/especializacion_ia:ro
+      - ./data/documentos_uam:/app/data/documentos_uam:ro
+      - nexus:/app/data/nexus_storage
+      - uam:/app/data/uam_storage
+      - knowledge:/data:ro
+  frontend:
+    build: ./agent-starter-react
+    depends_on:
+      - livekit
+    ports:
+      - "127.0.0.1:3500:3000"
+    environment:
+      # URL pública para el navegador y URL interna para verificar el token.
+      LIVEKIT_URL: ws://localhost:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      AGENT_NAME: nexus
+      ALLOW_INSECURE_ROOM_CREATION: "true"
+      AVATAR_MUTE_AGENT_AUDIO: "false"
+      AVATAR_BRIDGE_HINT_URL: http://127.0.0.1:9/hint
+volumes:
+  qdrant:
+  nexus:
+  uam:
+  knowledge:

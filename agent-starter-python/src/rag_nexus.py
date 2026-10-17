@@ -8,9 +8,9 @@ El índice vectorial se inicializa y persiste en disco una sola vez para evitar 
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -57,7 +57,9 @@ def _get_qa_template_nexus():
 def _get_nexus_storage_dir() -> Path:
     storage_dir = os.getenv("NEXUS_STORAGE_DIR")
     if not storage_dir:
-        storage_dir = os.path.join(os.path.dirname(__file__), "..", "data", "nexus_storage")
+        storage_dir = os.path.join(
+            os.path.dirname(__file__), "..", "data", "nexus_storage"
+        )
     p = Path(storage_dir)
     p.mkdir(parents=True, exist_ok=True)
     return p
@@ -67,7 +69,9 @@ def _get_nexus_docs_dir() -> Path:
     possible_paths = [
         os.getenv("NEXUS_DOCS_DIR", ""),
         os.path.join(os.path.dirname(__file__), "..", "data", "especializacion_ia"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "data", "especializacion_ia"),
+        os.path.join(
+            os.path.dirname(__file__), "..", "..", "data", "especializacion_ia"
+        ),
         "/data/especializacion_ia",
         "C:\\Users\\eguen\\Downloads\\Especializacion IA",
     ]
@@ -76,7 +80,9 @@ def _get_nexus_docs_dir() -> Path:
             p = Path(p_str).resolve()
             if p.is_dir() and any(p.iterdir()):
                 return p
-    return Path(os.path.join(os.path.dirname(__file__), "..", "data", "especializacion_ia")).resolve()
+    return Path(
+        os.path.join(os.path.dirname(__file__), "..", "data", "especializacion_ia")
+    ).resolve()
 
 
 def listar_documentos_especializacion() -> list[dict[str, Any]]:
@@ -116,7 +122,10 @@ def _extraer_texto_archivo(ruta: Path) -> str:
 
             # Si el texto está vacío (PDF escaneado), se transcribe automáticamente con Gemini multimodal
             if not texto.strip():
-                logger.info("PDF escaneado detectado (%s). Extrayendo texto mediante Gemini multimodal...", ruta.name)
+                logger.info(
+                    "PDF escaneado detectado (%s). Extrayendo texto mediante Gemini multimodal...",
+                    ruta.name,
+                )
                 api_key = os.getenv("GOOGLE_API_KEY")
                 if api_key and api_key != "mock-key-for-tests":
                     try:
@@ -134,7 +143,9 @@ def _extraer_texto_archivo(ruta: Path) -> str:
                             import tempfile
 
                             temp_dir = Path(tempfile.gettempdir())
-                            temp_file = temp_dir / f"nexus_doc_{abs(hash(ruta.name))}.pdf"
+                            temp_file = (
+                                temp_dir / f"nexus_doc_{abs(hash(ruta.name))}.pdf"
+                            )
                             shutil.copyfile(ruta, temp_file)
                             upload_path = temp_file
 
@@ -180,12 +191,14 @@ def _extraer_texto_archivo(ruta: Path) -> str:
                                     )
                                     time.sleep(espera)
                         finally:
-                            try:
+                            with suppress(Exception):
                                 client.files.delete(name=uploaded.name)
-                            except Exception:
-                                pass
                     except Exception as e:
-                        logger.warning("Fallo el OCR multimodal con Gemini para %s tras varios reintentos: %s", ruta.name, e)
+                        logger.warning(
+                            "Fallo el OCR multimodal con Gemini para %s tras varios reintentos: %s",
+                            ruta.name,
+                            e,
+                        )
                 if not texto.strip():
                     texto = f"Documento oficial: {ruta.stem}."
         elif sufijo in [".docx", ".doc"]:
@@ -213,7 +226,12 @@ def _cargar_documentos_especializacion():
         return documentos
 
     for archivo in docs_dir.iterdir():
-        if archivo.is_file() and archivo.suffix.lower() in [".pdf", ".docx", ".txt", ".md"]:
+        if archivo.is_file() and archivo.suffix.lower() in [
+            ".pdf",
+            ".docx",
+            ".txt",
+            ".md",
+        ]:
             texto = _extraer_texto_archivo(archivo)
             if texto and texto.strip():
                 doc = Document(
@@ -226,7 +244,11 @@ def _cargar_documentos_especializacion():
                 )
                 documentos.append(doc)
 
-    logger.info("Cargados %d documentos para el RAG de Nexus desde %s", len(documentos), docs_dir)
+    logger.info(
+        "Cargados %d documentos para el RAG de Nexus desde %s",
+        len(documentos),
+        docs_dir,
+    )
     return documentos
 
 
@@ -247,7 +269,11 @@ def get_or_build_nexus_query_engine():
         return None
 
     try:
-        from llama_index.core import StorageContext, VectorStoreIndex, load_index_from_storage
+        from llama_index.core import (
+            StorageContext,
+            VectorStoreIndex,
+            load_index_from_storage,
+        )
         from llama_index.core.node_parser import SentenceSplitter
         from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
         from llama_index.llms.google_genai import GoogleGenAI
@@ -268,9 +294,13 @@ def get_or_build_nexus_query_engine():
         if docstore_file.exists():
             logger.info("Cargando índice persistente de Nexus desde %s", storage_dir)
             storage_context = StorageContext.from_defaults(persist_dir=str(storage_dir))
-            _nexus_index = load_index_from_storage(storage_context, embed_model=embed_model)
+            _nexus_index = load_index_from_storage(
+                storage_context, embed_model=embed_model
+            )
         else:
-            logger.info("Construyendo índice de embeddings de Nexus con SentenceSplitter(800)...")
+            logger.info(
+                "Construyendo índice de embeddings de Nexus con SentenceSplitter(800)..."
+            )
             documentos = _cargar_documentos_especializacion()
             if not documentos:
                 from llama_index.core import Document
@@ -278,7 +308,10 @@ def get_or_build_nexus_query_engine():
                 documentos = [
                     Document(
                         text="La Especialización en Inteligencia Artificial de la UAM tiene 25 créditos académicos y cuenta con materias como Conceptos Básicos de Matemáticas y Estadística, Programación para Analítica de Datos, Aprendizaje Automático, Computación en la Nube y Seminario de Investigación.",
-                        metadata={"titulo": "Resumen Especialización IA", "archivo": "plan-de-estudios.pdf"},
+                        metadata={
+                            "titulo": "Resumen Especialización IA",
+                            "archivo": "plan-de-estudios.pdf",
+                        },
                     )
                 ]
 
@@ -330,4 +363,3 @@ async def consultar_especializacion_ia(consulta: str) -> dict[str, Any] | None:
             return None
 
     return await asyncio.to_thread(_sync_query)
-

@@ -2,7 +2,7 @@ name: Gitflow
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, backp-fase1]
     types: [opened, reopened, synchronize, edited]
 
 permissions:
@@ -19,6 +19,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           case "$BASE_REF" in
+            backp-fase1) allowed='^(feature|bugfix|chore|hotfix)/[a-z0-9._-]+$' ;;
             main)    allowed='^(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+$' ;;
             develop) allowed='^(main|(feature|bugfix)/[a-z0-9._-]+|(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+)$' ;;
             *)       exit 0 ;;
