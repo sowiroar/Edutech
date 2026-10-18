@@ -1,0 +1,16 @@
+{
+  "errors": [],
+  "checks": {
+    "detail_focused": true,
+    "raw_synthetic_email_absent": true,
+    "detail-desktop_no_overflow": true,
+    "detail-mobile_no_overflow": true,
+    "tools_visible": true,
+    "technical_events_visible": true,
+    "return_focus": true,
+    "legacy_explained": true,
+    "empty_filtered": true,
+    "late_response_does_not_restore_private_dashboard": true,
+    "logout": true
+  }
+}

@@ -43,9 +43,9 @@ async def run(base,scenario):
         async with asyncio.timeout(90):
             await room.connect(data['serverUrl'],data['participantToken'])
             await completed.wait();result['greeting_completed']=True
-            if scenario=='handoff':
+            if scenario in ('handoff','privacy'):
                 completed.clear()
-                await room.local_participant.send_text('Esta es una prueba técnica sin datos personales. Transfiéreme con Nexus; quiero conocer los temas de la especialización en inteligencia artificial.',topic='lk.chat')
+                await room.local_participant.send_text(('Mi correo ficticio de prueba es prueba.telemetria@example.com. ' if scenario=='privacy' else '') + 'Esta es una prueba técnica sin datos personales. Transfiéreme con Nexus; quiero conocer los temas de la especialización en inteligencia artificial.',topic='lk.chat')
                 # An acknowledgment can finish before the handoff. Wait for the target then its response.
                 for _ in range(100):
                     if 'NEXO' in result['avatars']:break
@@ -74,6 +74,13 @@ async def inspect(base,result):
             result['persisted_event_counts']=counts
             result['logical_agents']=sorted({e['agent_id'] for e in events if e.get('agent_id')})
             result['usage_providers']=sorted({e['payload']['provider'] for e in events if e['type']=='usage_recorded'})
+            messages=[e['payload'] for e in events if e['type']=='conversation_message']
+            result['transcript_messages']=len(messages)
+            result['transcript_roles']=sorted({e['role'] for e in messages})
+            if result['scenario']=='privacy':
+                text=' '.join(e.get('text') or '' for e in messages)
+                result['redaction_verified']='[CORREO]' in text and 'prueba.telemetria@example.com' not in text
+                result['trace_spans_present']=any(e.get('span_id') for e in events)
             result['producer_health']=[e['payload'] for e in events if e['type']=='producer_health'][:1]
 
 async def main(args):
@@ -83,13 +90,13 @@ async def main(args):
     except Exception as exc:result['inspection_error']=type(exc).__name__
     output=Path(args.output);output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
-    return 0 if result.get('greeting_completed') and not result.get('error_type') else 1
+    return 0 if result.get('greeting_completed') and not result.get('error_type') and (args.scenario!='privacy' or (result.get('redaction_verified') and result.get('handoff_announced') and result.get('trace_spans_present'))) else 1
 
 if __name__=='__main__':
     logging.disable(logging.CRITICAL)
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--live',action='store_true',required=True)
     parser.add_argument('--base',default='http://localhost:3500')
-    parser.add_argument('--scenario',choices=['greeting','handoff'],default='greeting')
+    parser.add_argument('--scenario',choices=['greeting','handoff','privacy'],default='greeting')
     parser.add_argument('--output',required=True)
     raise SystemExit(asyncio.run(main(parser.parse_args())))

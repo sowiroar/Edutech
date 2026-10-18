@@ -49,3 +49,5 @@ manualmente entre ramas. Seis personajes visuales no implican seis roles nuevos.
 Estado: voz real y telemetría probadas localmente. Panel en http://localhost:3500/admin;
 contraseña TELEMETRY_ADMIN_PASSWORD en .env.voice. Selector/avatar y validación UAM
 siguen pendientes. No afirmar MVP institucional completo ni SSO.
+
+Panel privado claro, transcripción opt-in y trazas: [guía del dashboard](docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md).

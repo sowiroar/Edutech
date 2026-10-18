@@ -1,3 +1,7 @@
+> Actualización 17 octubre: [dashboard y trazas](TELEMETRY_DASHBOARD_Y_TRAZAS.md)
+> añade contrato v2 y texto opt-in redactado con retención, autorizado por el usuario.
+> Prevalece sobre el alcance inicial sin transcripciones descrito abajo.
+
 # Telemetría P0: implementación y operación
 
 Rama `feature/telemetry`, PR [#8](https://github.com/sowiroar/Edutech/pull/8),

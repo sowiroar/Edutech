@@ -52,6 +52,7 @@ export function App({ agentName = 'nexus' }: AppProps) {
   const tokenSource = useMemo(
     () =>
       TokenSource.custom(async () => {
+        mediaTelemetry.beginSession();
         const response = await fetch('/api/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

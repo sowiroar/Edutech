@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-17T23:59:32.599712+00:00",
+  "generatedAt": "2026-10-18T01:12:36.237391+00:00",
   "title": "Design System: VIVAVerse",
   "extensions": {
     "colorMeta": {
@@ -199,16 +199,272 @@
           "oklch(84% 0.16 215)",
           "oklch(95% 0.16 215)"
         ]
+      },
+      "admin-canvas": {
+        "role": "neutral",
+        "displayName": "Canvas · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0045 258.32)",
+          "oklch(26% 0.0045 258.32)",
+          "oklch(38% 0.0045 258.32)",
+          "oklch(49% 0.0045 258.32)",
+          "oklch(61% 0.0045 258.32)",
+          "oklch(72% 0.0045 258.32)",
+          "oklch(84% 0.0045 258.32)",
+          "oklch(95% 0.0045 258.32)"
+        ]
+      },
+      "admin-surface": {
+        "role": "neutral",
+        "displayName": "Surface · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.00)",
+          "oklch(26% 0.0000 0.00)",
+          "oklch(38% 0.0000 0.00)",
+          "oklch(49% 0.0000 0.00)",
+          "oklch(61% 0.0000 0.00)",
+          "oklch(72% 0.0000 0.00)",
+          "oklch(84% 0.0000 0.00)",
+          "oklch(95% 0.0000 0.00)"
+        ]
+      },
+      "admin-ink": {
+        "role": "neutral",
+        "displayName": "Ink · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0493 258.28)",
+          "oklch(26% 0.0493 258.28)",
+          "oklch(38% 0.0493 258.28)",
+          "oklch(49% 0.0493 258.28)",
+          "oklch(61% 0.0493 258.28)",
+          "oklch(72% 0.0493 258.28)",
+          "oklch(84% 0.0493 258.28)",
+          "oklch(95% 0.0493 258.28)"
+        ]
+      },
+      "admin-muted": {
+        "role": "neutral",
+        "displayName": "Muted · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0097 252.81)",
+          "oklch(26% 0.0097 252.81)",
+          "oklch(38% 0.0097 252.81)",
+          "oklch(49% 0.0097 252.81)",
+          "oklch(61% 0.0097 252.81)",
+          "oklch(72% 0.0097 252.81)",
+          "oklch(84% 0.0097 252.81)",
+          "oklch(95% 0.0097 252.81)"
+        ]
+      },
+      "admin-secondary-text": {
+        "role": "neutral",
+        "displayName": "Secondary text · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0397 256.41)",
+          "oklch(26% 0.0397 256.41)",
+          "oklch(38% 0.0397 256.41)",
+          "oklch(49% 0.0397 256.41)",
+          "oklch(61% 0.0397 256.41)",
+          "oklch(72% 0.0397 256.41)",
+          "oklch(84% 0.0397 256.41)",
+          "oklch(95% 0.0397 256.41)"
+        ]
+      },
+      "admin-border": {
+        "role": "neutral",
+        "displayName": "Border · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0144 254.61)",
+          "oklch(26% 0.0144 254.61)",
+          "oklch(38% 0.0144 254.61)",
+          "oklch(49% 0.0144 254.61)",
+          "oklch(61% 0.0144 254.61)",
+          "oklch(72% 0.0144 254.61)",
+          "oklch(84% 0.0144 254.61)",
+          "oklch(95% 0.0144 254.61)"
+        ]
+      },
+      "admin-error-border": {
+        "role": "error",
+        "displayName": "Error border · admin",
+        "tonalRamp": [
+          "oklch(15% 0.1687 18.45)",
+          "oklch(26% 0.1687 18.45)",
+          "oklch(38% 0.1687 18.45)",
+          "oklch(49% 0.1687 18.45)",
+          "oklch(61% 0.1687 18.45)",
+          "oklch(72% 0.1687 18.45)",
+          "oklch(84% 0.1687 18.45)",
+          "oklch(95% 0.1687 18.45)"
+        ]
+      },
+      "admin-accent": {
+        "role": "primary",
+        "displayName": "Accent · admin",
+        "tonalRamp": [
+          "oklch(15% 0.1894 261.97)",
+          "oklch(26% 0.1894 261.97)",
+          "oklch(38% 0.1894 261.97)",
+          "oklch(49% 0.1894 261.97)",
+          "oklch(61% 0.1894 261.97)",
+          "oklch(72% 0.1894 261.97)",
+          "oklch(84% 0.1894 261.97)",
+          "oklch(95% 0.1894 261.97)"
+        ]
+      },
+      "admin-accent-hover": {
+        "role": "primary",
+        "displayName": "Accent hover · admin",
+        "tonalRamp": [
+          "oklch(15% 0.1605 261.34)",
+          "oklch(26% 0.1605 261.34)",
+          "oklch(38% 0.1605 261.34)",
+          "oklch(49% 0.1605 261.34)",
+          "oklch(61% 0.1605 261.34)",
+          "oklch(72% 0.1605 261.34)",
+          "oklch(84% 0.1605 261.34)",
+          "oklch(95% 0.1605 261.34)"
+        ]
+      },
+      "admin-selected-text": {
+        "role": "primary",
+        "displayName": "Selected text · admin",
+        "tonalRamp": [
+          "oklch(15% 0.1426 260.38)",
+          "oklch(26% 0.1426 260.38)",
+          "oklch(38% 0.1426 260.38)",
+          "oklch(49% 0.1426 260.38)",
+          "oklch(61% 0.1426 260.38)",
+          "oklch(72% 0.1426 260.38)",
+          "oklch(84% 0.1426 260.38)",
+          "oklch(95% 0.1426 260.38)"
+        ]
+      },
+      "admin-selected-surface": {
+        "role": "primary",
+        "displayName": "Selected surface · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0262 264.44)",
+          "oklch(26% 0.0262 264.44)",
+          "oklch(38% 0.0262 264.44)",
+          "oklch(49% 0.0262 264.44)",
+          "oklch(61% 0.0262 264.44)",
+          "oklch(72% 0.0262 264.44)",
+          "oklch(84% 0.0262 264.44)",
+          "oklch(95% 0.0262 264.44)"
+        ]
+      },
+      "admin-error-surface": {
+        "role": "error",
+        "displayName": "Error surface · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0163 12.78)",
+          "oklch(26% 0.0163 12.78)",
+          "oklch(38% 0.0163 12.78)",
+          "oklch(49% 0.0163 12.78)",
+          "oklch(61% 0.0163 12.78)",
+          "oklch(72% 0.0163 12.78)",
+          "oklch(84% 0.0163 12.78)",
+          "oklch(95% 0.0163 12.78)"
+        ]
+      },
+      "admin-error-text": {
+        "role": "error",
+        "displayName": "Error text · admin",
+        "tonalRamp": [
+          "oklch(15% 0.1499 16.26)",
+          "oklch(26% 0.1499 16.26)",
+          "oklch(38% 0.1499 16.26)",
+          "oklch(49% 0.1499 16.26)",
+          "oklch(61% 0.1499 16.26)",
+          "oklch(72% 0.1499 16.26)",
+          "oklch(84% 0.1499 16.26)",
+          "oklch(95% 0.1499 16.26)"
+        ]
+      },
+      "admin-table-heading": {
+        "role": "neutral",
+        "displayName": "Table heading · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0520 256.85)",
+          "oklch(26% 0.0520 256.85)",
+          "oklch(38% 0.0520 256.85)",
+          "oklch(49% 0.0520 256.85)",
+          "oklch(61% 0.0520 256.85)",
+          "oklch(72% 0.0520 256.85)",
+          "oklch(84% 0.0520 256.85)",
+          "oklch(95% 0.0520 256.85)"
+        ]
+      },
+      "admin-row-hover": {
+        "role": "neutral",
+        "displayName": "Row hover · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0070 268.55)",
+          "oklch(26% 0.0070 268.55)",
+          "oklch(38% 0.0070 268.55)",
+          "oklch(49% 0.0070 268.55)",
+          "oklch(61% 0.0070 268.55)",
+          "oklch(72% 0.0070 268.55)",
+          "oklch(84% 0.0070 268.55)",
+          "oklch(95% 0.0070 268.55)"
+        ]
+      },
+      "admin-status-text": {
+        "role": "neutral",
+        "displayName": "Status text · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0472 257.53)",
+          "oklch(26% 0.0472 257.53)",
+          "oklch(38% 0.0472 257.53)",
+          "oklch(49% 0.0472 257.53)",
+          "oklch(61% 0.0472 257.53)",
+          "oklch(72% 0.0472 257.53)",
+          "oklch(84% 0.0472 257.53)",
+          "oklch(95% 0.0472 257.53)"
+        ]
+      },
+      "admin-active-text": {
+        "role": "neutral",
+        "displayName": "Active text · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0844 159.76)",
+          "oklch(26% 0.0844 159.76)",
+          "oklch(38% 0.0844 159.76)",
+          "oklch(49% 0.0844 159.76)",
+          "oklch(61% 0.0844 159.76)",
+          "oklch(72% 0.0844 159.76)",
+          "oklch(84% 0.0844 159.76)",
+          "oklch(95% 0.0844 159.76)"
+        ]
+      },
+      "admin-active-surface": {
+        "role": "neutral",
+        "displayName": "Active surface · admin",
+        "tonalRamp": [
+          "oklch(15% 0.0150 164.73)",
+          "oklch(26% 0.0150 164.73)",
+          "oklch(38% 0.0150 164.73)",
+          "oklch(49% 0.0150 164.73)",
+          "oklch(61% 0.0150 164.73)",
+          "oklch(72% 0.0150 164.73)",
+          "oklch(84% 0.0150 164.73)",
+          "oklch(95% 0.0150 164.73)"
+        ]
       }
     },
     "typographyMeta": {
       "headline": {
-        "displayName": "Título principal",
-        "purpose": "Título de la superficie operativa; 1.7rem en móvil."
+        "displayName": "Cabecera administrativa",
+        "purpose": "Título de /admin; tamaño conservado en móvil."
+      },
+      "body": {
+        "displayName": "Párrafo operativo",
+        "purpose": "Escala de /admin; line-height corresponde a párrafos."
       },
       "metric": {
         "displayName": "Cifra de actividad",
-        "purpose": "Magnitudes con cifras tabulares."
+        "purpose": "Resumen administrativo con cifras tabulares."
       }
     },
     "shadows": [],
@@ -222,76 +478,112 @@
   },
   "components": [
     {
-      "name": "Botón normal",
+      "name": "Botón default",
       "kind": "button",
-      "refersTo": "button-default",
-      "description": "Control administrativo; altura mínima de 42px y foco visible.",
-      "html": "<button class=\"ds-button-default\">Actualizar</button>",
-      "css": ".ds-button-default{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;}.ds-button-default:hover{background:var(--muted,oklch(0.97 0 0));}.ds-button-default:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}.ds-button-default:disabled{opacity:0.55;cursor:wait;}"
+      "description": "Control de /admin con foco visible y altura mínima de 44px.",
+      "html": "<button class=\"ds-button-default\">Cerrar detalle</button>",
+      "css": ".ds-button-default{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;border:1px solid #dfe6ef;border-radius:8px;min-height:44px;padding:8px 12px;background:#fff;font-weight:550;cursor:pointer;}.ds-button-default:hover{background:#eef3f9;}.ds-button-default:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}.ds-button-default:disabled{opacity:.55;cursor:wait;}",
+      "refersTo": "admin-button-default"
     },
     {
-      "name": "Botón principal",
+      "name": "Botón primary",
       "kind": "button",
-      "refersTo": "button-primary",
-      "description": "Control administrativo; altura mínima de 42px y foco visible.",
+      "description": "Control de /admin con foco visible y altura mínima de 44px.",
       "html": "<button class=\"ds-button-primary\">Entrar al panel</button>",
-      "css": ".ds-button-primary{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;background:var(--foreground,oklch(0.145 0 0));color:var(--background,white);}.ds-button-primary:hover{opacity:0.85;}.ds-button-primary:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}.ds-button-primary:disabled{opacity:0.55;cursor:wait;}"
+      "css": ".ds-button-primary{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;border:1px solid #dfe6ef;border-radius:8px;min-height:44px;padding:8px 12px;background:#fff;font-weight:550;cursor:pointer;background:#245fd3;border-color:#245fd3;color:#fff;}.ds-button-primary:hover{background:#1a4dab;opacity:.85;}.ds-button-primary:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}.ds-button-primary:disabled{opacity:.55;cursor:wait;}",
+      "refersTo": "admin-button-primary"
+    },
+    {
+      "name": "Botón selected",
+      "kind": "button",
+      "description": "Control de /admin con foco visible y altura mínima de 44px.",
+      "html": "<button class=\"ds-button-selected\" aria-pressed=\"true\">Conversación</button>",
+      "css": ".ds-button-selected{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;border:1px solid #dfe6ef;border-radius:8px;min-height:44px;padding:8px 12px;background:#fff;font-weight:550;cursor:pointer;background:#e4edff;border-color:#245fd3;color:#174798;}.ds-button-selected:hover{background:#e4edff;}.ds-button-selected:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}.ds-button-selected:disabled{opacity:.55;cursor:wait;}",
+      "refersTo": "admin-button-selected"
     },
     {
       "name": "Campo etiquetado",
       "kind": "input",
-      "refersTo": "input",
-      "description": "Etiqueta persistente y control nativo.",
+      "description": "Control nativo con etiqueta persistente.",
       "html": "<label class=\"ds-field\">Desde<input type=\"datetime-local\" value=\"2026-10-17T08:00\"></label>",
-      "css": ".ds-field{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));display:grid;gap:7px;font-size:0.875rem;}.ds-field input{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);}.ds-field input:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}"
+      "css": ".ds-field{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;display:grid;gap:7px;font-size:.875rem;color-scheme:light;}.ds-field input{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;border:1px solid #dfe6ef;border-radius:8px;min-height:42px;padding:8px 12px;background:#fff;}.ds-field input:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}",
+      "refersTo": "admin-input"
     },
     {
-      "name": "Navegación operativa",
+      "name": "Navegación de secciones",
       "kind": "nav",
-      "description": "Regreso a voz y cierre de sesión.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Navegación de telemetría\"><a href=\"#voz\">Volver a voz</a><button>Cerrar sesión</button></nav>",
-      "css": ".ds-nav{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));display:flex;align-items:center;gap:20px;}.ds-nav a{color:inherit;text-decoration:underline;text-underline-offset:4px;}.ds-nav button{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;}.ds-nav button:hover{background:var(--muted,oklch(0.97 0 0));}.ds-nav :focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}@media(max-width:700px){.ds-nav{justify-content:space-between;}}"
+      "description": "Anclas administrativas que ajustan a varias líneas.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Secciones del panel\"><a href=\"#resumen\">Resumen</a><a href=\"#sesiones\">Sesiones</a><a href=\"#herramientas\">Herramientas</a></nav>",
+      "css": ".ds-nav{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;display:flex;flex-wrap:wrap;gap:8px 24px;border-bottom:1px solid #dfe6ef;padding:8px 0 16px;}.ds-nav a{color:#245fd3;font-weight:600;padding:8px 0;text-decoration:none;}.ds-nav a:hover{text-decoration:underline;}.ds-nav a:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}@media(max-width:700px){.ds-nav{gap:4px 18px;}}"
+    },
+    {
+      "name": "Estado de sesión",
+      "kind": "chip",
+      "description": "Etiquetas descriptivas; no controles interactivos.",
+      "html": "<span class=\"ds-status\">Cerrada</span> <span class=\"ds-status ds-active\">Activa</span>",
+      "css": ".ds-status{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;display:inline-block;color:#52647e;background:#eef3f9;padding:4px 8px;border-radius:4px;font-size:.8rem;}.ds-active{color:#246647;background:#e7f3ed;}",
+      "refersTo": "admin-status"
+    },
+    {
+      "name": "Panel operativo",
+      "kind": "card",
+      "description": "Superficie plana para un grupo de datos.",
+      "html": "<section class=\"ds-panel\"><h2>Sesiones</h2><p>Conversación y actividad registrada.</p></section>",
+      "css": ".ds-panel{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;background:#fff;padding:24px;border:1px solid #dfe6ef;border-radius:12px;}.ds-panel h2{font-size:1.2rem;line-height:1.4;font-weight:600;margin:0;}.ds-panel p{color:#5e6e84;line-height:1.65;max-width:75ch;margin:10px 0 20px;}@media(max-width:700px){.ds-panel{padding:16px;}}",
+      "refersTo": "admin-panel"
     },
     {
       "name": "Tabla operativa",
       "kind": "custom",
-      "refersTo": "table-heading",
-      "description": "Encabezado tonal, cifras alineadas y región desplazable.",
+      "description": "Encabezado tonal, notas de cobertura y región desplazable.",
       "html": "<div class=\"ds-table\" role=\"region\" aria-label=\"Tabla desplazable\" tabindex=\"0\"><table><thead><tr><th>Medición</th><th>Muestras</th><th>Cobertura</th></tr></thead><tbody><tr><td>Inicio de respuesta</td><td>2</td><td>2 / 7<small>Eventos registrados</small></td></tr></tbody></table></div>",
-      "css": ".ds-table{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));overflow-x:auto;border-top:1px solid var(--border,oklch(0.922 0 0));font-variant-numeric:tabular-nums;}.ds-table table{width:100%;border-collapse:collapse;text-align:left;font-size:0.875rem;}.ds-table th{font-weight:600;background:var(--muted,oklch(0.97 0 0));}.ds-table th,.ds-table td{padding:13px 16px;border-bottom:1px solid var(--border,oklch(0.922 0 0));vertical-align:top;}.ds-table th:first-child,.ds-table td:first-child{padding-left:10px;}.ds-table small{display:block;font-size:0.75rem;margin-top:5px;color:var(--muted-foreground,oklch(0.556 0 0));}.ds-table:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}@media(max-width:700px){.ds-table table{min-width:560px;}}"
+      "css": ".ds-table{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;overflow-x:auto;border:1px solid #dfe6ef;border-radius:8px;font-variant-numeric:tabular-nums;}.ds-table table{width:100%;border-collapse:collapse;text-align:left;font-size:.875rem;}.ds-table th{font-weight:600;background:#eef3f9;color:#475b77;font-size:.8rem;white-space:nowrap;}.ds-table th,.ds-table td{padding:14px;border-bottom:1px solid #dfe6ef;vertical-align:top;}.ds-table th:first-child,.ds-table td:first-child{padding-left:10px;}.ds-table tr:last-child td{border-bottom:0;}.ds-table tbody tr:hover{background:#f8faff;}.ds-table small{display:block;font-size:.75rem;margin-top:5px;color:#5e6e84;}.ds-table:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}@media(max-width:700px){.ds-table table{min-width:610px;}.ds-table:before{content:\"Desliza para ver todas las columnas\";display:block;font-size:.8rem;padding:10px;color:#5e6e84;}}",
+      "refersTo": "admin-table-heading"
+    },
+    {
+      "name": "Línea de tiempo",
+      "kind": "custom",
+      "description": "Hora, contenido y detalle técnico desplegable.",
+      "html": "<ol class=\"ds-timeline\"><li><time>20:00:18</time><div><strong>Asistente</strong><p>Texto de ejemplo sin datos personales.</p><details><summary>Detalle técnico</summary><pre>{\"type\": \"conversation_message\"}</pre></details></div></li></ol>",
+      "css": ".ds-timeline{font-family:var(--font-public-sans,\"Public Sans\"),ui-sans-serif,system-ui,sans-serif;font-size:.9375rem;color:#1b2b43;list-style:none;margin:24px 0;padding:0;}.ds-timeline li{display:grid;grid-template-columns:80px minmax(0,1fr);gap:16px;padding:20px 0;border-bottom:1px solid #dfe6ef;}.ds-timeline time{color:#5e6e84;font-size:.8rem;padding-top:3px;}.ds-timeline p{line-height:1.65;margin:6px 0 10px;white-space:pre-wrap;overflow-wrap:anywhere;}.ds-timeline details{color:#5e6e84;font-size:.8rem;}.ds-timeline summary{cursor:pointer;width:fit-content;padding:6px 0;}.ds-timeline summary:focus-visible{outline:2px solid #245fd3;outline-offset:3px;}.ds-timeline pre{font-family:var(--font-commit-mono,\"CommitMono\"),ui-monospace,monospace;padding:16px;margin-top:8px;background:#f6f8fb;max-height:320px;overflow:auto;border-radius:6px;}@media(max-width:700px){.ds-timeline li{grid-template-columns:minmax(0,1fr);gap:6px;}}"
     }
   ],
   "narrative": {
-    "northStar": "Continuidad del frontend VIVAVerse",
-    "overview": "La superficie operativa hereda Public Sans, los colores semánticos y el cambio claro/oscuro del frontend existente. La jerarquía se construye con tipografía, espacio y divisores; las tablas conservan la relación entre datos, unidades y cobertura. No se establece una identidad visual nueva.",
+    "northStar": "Operación clara, continuidad de voz",
+    "overview": "La superficie administrativa tiene una paleta clara propia, inspirada en la referencia NeoIPS autorizada: lienzo gris azulado, paneles blancos, texto azul oscuro y acento azul funcional. Public Sans mantiene la continuidad tipográfica; tablas, divisores y cifras tabulares organizan la lectura operativa.\n\nEl alcance del cambio es `/admin`. La pantalla de voz conserva su sistema semántico claro/oscuro y su composición previa. Los tokens sin prefijo y `dark-*` preservan la paleta compartida de `styles/globals.css`; `admin-*`, la jerarquía tipográfica y los patrones operativos de este documento describen exclusivamente el panel. No sustituyen la identidad ni los componentes de voz.",
     "keyCharacteristics": [
-      "Tipografía continua con el frontend de voz.",
-      "Superficies planas y contraste semántico.",
-      "Cifras tabulares y contexto de medición visible.",
-      "Controles etiquetados y desplazamiento horizontal local."
+      "Paleta clara fija solo en /admin.",
+      "Paneles blancos planos y tablas con encabezado tonal.",
+      "Cifras tabulares, unidades y cobertura visibles.",
+      "Detalle inline y controles con foco visible."
     ],
     "rules": [
       {
-        "name": "The Semantic Theme Rule",
-        "body": "Los componentes consumen las variables compartidas para que texto, fondo y estados cambien juntos con el tema.",
+        "name": "The Surface Scope Rule",
+        "body": "El panel resuelve localmente sus colores semánticos; la pantalla de voz conserva las variables y el tema compartidos.",
         "section": "colors"
       },
       {
         "name": "The Measured Number Rule",
         "body": "Tamaño y alineación ayudan a comparar cifras; la unidad, el denominador y la ausencia de dato permanecen visibles junto a ellas.",
         "section": "typography"
+      },
+      {
+        "name": "The Flat Panel Rule",
+        "body": "Bordes y cambios de superficie separan los grupos del panel sin sombras.",
+        "section": "elevation"
       }
     ],
     "dos": [
-      "Do conservar Public Sans y los tokens semánticos compartidos.",
+      "Do conservar Public Sans y limitar la paleta administrativa a /admin.",
       "Do acompañar cifras con unidades, cobertura y estados de ausencia de dato.",
       "Do mantener foco visible y regiones de tabla accesibles por teclado.",
-      "Do mantener la densidad legible mediante desplazamiento de tablas en móvil."
+      "Do mantener la densidad legible mediante desplazamiento local de tablas en móvil."
     ],
     "donts": [
-      "Don’t convertir las secciones operativas en tarjetas decorativas.",
       "Don’t representar ausencia de medición como cero ni estimación como factura.",
-      "Don’t aplicar la composición de /admin al recorrido de voz sin revisar su contexto."
+      "Don’t aplicar la paleta o composición de /admin al recorrido de voz.",
+      "Don’t comunicar selección o error solamente mediante color."
     ]
   }
 }

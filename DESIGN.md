@@ -1,6 +1,6 @@
 ---
-name: VIVAVerse — extensión operativa
-description: Sistema existente del frontend aplicado al panel de telemetría.
+name: VIVAVerse — voz y operación
+description: Sistema compartido conservado y superficie administrativa clara de alcance local.
 colors:
   background: "oklch(1 0 0)"
   foreground: "oklch(0.145 0 0)"
@@ -16,10 +16,28 @@ colors:
   dark-border: "oklch(1 0 0 / 10%)"
   dark-destructive: "oklch(0.704 0.191 22.216)"
   dark-primary: "#1fd5f9"
+  admin-canvas: "#f6f8fb"
+  admin-surface: "#fff"
+  admin-ink: "#1b2b43"
+  admin-muted: "#eef3f9"
+  admin-secondary-text: "#5e6e84"
+  admin-border: "#dfe6ef"
+  admin-error-border: "#ba3545"
+  admin-accent: "#245fd3"
+  admin-accent-hover: "#1a4dab"
+  admin-selected-text: "#174798"
+  admin-selected-surface: "#e4edff"
+  admin-error-surface: "#fff0f1"
+  admin-error-text: "#962337"
+  admin-table-heading: "#475b77"
+  admin-row-hover: "#f8faff"
+  admin-status-text: "#52647e"
+  admin-active-text: "#246647"
+  admin-active-surface: "#e7f3ed"
 typography:
   headline:
     fontFamily: "Public Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "2rem"
+    fontSize: "1.8rem"
     fontWeight: 650
     lineHeight: 1.2
     letterSpacing: "-0.025em"
@@ -30,7 +48,7 @@ typography:
     lineHeight: 1.4
   body:
     fontFamily: "Public Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1rem"
+    fontSize: "0.9375rem"
     fontWeight: 400
     lineHeight: 1.65
   label:
@@ -38,191 +56,235 @@ typography:
     fontSize: "0.875rem"
   metric:
     fontFamily: "Public Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.5rem"
-    fontWeight: 550
+    fontSize: "1.8rem"
+    fontWeight: 600
+  caption:
+    fontFamily: "Public Sans, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.8rem"
   detail:
     fontFamily: "Public Sans, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.75rem"
   code:
     fontFamily: "CommitMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
 rounded:
+  status: "4px"
+  code: "6px"
   control: "8px"
+  surface: "12px"
 spacing:
-  control-y: "8px"
-  control-x: "12px"
+  tight: "4px"
+  small: "8px"
   compact: "12px"
   standard: "16px"
   content: "20px"
   group: "24px"
-  section: "40px"
+  spacious: "32px"
   wide: "48px"
 components:
-  button-default:
-    backgroundColor: "{colors.background}"
-    textColor: "{colors.foreground}"
+  admin-button-default:
+    backgroundColor: "{colors.admin-surface}"
+    textColor: "{colors.admin-ink}"
     rounded: "{rounded.control}"
     padding: "8px 12px"
-  button-default-hover:
-    backgroundColor: "{colors.muted}"
-  button-primary:
-    backgroundColor: "{colors.foreground}"
-    textColor: "{colors.background}"
+  admin-button-default-hover:
+    backgroundColor: "{colors.admin-muted}"
+  admin-button-primary:
+    backgroundColor: "{colors.admin-accent}"
+    textColor: "{colors.admin-surface}"
     rounded: "{rounded.control}"
     padding: "8px 12px"
-  input:
-    backgroundColor: "{colors.background}"
-    textColor: "{colors.foreground}"
+  admin-button-primary-hover:
+    backgroundColor: "{colors.admin-accent-hover}"
+  admin-button-selected:
+    backgroundColor: "{colors.admin-selected-surface}"
+    textColor: "{colors.admin-selected-text}"
     rounded: "{rounded.control}"
     padding: "8px 12px"
-  table-heading:
-    backgroundColor: "{colors.muted}"
-    textColor: "{colors.foreground}"
-    padding: "13px 16px"
+  admin-input:
+    backgroundColor: "{colors.admin-surface}"
+    textColor: "{colors.admin-ink}"
+    rounded: "{rounded.control}"
+    padding: "8px 12px"
+  admin-panel:
+    backgroundColor: "{colors.admin-surface}"
+    textColor: "{colors.admin-ink}"
+    rounded: "{rounded.surface}"
+    padding: "24px"
+  admin-table-heading:
+    backgroundColor: "{colors.admin-muted}"
+    textColor: "{colors.admin-table-heading}"
+    padding: "14px"
+  admin-status:
+    backgroundColor: "{colors.admin-muted}"
+    textColor: "{colors.admin-status-text}"
+    rounded: "{rounded.status}"
+    padding: "4px 8px"
+  admin-status-active:
+    backgroundColor: "{colors.admin-active-surface}"
+    textColor: "{colors.admin-active-text}"
+    rounded: "{rounded.status}"
+    padding: "4px 8px"
 ---
 
 # Design System: VIVAVerse
 
 ## Overview
 
-**Creative North Star: "Continuidad del frontend VIVAVerse"**
+**Creative North Star: "Operación clara, continuidad de voz"**
 
-La superficie operativa hereda Public Sans, los colores semánticos y el cambio claro/oscuro del frontend existente. La jerarquía se construye con tipografía, espacio y divisores; las tablas conservan la relación entre datos, unidades y cobertura. No se establece una identidad visual nueva.
+La superficie administrativa tiene una paleta clara propia, inspirada en la referencia NeoIPS autorizada: lienzo gris azulado, paneles blancos, texto azul oscuro y acento azul funcional. Public Sans mantiene la continuidad tipográfica; tablas, divisores y cifras tabulares organizan la lectura operativa.
 
-Registro extraído del código al cierre de la extensión `/admin`; no es un rediseño
-global. El nombre de dirección describe la continuidad autorizada en `PRODUCT.md`,
-no una metáfora de marca nueva. Ese archivo conserva el brief y la secuencia de la
-superficie; este documento registra reglas reutilizables verificadas.
+El alcance del cambio es `/admin`. La pantalla de voz conserva su sistema semántico claro/oscuro y su composición previa. Los tokens sin prefijo y `dark-*` preservan la paleta compartida de `styles/globals.css`; `admin-*`, la jerarquía tipográfica y los patrones operativos de este documento describen exclusivamente el panel. No sustituyen la identidad ni los componentes de voz.
 
 **Key Characteristics:**
 
-- Tipografía continua con el frontend de voz.
-- Superficies planas y contraste semántico.
-- Cifras tabulares y contexto de medición visible.
-- Controles etiquetados y desplazamiento horizontal local.
+- Paleta clara fija solo en /admin.
+- Paneles blancos planos y tablas con encabezado tonal.
+- Cifras tabulares, unidades y cobertura visibles.
+- Detalle inline y controles con foco visible.
 
-Fuentes: `agent-starter-react/styles/globals.css`, `app/layout.tsx`,
-`app/admin/telemetry.css` y `app/admin/page.tsx`, con rutas relativas al frontend.
-Se contrastaron las capturas `docs/validation/2026-10-17-telemetry/desktop.png` y `mobile.png`.
-Las capturas verifican el tema claro; la variante oscura aquí se deriva del código.
+Registro fusionado desde el código terminado: `agent-starter-react/styles/globals.css`,
+`app/layout.tsx`, `app/admin/telemetry.css`, `app/admin/page.tsx` y
+`app/admin/session-detail.tsx` (rutas `app/` relativas al frontend).
+Evidencia de revisión: `.impeccable/review/desktop.png`, `mobile.png`,
+`detail-desktop.png`, `detail-mobile.png` y `actions-desktop.png`; revisión final: ship.
+La dirección y el brief de esta superficie permanecen en `PRODUCT.md`.
 
 ## Colors
 
-La base neutral comparte los colores semánticos del frontend, con acento heredado
-azul en claro y cian en oscuro.
+La paleta administrativa combina blancos y neutros azulados con acento funcional.
+El frontmatter conserva los valores canónicos; no hay variante oscura del panel.
 
 ### Primary
 
-`primary` y `dark-primary` pertenecen al sistema compartido. El botón principal del
-acceso administrativo usa inversión foreground/background, tal como lo implementa
-la superficie; no introduce un nuevo color de marca.
+`admin-accent` identifica acciones principales, enlaces, borde seleccionado y foco.
+`admin-accent-hover` oscurece las acciones al pasar el puntero; la selección combina
+`admin-selected-surface` y `admin-selected-text` con un borde de acento.
+`primary` y `dark-primary` siguen perteneciendo exclusivamente al sistema compartido.
 
 ### Neutral
 
-`background` define el lienzo, `foreground` el texto principal, `muted` los encabezados
-de tabla y hover, `muted-foreground` las explicaciones y `border` las separaciones.
-Las entradas `dark-*` documentan los valores del mismo rol bajo `.dark`: en código
-se consume siempre la variable semántica, no un color fijado por componente.
-`destructive` se reserva al borde de error; el texto conserva el color principal.
-Las rampas del sidecar son muestras sintetizadas para la vista previa, no colores
-adicionales del producto ni valores para implementar componentes.
+`admin-canvas` es el lienzo; `admin-surface`, los paneles y controles.
+`admin-ink` identifica contenido principal; `admin-secondary-text`, explicación y
+metadatos; `admin-muted`, encabezados, estados neutrales y pie de salud;
+`admin-border`, separaciones; `admin-table-heading`, los títulos de columna.
+`admin-row-hover` facilita seguir una fila. Los estados activos combinan
+`admin-active-text` y `admin-active-surface`; los errores usan la familia `admin-error-*`
+con un mensaje explícito. Los colores compartidos y `dark-*` se conservan sin cambio.
+Las rampas del sidecar son muestras sintetizadas de vista previa, no tokens adicionales.
 
-**The Semantic Theme Rule.** Los componentes consumen las variables compartidas para
-que texto, fondo y estados cambien juntos con el tema.
+**The Surface Scope Rule.** El panel resuelve localmente sus colores semánticos; la pantalla de voz conserva las variables y el tema compartidos.
 
 ## Typography
 
 **Display / Body Font:** Public Sans con respaldo sans-serif del sistema.
-**Label/Mono Font:** las etiquetas conservan Public Sans; los identificadores y JSON
-usan la pila CommitMono existente del frontend.
+**Label/Mono Font:** etiquetas en Public Sans; identificadores y JSON en CommitMono.
 
-La jerarquía de la extensión está registrada en el frontmatter: título principal,
-títulos de sección, cuerpo, etiquetas, métricas y detalle. No se añade una familia
-de exhibición. El título principal pasa a 1.7rem bajo el breakpoint móvil. El
-importe de sección utiliza 1.25rem y peso 550; el texto auxiliar de consulta,
-0.82rem. Los párrafos limitan su ancho a 75ch. Las tablas usan 0.875rem y encabezados
-con peso 600. Toda la superficie activa cifras tabulares.
+La escala del frontmatter describe el panel: headline para la cabecera, title para
+secciones, body para párrafos, label para campos y filas, metric para el resumen,
+caption para metadatos y encabezados de tabla, detail para notas de celdas y JSON.
+El título de cabecera conserva su tamaño en móvil por la regla específica vigente.
+Los párrafos tienen el interlineado body y un ancho máximo de 75ch, excepto captions.
+Los importes de sección y cifras de calidad usan 1.25rem, con pesos 550 y 600,
+respectivamente. Las tablas usan label y encabezados de peso 600.
+Toda la superficie administrativa activa cifras tabulares.
 
-**The Measured Number Rule.** Tamaño y alineación ayudan a comparar cifras; la unidad,
-el denominador y la ausencia de dato permanecen visibles junto a ellas.
+**The Measured Number Rule.** Tamaño y alineación ayudan a comparar cifras; la unidad, el denominador y la ausencia de dato permanecen visibles junto a ellas.
 
 ## Layout
 
-El contenedor de `/admin` centra un ancho máximo de 1280px, con padding de
-48px 32px 64px. La cabecera alinea título y navegación; las secciones tienen
-40px de separación y los grupos se distinguen con espacio y divisores. La síntesis
-de actividad es una lista de definiciones flexible, no una cuadrícula de tarjetas.
+El contenedor administrativo tiene ancho máximo de 1440px, margen automático y
+padding de 48px 32px 64px. La cabecera alinea título y navegación. Los paneles
+usan separación y padding de 24px; el área de filtros usa 20px. El resumen es una
+rejilla abierta de cinco columnas con separadores verticales, sin panel envolvente.
+La navegación por anclas permite saltar entre secciones de la página.
 
-A 700px o menos, el padding pasa a 28px 16px 40px. Cabecera y encabezados de sección
-se apilan. Los filtros forman dos columnas; las dos fechas ocupan ambas y los demás
-campos pueden compartir fila. Las tablas conservan un ancho mínimo de 560px dentro
-de una región desplazable, con indicación visible y acceso por teclado. La tabla,
-no la página completa, absorbe el ancho adicional. El formulario de acceso tiene
-ancho máximo de 460px y separación de campos de 12px.
-
-Estas dimensiones describen la extensión operativa, no un mandato de composición
-para voz/avatar. La navegación propia del panel sustituye visualmente el chrome
-fijo compartido para evitar superposición durante la lectura.
+A 700px o menos, el contenedor usa padding de 24px 16px y los paneles, filtros y
+pie usan 16px. Cabecera y encabezados se apilan; filtros y resumen usan dos columnas,
+con cada fecha ocupando ambas columnas. Las tablas mantienen 610px de ancho mínimo
+solo dentro de su región desplazable. El aviso de desplazamiento permanece visible.
+El detalle de sesión se inserta después de los filtros y antes de la navegación;
+su línea de tiempo pasa de una columna horaria de 80px y contenido flexible a una
+sola columna en móvil. El acceso tiene ancho máximo de 460px y padding de 32px.
+El chrome fijo compartido se oculta únicamente mientras está presente /admin.
 
 ## Elevation & Depth
 
-El panel no usa sombras. Divisores finos y fondos de encabezado expresan agrupación;
-el foco es un contorno de 2px en foreground con separación de 3px. No se generaliza
-esta ausencia de sombras a componentes externos al panel: el botón outline de la
-biblioteca compartida conserva su sombra existente.
+El panel no usa sombras: la separación del lienzo se consigue con superficie blanca
+y borde fino. El foco usa contorno azul de 2px y separación de 3px. Esta regla de
+profundidad pertenece al panel y no cambia los componentes compartidos de voz.
+No se añaden transiciones de estado en el CSS administrativo. Las anclas heredan
+el desplazamiento suave del layout compartido; el detalle solicita scroll y foco
+al abrirse. No se extrae una duración o curva nueva de esa conducta nativa.
+
+**The Flat Panel Rule.** Bordes y cambios de superficie separan los grupos del panel sin sombras.
 
 ## Shapes
 
-Los controles y errores usan esquinas suaves de la escala `control` y borde de 1px.
-Tablas y secciones permanecen rectangulares y abiertas. Los botones, inputs y
-selects comparten altura mínima de 42px; el tamaño puede crecer con el contenido.
+Paneles, filtros, acceso y pie usan la escala surface; tablas y controles, control;
+estados, status; bloques de JSON del detalle, code. Los bordes son de 1px.
+Botones tienen altura mínima de 44px; inputs y selects, de 42px, y pueden crecer
+con su contenido. Los estados son etiquetas compactas, no botones.
 
 ## Components
 
 ### Buttons
 
-Controles sobrios con peso 550, padding de la escala y borde semántico. El botón
-normal usa fondo del lienzo y hover muted. El acceso principal invierte fondo/texto;
-su hover reduce opacidad a 0.85. Disabled usa opacidad 0.55 y cursor de espera. Todos
-comparten el foco visible. No hay animación añadida en esta superficie.
+Acciones legibles de peso 550. El control normal usa blanco y texto principal,
+con hover muted. Filtros y acceso usan azul y blanco; el acceso conserva además
+opacidad 0.85 en hover. La vista pulsada y la sesión expandida usan superficie azul
+clara, borde azul y texto oscuro con `aria-pressed` o `aria-expanded`.
+Disabled usa opacidad 0.55 y cursor de espera. Todos conservan foco visible.
 
 ### Inputs / Fields
 
-Inputs y selects comparten forma y color con botones, tipografía heredada y etiquetas
-persistentes. Las fechas conservan controles nativos. Error se comunica mediante
-mensaje con role alert y borde destructive; los estados de consulta usan role status.
+Campos nativos blancos, con borde, esquinas de control y etiquetas persistentes.
+Las fechas conservan el selector nativo de tema claro. Error se presenta en fondo
+rojizo, texto oscuro y borde de error con `role=alert`; la consulta usa `role=status`.
+Los filtros editados pendientes de aplicar se explican mediante texto.
 
 ### Navigation
 
-Enlace subrayado de regreso a voz y acción de cierre de sesión, con separación de
-20px en escritorio. En móvil la navegación ocupa una fila propia y distribuye
-ambas acciones a los extremos. La interacción no depende solo del hover.
+La cabecera ofrece regreso a voz subrayado y cierre de sesión. La navegación de
+secciones usa enlaces azules de peso 600, subrayado al hover, ajuste de líneas y
+borde inferior. El detalle usa botones de vista que se distribuyen en varias líneas
+cuando falta espacio. La actualización del detalle se alinea a la derecha en
+escritorio y vuelve al flujo en móvil.
 
-### Tables / Containers
+### Chips / Status
 
-Encabezado muted, filas con divisor inferior, celdas de 13px 16px y primera columna
-con 10px a la izquierda. Consumo e importe se alinean a la derecha sin salto;
-metadatos aparecen en texto secundario bajo su valor. No hay chips ni tarjetas
-propios de esta extensión. Los detalles JSON se despliegan con details/summary,
-con área de código desplazable de hasta 420px de ancho.
+Estado neutral y activo comparten forma compacta; el activo usa verde tenue.
+Cada estado tiene texto, para que el significado no dependa del color.
 
-### Query state
+### Panels / Tables
 
-Los campos pueden contener cambios aún no aplicados: un aviso textual lo explica.
-Actualizar confirma la consulta; paginar conserva esa consulta aplicada. La consulta
-no reemplaza silenciosamente una sesión inspeccionada. Estados vacíos y “Sin dato”
-conservan su significado, además del formato visual de cifras y cobertura.
+Paneles blancos delimitan grupos de datos. Las tablas usan encabezado tonal,
+filas con divisores y hover suave. Las celdas tienen padding de 14px; la primera
+columna conserva 10px a la izquierda. Consumo e importe se alinean a la derecha
+sin salto; notas secundarias aparecen debajo. Las regiones desplazables admiten
+foco por teclado. El pie de salud usa fondo muted y conserva el radio de panel.
+
+### Session detail / Timeline
+
+El detalle permanece dentro de la página y mueve el foco a su título al abrirse;
+al cerrarse, lo devuelve al botón de sesión. Conversación, acciones y todos los
+eventos comparten estructura temporal y metadatos secundarios. El texto preserva
+saltos y permite cortes de palabras largas. El JSON usa `details/summary`, fondo
+del lienzo, padding de 16px y máximo de 320px de alto con desplazamiento propio.
+Estados vacíos, carga, error, texto retirado y ausencia de transcripción se expresan
+con mensajes explícitos. Paginar conserva la consulta aplicada y la vista elegida.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- Do conservar Public Sans y los tokens semánticos compartidos.
+- Do conservar Public Sans y limitar la paleta administrativa a /admin.
 - Do acompañar cifras con unidades, cobertura y estados de ausencia de dato.
 - Do mantener foco visible y regiones de tabla accesibles por teclado.
-- Do mantener la densidad legible mediante desplazamiento de tablas en móvil.
+- Do mantener la densidad legible mediante desplazamiento local de tablas en móvil.
 
 ### Don't:
 
-- Don’t convertir las secciones operativas en tarjetas decorativas.
 - Don’t representar ausencia de medición como cero ni estimación como factura.
-- Don’t aplicar la composición de /admin al recorrido de voz sin revisar su contexto.
+- Don’t aplicar la paleta o composición de /admin al recorrido de voz.
+- Don’t comunicar selección o error solamente mediante color.

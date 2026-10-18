@@ -203,7 +203,11 @@ async def test_session_usage_does_not_invent_current_agent_attribution(monkeypat
             "aud": "viva-telemetry",
             "iat": int(time.time()),
             "exp": int(time.time()) + 60,
-            "context": {"room_name": "test", "anonymous_id": str(uuid4())},
+            "context": {
+                "room_name": "test",
+                "anonymous_id": str(uuid4()),
+                "app_session_id": str(uuid4()),
+            },
         },
         "s" * 48,
         algorithm="HS256",
@@ -238,3 +242,134 @@ async def test_session_usage_does_not_invent_current_agent_attribution(monkeypat
         emitter.task.cancel()
         await asyncio.gather(emitter.task, return_exceptions=True)
         current.reset(scope)
+
+
+def test_basic_redaction_and_bounds():
+    from viva_telemetry.privacy import redact
+
+    raw = "Me llamo Ana Gómez. Correo ana@example.com, teléfono +57 300 123 4567, cédula 12345678. token=abcSECRET https://ejemplo.co/?key=secret"
+    value, truncated = redact(raw)
+    for secret in (
+        "Ana Gómez",
+        "ana@example.com",
+        "300 123",
+        "12345678",
+        "abcSECRET",
+        "key=secret",
+    ):
+        assert secret not in value
+    assert not truncated
+    assert redact("a" * 5000) == ("a" * 4000, True)
+
+
+@pytest.mark.asyncio
+async def test_nested_operations_keep_trace_and_parent_without_arguments():
+    from viva_telemetry import current, observed, trace_scope
+
+    emitter = Emitter({"app_session_id": str(uuid4())}, "token")
+
+    @observed("rag")
+    async def inner(query):
+        return query
+
+    @observed()
+    async def outer(query):
+        return await inner(query)
+
+    token = current.set(emitter)
+    try:
+        assert await outer("PRIVATE") == "PRIVATE"
+        rows = [emitter.queue.get_nowait()[1] for _ in range(5)]
+        retrieval = rows.pop(2)
+        assert retrieval["type"] == "retrieval_completed"
+        assert retrieval["payload"]["source_count"] == 0
+        assert rows[1]["parent_span_id"] == rows[0]["span_id"]
+        assert rows[2]["span_id"] == rows[1]["span_id"]
+        assert rows[3]["span_id"] == rows[0]["span_id"]
+        assert "PRIVATE" not in str(rows)
+        assert trace_scope.get() is None
+    finally:
+        current.reset(token)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("enabled", [True, False])
+async def test_transcript_optin_redacts_before_queue_no_system_no_audio(
+    enabled, monkeypatch
+):
+    import json
+    import time
+
+    import jwt
+    from livekit.agents.llm import ChatMessage
+
+    from viva_telemetry import current, install
+
+    monkeypatch.setenv("TELEMETRY_URL", "http://unused")
+    monkeypatch.setenv("TELEMETRY_SIGNING_SECRET", "s" * 48)
+    monkeypatch.setenv("TELEMETRY_CAPTURE_TRANSCRIPTS", str(enabled).lower())
+    token = jwt.encode(
+        {
+            "aud": "viva-telemetry",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 60,
+            "context": {
+                "room_name": "test",
+                "anonymous_id": str(uuid4()),
+                "app_session_id": str(uuid4()),
+            },
+        },
+        "s" * 48,
+        algorithm="HS256",
+    )
+    hooks = {}
+    session = SimpleNamespace(on=lambda name, callback: hooks.update({name: callback}))
+    ctx = SimpleNamespace(
+        job=SimpleNamespace(metadata=json.dumps({"telemetry_context": token})),
+        room=SimpleNamespace(name="test"),
+        add_shutdown_callback=lambda cb: None,
+    )
+    scope = current.set(None)
+    emitter = install(session, ctx, "model")
+    try:
+        message = ChatMessage(role="user", content=["Correo test@example.com"])
+        hooks["conversation_item_added"](SimpleNamespace(item=message))
+        hooks["conversation_item_added"](SimpleNamespace(item=message))
+        hooks["conversation_item_added"](
+            SimpleNamespace(item=ChatMessage(role="system", content=["PRIVATE"]))
+        )
+        rows = [item[1] for item in emitter.queue._queue]
+        assert "test@example.com" not in str(rows)
+        assert "PRIVATE" not in str(rows)
+        texts = [e for e in rows if e["type"] == "conversation_message"]
+        assert len(texts) == (2 if enabled else 0)
+        if texts:
+            assert texts[0]["event_id"] == texts[1]["event_id"]
+            assert texts[0]["payload"]["text"] == "Correo [CORREO]"
+    finally:
+        emitter.task.cancel()
+        await asyncio.gather(emitter.task, return_exceptions=True)
+        current.reset(scope)
+
+
+@pytest.mark.asyncio
+async def test_transcript_batches_respect_collector_byte_limit():
+    import json
+
+    emitter = Emitter({"app_session_id": str(uuid4())}, "token")
+    for _ in range(30):
+        emitter.emit("conversation_message", {"text": "😀" * 4000})
+    sizes = []
+
+    async def send(batch):
+        sizes.append(
+            len(json.dumps({"context_token": emitter.token, "events": batch}).encode())
+        )
+
+    emitter.send = send
+    emitter.task = asyncio.create_task(emitter.run())
+    await asyncio.wait_for(emitter.queue.join(), timeout=2)
+    emitter.task.cancel()
+    await asyncio.gather(emitter.task, return_exceptions=True)
+    assert len(sizes) > 1
+    assert max(sizes) < 262144

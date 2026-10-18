@@ -182,3 +182,153 @@ async def test_latency_denominator_is_event_boundary_not_session_count(store):
     browser = next(x for x in result["latencies"] if x["metric"] == "browser_first_audio_ms")
     assert (server["n"], server["eligible"], server["p50"]) == (1, 2, 120)
     assert (browser["n"], browser["eligible"], browser["p95"]) == (1, 2, 300)
+
+
+@pytest.mark.asyncio
+async def test_duplicate_and_orphan_playback_do_not_inflate_coverage(store):
+    first = event()
+    ctx = context(first)
+    attempt = uuid4()
+
+    def media(kind, attempt_id, ms=None):
+        return Event(
+            **ctx,
+            event_id=uuid4(),
+            occurred_at=datetime.now(timezone.utc),
+            source="browser",
+            connection_attempt_id=attempt_id,
+            type=kind,
+            payload={"elapsed_ms": ms},
+        )
+
+    await store.ingest(
+        [
+            first,
+            media("media_connect_started", attempt),
+            media("audio_playback_started", attempt, 100),
+            media("audio_playback_started", attempt, 200),
+            media("audio_playback_started", uuid4(), 300),
+            media("audio_playback_started", None, 400),
+        ]
+    )
+    now = datetime.now(timezone.utc)
+    metrics = await store.metrics(now - timedelta(hours=1), now + timedelta(hours=1), "test", None)
+    row = next(x for x in metrics["latencies"] if x["metric"] == "browser_first_audio_ms")
+    assert (row["n"], row["eligible"], row["p95"], row["excluded_events"]) == (1, 1, 100, 3)
+
+
+@pytest.mark.asyncio
+async def test_transcripts_separate_expire_and_require_optin(store, monkeypatch):
+    first = event()
+    first.schema_version = 2
+    first.payload["transcript_capture"] = True
+    ctx = context(first)
+    message = Event(
+        **ctx,
+        schema_version=2,
+        event_id=uuid4(),
+        occurred_at=datetime.now(timezone.utc),
+        source="agent",
+        type="conversation_message",
+        payload={
+            "message_id": "m1",
+            "role": "user",
+            "text": "Correo a@example.com",
+            "redaction": "basic-v1",
+        },
+    )
+    await store.ingest([first, message])
+    assert len((await store.events(str(first.app_session_id)))["items"]) == 1
+    monkeypatch.setenv("TELEMETRY_CAPTURE_TRANSCRIPTS", "true")
+    assert await store.ingest([message]) == 1
+    assert await store.ingest([message]) == 0
+    rows = (await store.events(str(first.app_session_id)))["items"]
+    assert rows[0]["payload"]["text"] == "Correo [CORREO]"
+    async with store.pool.acquire() as conn:
+        data = await conn.fetchval(
+            "SELECT data::text FROM telemetry_events WHERE event_id=$1", message.event_id
+        )
+        assert "Correo" not in data and "a@example" not in data
+        await conn.execute("UPDATE telemetry_transcripts SET expires_at=now()-interval '1 second'")
+    assert (await store.events(str(first.app_session_id)))["items"][0]["payload"]["text"] is None
+    await store.purge_transcripts()
+    async with store.pool.acquire() as conn:
+        assert await conn.fetchval("SELECT count(*) FROM telemetry_transcripts") == 0
+
+
+@pytest.mark.asyncio
+async def test_operations_handoffs_and_latest_health(store):
+    first = event()
+    ctx = context(first)
+    health = dict(
+        enqueued=10, persisted=7, dropped=2, write_failed=3, queue_depth=1, queue_age_ms=3
+    )
+    await store.ingest(
+        [
+            first,
+            event(ctx, "tool_completed", dict(name="search", status="ok", elapsed_ms=100)),
+            event(ctx, "tool_completed", dict(name="search", status="error", elapsed_ms=300)),
+            event(ctx, "agent_changed", dict(agent_id="Lira")),
+            event(ctx, "agent_changed", dict(previous_agent_id="Lira", agent_id="Nexus")),
+            event(ctx, "producer_health", health),
+            event(ctx, "producer_health", dict(health, enqueued=20)),
+        ]
+    )
+    now = datetime.now(timezone.utc)
+    m = await store.metrics(now - timedelta(hours=1), now + timedelta(hours=1), "test", None)
+    assert m["operations"][0]["calls"] == 2 and m["operations"][0]["errors"] == 1
+    assert m["operations"][0]["p50"] == 200
+    assert m["quality"]["handoffs"] == 1
+    assert len(m["producers"]) == 1 and m["producers"][0]["payload"]["enqueued"] == 20
+
+
+@pytest.mark.asyncio
+async def test_filtered_pagination_does_not_hide_conversation_behind_technical_events(
+    store, monkeypatch
+):
+    monkeypatch.setenv("TELEMETRY_CAPTURE_TRANSCRIPTS", "true")
+    first = event()
+    first.schema_version = 2
+    first.payload["transcript_capture"] = True
+    ctx = context(first)
+    message = Event(
+        **ctx,
+        schema_version=2,
+        event_id=uuid4(),
+        occurred_at=datetime.now(timezone.utc),
+        source="agent",
+        type="conversation_message",
+        payload={"message_id": "m1", "role": "assistant", "text": "Hola", "redaction": "basic-v1"},
+    )
+    await store.ingest([first, message] + [event(ctx, "response_started", {}) for _ in range(105)])
+    all_events = await store.events(str(first.app_session_id))
+    assert len(all_events["items"]) == 100 and all_events["next_cursor"]
+    messages = await store.events(str(first.app_session_id), view="conversation")
+    assert len(messages["items"]) == 1 and messages["items"][0]["payload"]["text"] == "Hola"
+    assert messages["transcript_capture"]
+    earlier = await store.events(str(first.app_session_id), before=all_events["next_cursor"])
+    assert len(earlier["items"]) == 7
+    assert not set(x["event_id"] for x in earlier["items"]) & set(
+        x["event_id"] for x in all_events["items"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_v1_stored_envelope_stays_valid_for_legacy_readers(store):
+    import json
+    from pathlib import Path
+
+    from jsonschema import Draft202012Validator
+
+    first = event()
+    await store.ingest([first])
+    async with store.pool.acquire() as conn:
+        data = json.loads(
+            await conn.fetchval(
+                "SELECT data FROM telemetry_events WHERE event_id=$1", first.event_id
+            )
+        )
+    schema = json.loads(
+        (Path(__file__).parents[2] / "contracts/telemetry-event.v1.schema.json").read_text()
+    )
+    Draft202012Validator(schema).validate(data)

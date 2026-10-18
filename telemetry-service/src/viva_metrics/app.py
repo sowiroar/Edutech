@@ -36,6 +36,7 @@ async def lifespan(app):
                 if app.state.store.pool is None:
                     await app.state.store.connect()
                 await app.state.store.expire()
+                await app.state.store.purge_transcripts()
                 app.state.ready = True
             except Exception:
                 if app.state.store.pool is not None:
@@ -202,4 +203,9 @@ async def sessions(request: Request):
 
 @app.get("/sessions/{session_id}/events", dependencies=[Depends(authorized)])
 async def events(session_id: UUID, request: Request):
-    return await query(app.state.store.events, str(session_id), request.query_params.get("cursor"))
+    return await query(
+        app.state.store.events,
+        str(session_id),
+        request.query_params.get("cursor"),
+        request.query_params.get("view", "all"),
+    )

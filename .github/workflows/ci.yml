@@ -130,6 +130,8 @@ jobs:
 
       - name: TypeScript
         run: npx tsc --noEmit
+      - name: Pruebas de instrumentación del navegador
+        run: node --test tests/media-telemetry.test.cjs
       - name: Lint de telemetría
         run: npx eslint app/admin app/api/admin app/api/telemetry lib/telemetry app/api/token components/app/app.tsx
       - name: Build

@@ -48,7 +48,7 @@ def test_contract_matches_exported_json_schema():
         {"user_id": "student-chosen-by-browser"},
         {"occurred_at": "2026-10-17T12:00:00"},
         {"source": "unknown"},
-        {"schema_version": 2},
+        {"schema_version": 3},
     ],
 )
 def test_rejects_untrusted_or_sensitive_fields(changes):
@@ -60,3 +60,16 @@ def test_rejects_nonfinite_and_negative_measurements():
     for value in (float("nan"), float("inf"), -1):
         with pytest.raises(ValidationError):
             Event.model_validate(event("media_connected", {"elapsed_ms": value}))
+
+
+def test_transcript_requires_v2_agent_and_bounded_redaction_label():
+    row = event(
+        "conversation_message",
+        {"message_id": "msg1", "role": "user", "text": "Hola", "redaction": "basic-v1"},
+    )
+    with pytest.raises(ValidationError):
+        Event.model_validate(row)
+    row["schema_version"] = 2
+    assert Event.model_validate(row).payload["text"] == "Hola"
+    with pytest.raises(ValidationError):
+        Event.model_validate(dict(row, source="browser"))

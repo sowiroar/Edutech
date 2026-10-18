@@ -24,3 +24,14 @@ CREATE TABLE IF NOT EXISTS usage_ledger (
  cost_status text NOT NULL, PRIMARY KEY(event_id,entry_index)
 );
 CREATE INDEX IF NOT EXISTS usage_ledger_session ON usage_ledger(session_id);
+
+-- Redacted text is isolated from permanent technical events and expires independently.
+CREATE TABLE IF NOT EXISTS telemetry_transcripts (
+    event_id UUID PRIMARY KEY REFERENCES telemetry_events(event_id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES telemetry_sessions(id) ON DELETE CASCADE,
+    message_id TEXT NOT NULL,
+    text TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    UNIQUE(session_id, message_id)
+);
+CREATE INDEX IF NOT EXISTS telemetry_transcripts_expiry ON telemetry_transcripts(expires_at);

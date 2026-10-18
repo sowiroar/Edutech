@@ -256,3 +256,294 @@ body:has(.telemetry-page) [data-app-chrome] {
     color: var(--muted-foreground);
   }
 }
+
+/* The operating dashboard has a pinned light palette; voice retains its own theme. */
+body:has(.telemetry-page) {
+  background: #f6f8fb;
+  color-scheme: light;
+}
+.telemetry-page {
+  --foreground: #1b2b43;
+  --background: #fff;
+  --muted: #eef3f9;
+  --muted-foreground: #5e6e84;
+  --border: #dfe6ef;
+  --destructive: #ba3545;
+  --admin-accent: #245fd3;
+  max-width: 1440px;
+  color-scheme: light;
+  font-size: 0.9375rem;
+  caret-color: var(--admin-accent);
+  scrollbar-color: #9baac0 #eef3f9;
+}
+.telemetry-header {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+.telemetry-header h1 {
+  font-size: 1.8rem;
+}
+.telemetry-page h2 {
+  scroll-margin-top: 24px;
+}
+.telemetry-page section:not(.telemetry-filters) {
+  background: #fff;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 24px;
+}
+.telemetry-page .telemetry-overview {
+  background: transparent !important;
+  padding: 12px 0 0 !important;
+  border: 0 !important;
+}
+.telemetry-overview dl {
+  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.telemetry-overview dl > div {
+  border-right: 1px solid var(--border);
+  padding-right: 12px;
+}
+.telemetry-overview dl > div:last-child {
+  border-right: 0;
+}
+.telemetry-overview dd {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+.telemetry-filters {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 12px;
+}
+.telemetry-filters button,
+.telemetry-page .primary {
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  color: #fff;
+}
+.telemetry-filters button:hover,
+.telemetry-page .primary:hover {
+  background: #1a4dab;
+}
+.telemetry-page :focus-visible {
+  outline-color: var(--admin-accent);
+}
+.telemetry-page a {
+  color: var(--admin-accent);
+}
+.telemetry-page button {
+  min-height: 44px;
+}
+.telemetry-page button[aria-expanded='true'],
+.telemetry-page button[aria-pressed='true'] {
+  color: #174798;
+  border-color: #245fd3;
+  background: #e4edff;
+}
+.telemetry-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-top: 24px;
+  padding: 8px 0 16px;
+}
+.telemetry-section-nav a {
+  padding: 8px 0;
+  text-decoration: none;
+  font-weight: 600;
+}
+.telemetry-section-nav a:hover {
+  text-decoration: underline;
+}
+.telemetry-page .telemetry-caption {
+  font-size: 0.8rem;
+  max-width: none;
+}
+.telemetry-page .telemetry-login {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+.telemetry-page .telemetry-error {
+  background: #fff0f1;
+  color: #962337;
+}
+.telemetry-table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.telemetry-table th {
+  font-size: 0.8rem;
+  color: #475b77;
+  white-space: nowrap;
+}
+.telemetry-table th,
+.telemetry-table td {
+  padding: 14px;
+}
+.telemetry-table tr:last-child td {
+  border-bottom: 0;
+}
+.telemetry-table tbody tr:hover {
+  background: #f8faff;
+}
+.telemetry-table .telemetry-empty {
+  margin: 0;
+}
+.telemetry-quality {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 44px;
+  margin: 24px 0;
+}
+.telemetry-quality dt {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+.telemetry-quality dd {
+  margin-top: 4px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.telemetry-status {
+  display: inline-block;
+  color: #52647e;
+  background: #eef3f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+.telemetry-status.active {
+  color: #246647;
+  background: #e7f3ed;
+}
+.telemetry-status-error {
+  color: #a52939;
+}
+.telemetry-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding-bottom: 20px;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+.telemetry-detail-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.telemetry-detail-nav button:last-child {
+  margin-left: auto;
+}
+.telemetry-detail h2 {
+  scroll-margin-top: 24px;
+}
+.telemetry-timeline {
+  list-style: none;
+  margin: 24px 0;
+  padding: 0;
+}
+.telemetry-timeline li {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+.telemetry-timeline time {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  padding-top: 3px;
+}
+.telemetry-event-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.telemetry-event-heading span,
+.telemetry-timeline small {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+.telemetry-timeline p {
+  margin: 6px 0 10px;
+}
+.telemetry-page .telemetry-transcript {
+  color: var(--foreground);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.telemetry-timeline details {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+.telemetry-timeline summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 6px 0;
+}
+.telemetry-timeline pre {
+  padding: 16px;
+  margin-top: 8px;
+  background: #f6f8fb;
+  max-height: 320px;
+  overflow: auto;
+  border-radius: 6px;
+}
+.telemetry-footer {
+  padding: 24px;
+  background: #eef3f9;
+  border: 0;
+  border-radius: 12px;
+}
+.telemetry-page ::selection {
+  background: #dbe8ff;
+  color: #143d7b;
+}
+@media (max-width: 700px) {
+  .telemetry-page {
+    padding: 24px 16px;
+  }
+  .telemetry-page section:not(.telemetry-filters),
+  .telemetry-filters,
+  .telemetry-footer {
+    padding: 16px;
+  }
+  .telemetry-overview dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .telemetry-overview dl > div {
+    border: 0;
+  }
+  .telemetry-detail-nav button:last-child {
+    margin-left: 0;
+  }
+  .telemetry-timeline li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .telemetry-section-nav {
+    gap: 4px 18px;
+  }
+  .telemetry-table table {
+    min-width: 610px;
+  }
+  .telemetry-detail h2 code {
+    display: inline-block;
+  }
+}

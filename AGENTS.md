@@ -1,3 +1,12 @@
+## Panel y texto opt-in — 17 octubre 2026 (vigente)
+
+Leer `docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md` desde la raíz del repo.
+Usuario autorizó futuras transcripciones con ocultación básica, sin audio;
+prevalece sobre la prohibición histórica de texto debajo. Contrato v2, compatible
+con v1, texto separado con TTL (7 días local), captura desactivada por defecto.
+No reconstruir sesiones antiguas. `/admin` claro como NeoIPS; voz visual intacta.
+Pruebas PostgreSQL solo base `test`. No borrar datos reales. Sin despliegue UAM.
+
 ## Telemetría implementada — 17 octubre 2026, noche
 
 Publicado por PR #8 https://github.com/sowiroar/Edutech/pull/8 contra

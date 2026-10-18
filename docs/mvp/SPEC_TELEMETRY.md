@@ -1,3 +1,7 @@
+> Actualización 17 octubre: [dashboard y trazas](TELEMETRY_DASHBOARD_Y_TRAZAS.md)
+> añade contrato v2 y texto opt-in redactado con retención, autorizado por el usuario.
+> Prevalece sobre el alcance inicial sin transcripciones descrito abajo.
+
 # Especificación: feature/telemetry — Juan
 
 Estado: P0 implementado en feature/telemetry; implementación y límites verificables

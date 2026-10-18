@@ -12,13 +12,27 @@ export class MediaTelemetry {
   private sending = false;
   private failures = 0;
   private closed = false;
-  setToken(token: string) {
-    this.token = token;
+  private generation = 0;
+  beginSession() {
+    this.generation++;
+    this.token = '';
     this.pending = [];
     this.failures = 0;
+    this.startAttempt();
+  }
+  private startAttempt() {
+    this.attempt = crypto.randomUUID();
+    this.media = crypto.randomUUID();
+    this.started = performance.now();
+    this.firstAudio = false;
+    this.emit('media_connect_started', { reason: 'connecting' });
+  }
+  setToken(token: string) {
+    this.token = token;
+    if (this.pending.length) this.schedule();
   }
   private emit(type: string, payload: Record<string, unknown> = {}) {
-    if (!this.token || !this.attempt || this.closed || this.pending.length >= 50) return;
+    if (!this.attempt || this.closed || this.pending.length >= 50) return;
     this.pending.push({
       event_id: crypto.randomUUID(),
       occurred_at: new Date().toISOString(),
@@ -37,9 +51,10 @@ export class MediaTelemetry {
       }, 1000);
   }
   private async flush() {
-    if (this.sending || !this.pending.length || this.closed) return;
+    if (this.sending || !this.token || !this.pending.length || this.closed) return;
     this.sending = true;
     const batch = this.pending.slice(0, 10);
+    const generation = this.generation;
     try {
       const response = await fetch('/api/telemetry/media', {
         method: 'POST',
@@ -48,6 +63,7 @@ export class MediaTelemetry {
         signal: AbortSignal.timeout(4000),
         keepalive: true,
       });
+      if (generation !== this.generation) return;
       if (response.ok) {
         this.pending.splice(0, batch.length);
         this.failures = 0;
@@ -56,6 +72,7 @@ export class MediaTelemetry {
         this.failures = 0;
       }
     } catch {
+      if (generation !== this.generation) return;
       if (++this.failures >= 6) {
         this.pending.splice(0, batch.length);
         this.failures = 0;
@@ -68,13 +85,7 @@ export class MediaTelemetry {
   attach(room: Room) {
     this.closed = false;
     const state = (value: ConnectionState) => {
-      if (value === ConnectionState.Connecting) {
-        this.attempt = crypto.randomUUID();
-        this.media = crypto.randomUUID();
-        this.started = performance.now();
-        this.firstAudio = false;
-        this.emit('media_connect_started', { reason: 'connecting' });
-      }
+      if (value === ConnectionState.Connecting && !this.attempt) this.startAttempt();
       if (value === ConnectionState.Connected)
         this.emit('media_connected', {
           elapsed_ms: performance.now() - this.started,
@@ -93,7 +104,14 @@ export class MediaTelemetry {
         !audio.muted &&
         audio.volume > 0 &&
         !this.firstAudio &&
-        room.state === ConnectionState.Connected
+        room.state === ConnectionState.Connected &&
+        Array.from(room.remoteParticipants.values()).some(
+          (participant) =>
+            participant.isAgent &&
+            Array.from(participant.audioTrackPublications.values()).some((publication) =>
+              publication.track?.attachedElements.includes(audio)
+            )
+        )
       ) {
         this.firstAudio = true;
         this.emit('audio_playback_started', {

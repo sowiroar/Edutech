@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import SessionDetail from './session-detail';
 import './telemetry.css';
 
 type Usage = {
@@ -28,9 +29,35 @@ type Metrics = {
     coverage_basis: string;
     p50: number | null;
     p95: number | null;
+    excluded_events?: number;
   }[];
   known_cost_usd: number | null;
   unmetered_operations: number;
+  operations: {
+    type: string;
+    name: string;
+    purpose: string | null;
+    calls: number;
+    ok: number;
+    errors: number;
+    cancelled: number;
+    timed: number;
+    p50: number | null;
+    p95: number | null;
+  }[];
+  quality: {
+    sessions_with_errors: number;
+    handoffs: number;
+    interrupted: number;
+    finished_responses: number;
+    incomplete_usage_reports: number;
+    retrieval_without_result: number;
+  };
+  producers: {
+    session_id: string;
+    occurred_at: string;
+    payload: { dropped: number; write_failed: number; queue_depth: number };
+  }[];
 };
 type Session = {
   id: string;
@@ -43,16 +70,6 @@ type Session = {
   started_at: string;
   ended_at: string | null;
   end_reason: string | null;
-};
-type Event = {
-  event_id: string;
-  type: string;
-  source: string;
-  occurred_at: string;
-  received_at: string;
-  agent_id: string | null;
-  turn_id: string | null;
-  payload: Record<string, unknown>;
 };
 const number = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
 const money = (v: number | null) =>
@@ -88,8 +105,6 @@ export default function Admin() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [health, setHealth] = useState<{ ready: boolean; write_failed: number } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [eventCursor, setEventCursor] = useState<string | null>(null);
   const [updated, setUpdated] = useState<string | null>(null);
   const query = useCallback(
     () =>
@@ -105,12 +120,12 @@ export default function Admin() {
   const initialized = useRef(false);
   const [appliedQuery, setAppliedQuery] = useState('');
   const request = async (path: string) => {
+    const sequence = requestSequence.current;
     const response = await fetch('/api/admin/' + path, { cache: 'no-store' });
     if (response.status === 401) {
-      setAuthenticated(false);
+      if (sequence === requestSequence.current) setAuthenticated(false);
       throw new Error('');
     }
-    setAuthenticated(true);
     if (!response.ok)
       throw new Error(
         'No se pudieron consultar las métricas. Revisa el servicio de telemetría y vuelve a actualizar.'
@@ -129,6 +144,7 @@ export default function Admin() {
         request('health'),
       ]);
       if (sequence !== requestSequence.current) return;
+      setAuthenticated(true);
       setAppliedQuery(q);
       setMetrics(m);
       setSessions(s.items);
@@ -136,7 +152,6 @@ export default function Admin() {
       setHealth(h);
       setUpdated(new Date().toISOString());
       setSelected(null);
-      setEvents([]);
     } catch (e) {
       if (sequence === requestSequence.current)
         setError(e instanceof Error ? e.message : 'No se pudo actualizar');
@@ -180,24 +195,11 @@ export default function Admin() {
     setAuthenticated(false);
     setMetrics(null);
     setSessions([]);
-    setEvents([]);
+
     setSelected(null);
-  }
-  async function detail(id: string, next?: string) {
-    setBusy(true);
+    setHealth(null);
+    setBusy(false);
     setError('');
-    try {
-      const d = await request(
-        'sessions/' + id + '/events' + (next ? '?cursor=' + encodeURIComponent(next) : '')
-      );
-      setSelected(id);
-      setEvents((old) => (next ? [...old, ...d.items] : d.items));
-      setEventCursor(d.next_cursor);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo cargar la sesión');
-    } finally {
-      setBusy(false);
-    }
   }
   const priced = metrics?.usage.reduce((n, u) => n + u.priced_entries, 0) || 0;
   const total = metrics?.usage.reduce((n, u) => n + u.entries, 0) || 0;
@@ -206,7 +208,7 @@ export default function Admin() {
       <header className="telemetry-header">
         <div>
           <h1>Telemetría VIVA</h1>
-          <p>Sesiones, consumo y calidad de la conversación.</p>
+          <p>Uso, rendimiento y trazabilidad de las conversaciones.</p>
         </div>
         <nav aria-label="Navegación de telemetría">
           <Link href="/">Volver a voz</Link>
@@ -216,6 +218,11 @@ export default function Admin() {
       {error && (
         <p className="telemetry-error" role="alert">
           {error}
+          {authenticated === null && (
+            <button disabled={busy} onClick={load}>
+              Reintentar consulta
+            </button>
+          )}
         </p>
       )}
       {authenticated === null && !error && <p role="status">Comprobando acceso…</p>}
@@ -290,8 +297,27 @@ export default function Admin() {
             {updated ? 'Actualizado ' + date(updated) : 'Sin consulta completada'} · Sesiones
             iniciadas en el periodo seleccionado. Máximo 90 días.
           </p>
+          {selected && (
+            <SessionDetail
+              key={selected}
+              id={selected}
+              onClose={() => {
+                const id = selected;
+                setSelected(null);
+                requestAnimationFrame(() => document.getElementById('session-' + id)?.focus());
+              }}
+            />
+          )}
           {metrics && (
             <>
+              <nav className="telemetry-section-nav" aria-label="Secciones del panel">
+                <a href="#overview">Resumen</a>
+                <a href="#sessions">Sesiones</a>
+                <a href="#operations">Herramientas</a>
+                <a href="#cost">Consumo</a>
+                <a href="#latency">Tiempos</a>
+                <a href="#health">Salud</a>
+              </nav>
               <section className="telemetry-overview" aria-labelledby="overview">
                 <h2 id="overview">Actividad del periodo</h2>
                 <dl>
@@ -317,6 +343,164 @@ export default function Admin() {
                   </div>
                 </dl>
               </section>
+              <section aria-labelledby="sessions">
+                <h2 id="sessions">Sesiones</h2>
+                <p>
+                  Revisa la conversación, las herramientas ejecutadas y los errores. El texto solo
+                  está disponible en sesiones con captura activada; no se guarda audio.
+                </p>
+                <div
+                  className="telemetry-table"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Tabla desplazable"
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Inicio</th>
+                        <th>Sesión</th>
+                        <th>Modo</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sessions.map((s) => (
+                        <tr key={s.id}>
+                          <td>{date(s.started_at)}</td>
+                          <td>
+                            <code title={s.id}>{s.id.slice(0, 8)}</code>
+                          </td>
+                          <td>{s.context.presentation_mode === 'voice' ? 'Voz' : 'Avatar'}</td>
+                          <td>
+                            <span className={'telemetry-status ' + (!s.ended_at ? 'active' : '')}>
+                              {s.ended_at
+                                ? {
+                                    shutdown: 'Cerrada',
+                                    expired: 'Sin cierre confirmado',
+                                    completed: 'Completada',
+                                    participant_left: 'Usuario salió',
+                                    error: 'Error',
+                                    unknown: 'Sin confirmar',
+                                  }[s.end_reason || 'unknown'] || s.end_reason
+                                : 'Activa'}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              id={'session-' + s.id}
+                              aria-expanded={selected === s.id}
+                              disabled={busy}
+                              onClick={() => setSelected(s.id)}
+                              aria-label={'Ver eventos de sesión ' + s.id.slice(0, 8)}
+                            >
+                              Ver eventos
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!sessions.length && (
+                    <p className="telemetry-empty">No hay sesiones para estos filtros.</p>
+                  )}
+                </div>
+                {cursor && (
+                  <button
+                    disabled={busy}
+                    onClick={async () => {
+                      const sequence = requestSequence.current;
+                      setBusy(true);
+                      try {
+                        const d = await request('sessions?' + appliedQuery + '&cursor=' + cursor);
+                        if (sequence !== requestSequence.current) return;
+                        setSessions((v) => [...v, ...d.items]);
+                        setCursor(d.next_cursor);
+                      } catch {
+                        if (sequence === requestSequence.current)
+                          setError('No se pudieron cargar más sesiones.');
+                      } finally {
+                        if (sequence === requestSequence.current) setBusy(false);
+                      }
+                    }}
+                  >
+                    Cargar más sesiones
+                  </button>
+                )}
+              </section>
+              <section aria-labelledby="operations">
+                <h2 id="operations">Herramientas y operaciones</h2>
+                <p>
+                  Resultado y tiempo de cada ejecución. RAG y memoria se miden por separado de la
+                  herramienta que los invoca.
+                </p>
+                <dl className="telemetry-quality">
+                  <div>
+                    <dt>Cambios de agente</dt>
+                    <dd>{metrics.quality?.handoffs ?? 'Sin dato'}</dd>
+                  </div>
+                  <div>
+                    <dt>Respuestas interrumpidas</dt>
+                    <dd>
+                      {metrics.quality?.interrupted ?? 'Sin dato'} /{' '}
+                      {metrics.quality?.finished_responses ?? '—'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Sesiones con errores</dt>
+                    <dd>
+                      {metrics.quality?.sessions_with_errors ?? 'Sin dato'} /{' '}
+                      {metrics.summary.sessions}
+                    </dd>
+                  </div>
+                </dl>
+                <div
+                  className="telemetry-table"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Resultados de herramientas"
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Herramienta / operación</th>
+                        <th>Ejecuciones</th>
+                        <th>Correctas</th>
+                        <th>Fallidas</th>
+                        <th>Canceladas</th>
+                        <th>p50 / p95</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.operations?.map((o) => (
+                        <tr key={o.type + o.name + o.purpose}>
+                          <td>
+                            {o.name}
+                            <small>{o.purpose || 'Herramienta'}</small>
+                          </td>
+                          <td>{o.calls}</td>
+                          <td>{o.ok}</td>
+                          <td>{o.errors}</td>
+                          <td>{o.cancelled}</td>
+                          <td>
+                            {o.p50 === null ? 'Sin dato' : number.format(o.p50) + ' ms'} /{' '}
+                            {o.p95 === null ? 'Sin dato' : number.format(o.p95) + ' ms'}
+                            <small>
+                              {o.timed} de {o.calls} con tiempo
+                            </small>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!metrics.operations?.length && (
+                    <p className="telemetry-empty">
+                      No hay herramientas u operaciones finalizadas en este periodo.
+                    </p>
+                  )}
+                </div>
+              </section>
               <section aria-labelledby="cost">
                 <div className="telemetry-section-heading">
                   <h2 id="cost">Consumo y costo estimado</h2>
@@ -325,7 +509,9 @@ export default function Admin() {
                 <p>
                   Tarifa estándar publicada, no factura. {priced} de {total} registros de uso tienen
                   tarifa. {metrics.unmetered_operations} operaciones de RAG o memoria no exponen
-                  consumo; su costo es desconocido. Infraestructura, GPU e impuestos no incluidos.
+                  consumo; su costo es desconocido. Infraestructura, GPU e impuestos no incluidos.{' '}
+                  {metrics.quality?.incomplete_usage_reports ?? 0} reportes de uso tienen cobertura
+                  incompleta.
                 </p>
                 <div
                   className="telemetry-table"
@@ -415,6 +601,11 @@ export default function Admin() {
                                 ? 'Intentos de conexión registrados'
                                 : 'Eventos de respuesta registrados'}
                             </small>
+                            {!!l.excluded_events && (
+                              <small>
+                                {l.excluded_events} eventos sin emparejar o duplicados, excluidos.
+                              </small>
+                            )}
                           </td>
                           <td>{l.p50 === null ? 'Sin dato' : number.format(l.p50) + ' ms'}</td>
                           <td>{l.p95 === null ? 'Sin dato' : number.format(l.p95) + ' ms'}</td>
@@ -424,132 +615,21 @@ export default function Admin() {
                   </table>
                 </div>
               </section>
-              <section aria-labelledby="sessions">
-                <h2 id="sessions">Sesiones</h2>
-                <p>
-                  Abre una sesión para revisar sus eventos. No se guardan transcripciones ni audio
-                  en este registro.
-                </p>
-                <div
-                  className="telemetry-table"
-                  tabIndex={0}
-                  role="region"
-                  aria-label="Tabla desplazable"
-                >
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Inicio</th>
-                        <th>Sesión</th>
-                        <th>Modo</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sessions.map((s) => (
-                        <tr key={s.id}>
-                          <td>{date(s.started_at)}</td>
-                          <td>
-                            <code title={s.id}>{s.id.slice(0, 8)}</code>
-                          </td>
-                          <td>{s.context.presentation_mode === 'voice' ? 'Voz' : 'Avatar'}</td>
-                          <td>{s.ended_at ? s.end_reason : 'Activa'}</td>
-                          <td>
-                            <button
-                              disabled={busy}
-                              onClick={() => detail(s.id)}
-                              aria-label={'Ver eventos de sesión ' + s.id.slice(0, 8)}
-                            >
-                              Ver eventos
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {!sessions.length && (
-                    <p className="telemetry-empty">No hay sesiones para estos filtros.</p>
-                  )}
-                </div>
-                {cursor && (
-                  <button
-                    disabled={busy}
-                    onClick={async () => {
-                      setBusy(true);
-                      try {
-                        const d = await request('sessions?' + appliedQuery + '&cursor=' + cursor);
-                        setSessions((v) => [...v, ...d.items]);
-                        setCursor(d.next_cursor);
-                      } catch {
-                        setError('No se pudieron cargar más sesiones.');
-                      } finally {
-                        setBusy(false);
-                      }
-                    }}
-                  >
-                    Cargar más sesiones
-                  </button>
-                )}
-              </section>
-              {selected && (
-                <section aria-labelledby="events">
-                  <h2 id="events">Eventos de la sesión</h2>
-                  <p className="telemetry-id">
-                    <code>{selected}</code>
-                  </p>
-                  <div
-                    className="telemetry-table"
-                    tabIndex={0}
-                    role="region"
-                    aria-label="Tabla desplazable"
-                  >
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Hora del productor</th>
-                          <th>Evento</th>
-                          <th>Origen / agente</th>
-                          <th>Detalle</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {events.map((e) => (
-                          <tr key={e.event_id}>
-                            <td>{date(e.occurred_at)}</td>
-                            <td>
-                              {e.type}
-                              <small>{e.turn_id || 'Sin turno correlacionado'}</small>
-                            </td>
-                            <td>
-                              {e.source}
-                              <small>{e.agent_id || '—'}</small>
-                            </td>
-                            <td>
-                              <details>
-                                <summary>Inspeccionar</summary>
-                                <pre>{JSON.stringify(e.payload, null, 2)}</pre>
-                                <small>Recibido: {date(e.received_at)}</small>
-                              </details>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {eventCursor && (
-                    <button disabled={busy} onClick={() => detail(selected, eventCursor)}>
-                      Cargar eventos anteriores
-                    </button>
-                  )}
-                </section>
-              )}
               <footer className="telemetry-footer">
-                <h2>Salud del registro</h2>
+                <h2 id="health">Salud del registro</h2>
                 <p>
                   {health?.ready ? 'Almacenamiento disponible' : 'Almacenamiento sin confirmar'} ·{' '}
                   {health?.write_failed ?? 'Sin dato'} fallos de escritura desde el inicio del
                   colector.
+                </p>
+                <p>
+                  Último reporte por productor:{' '}
+                  {metrics.producers?.reduce((n, row) => n + row.payload.dropped, 0) ?? 'Sin dato'}{' '}
+                  eventos descartados,{' '}
+                  {metrics.producers?.reduce((n, row) => n + row.payload.write_failed, 0) ??
+                    'Sin dato'}{' '}
+                  intentos de escritura fallidos. Cobertura: {metrics.producers?.length || 0} de{' '}
+                  {metrics.summary.sessions} sesiones.
                 </p>
                 <p>
                   La cola del agente es acotada. Consulta los eventos <code>producer_health</code> y

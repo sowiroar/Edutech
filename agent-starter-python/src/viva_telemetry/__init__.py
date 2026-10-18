@@ -1,4 +1,4 @@
-"""Bounded best-effort telemetry. No transcripts, audio, tool arguments or secrets."""
+"""Bounded best-effort telemetry. Opt-in redacted transcripts; never audio or tool arguments."""
 
 from __future__ import annotations
 
@@ -7,18 +7,22 @@ import contextlib
 import contextvars
 import copy
 import functools
+import hashlib
 import json
 import logging
 import os
 import time
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4, uuid5
 
 import aiohttp
 import jwt
 
+from .privacy import VERSION, redact
+
 logger = logging.getLogger("viva-telemetry")
 current = contextvars.ContextVar("viva_telemetry", default=None)
+trace_scope = contextvars.ContextVar("viva_trace_scope", default=None)
 
 
 def memory_identity(session):
@@ -127,7 +131,8 @@ class Emitter:
             return
         event = dict(
             self.context,
-            schema_version=1,
+            schema_version=2,
+            trace_id=UUID(self.context["app_session_id"]).hex,
             event_id=str(uuid4()),
             occurred_at=datetime.now(timezone.utc).isoformat(),
             source="agent",
@@ -136,6 +141,7 @@ class Emitter:
             type=kind,
             payload=copy.deepcopy(payload),
         )
+        event.update(trace_scope.get() or {})
         event.update(correlation)
         if kind == "session_started":
             self.start_event = event
@@ -187,8 +193,15 @@ class Emitter:
                 self.emit("producer_health", self.health())
                 continue
             batch = [item]
+            batch_bytes = len(json.dumps(item[1], ensure_ascii=True).encode())
             while len(batch) < 48 and not self.queue.empty():
+                size = len(
+                    json.dumps(self.queue._queue[0][1], ensure_ascii=True).encode()
+                )
+                if batch_bytes + size > 200_000:
+                    break
                 batch.append(self.queue.get_nowait())
+                batch_bytes += size
             self.inflight = len(batch)
             events = [e for _, e in batch]
             if (
@@ -257,6 +270,8 @@ def install(session, ctx, model):
             options={"require": ["exp", "iat", "context"]},
         )
         context = claims["context"]
+        for key in ("app_session_id", "anonymous_id"):
+            UUID(context[key])
         if context["room_name"] != ctx.room.name:
             raise ValueError("Room mismatch")
     except Exception:
@@ -266,7 +281,43 @@ def install(session, ctx, model):
     current.set(emitter)
     session._viva_emitter = emitter
     session._viva_memory_identity = "visitor-" + context["anonymous_id"]
-    emitter.emit("session_started", {"model": model})
+    capture = os.getenv("TELEMETRY_CAPTURE_TRANSCRIPTS", "false").lower() == "true"
+    emitter.emit("session_started", {"model": model, "transcript_capture": capture})
+
+    def conversation(event):
+        if not capture:
+            return
+        try:
+            item = event.item
+            if item.type != "message" or item.role not in ("user", "assistant"):
+                return
+            text = item.text_content
+            if not text or not text.strip():
+                return
+            text, truncated = redact(text)
+            emitter.emit(
+                "conversation_message",
+                {
+                    "message_id": item.id,
+                    "role": item.role,
+                    "text": text,
+                    "interrupted": item.interrupted,
+                    "truncated": truncated,
+                    "redaction": VERSION,
+                },
+                # Idempotent SDK message identity, not a fabricated turn/playback match.
+                event_id=str(
+                    uuid5(UUID(context["app_session_id"]), "message:" + item.id)
+                ),
+                agent_id=None,
+                avatar_id=None,
+            )
+        except Exception:
+            emitter.emit(
+                "error", {"component": "telemetry", "code": "TranscriptAdapterError"}
+            )
+
+    session.on("conversation_item_added", conversation)
     emitter.task = asyncio.create_task(emitter.run())
     deltas = UsageDelta()
 
@@ -383,7 +434,13 @@ def observed(purpose=None):
             if context is not None:
                 with contextlib.suppress(Exception):
                     call_id = context.function_call.call_id
-            correlation = {"agent_id": emitter.agent_id, "avatar_id": emitter.avatar_id}
+            correlation = dict(trace_scope.get() or {})
+            correlation.update(
+                agent_id=emitter.agent_id,
+                avatar_id=emitter.avatar_id,
+                parent_span_id=correlation.get("span_id"),
+                span_id=uuid4().hex[:16],
+            )
             if call_id:
                 correlation["tool_call_id"] = call_id
             if context is not None:
@@ -393,6 +450,7 @@ def observed(purpose=None):
             prefix = "tool" if purpose is None else "operation"
             if purpose:
                 payload.update(purpose=purpose, usage_observed=False)
+            trace_token = trace_scope.set(correlation)
             emitter.emit(prefix + "_started", payload, **correlation)
             from .google_usage import operation
 
@@ -401,7 +459,34 @@ def observed(purpose=None):
             start = time.monotonic()
             status = "ok"
             try:
-                return await fn(*args, **kwargs)
+                result = await fn(*args, **kwargs)
+                if purpose == "rag":
+                    try:
+                        sources = (
+                            result.get("fuentes", [])
+                            if isinstance(result, dict)
+                            else []
+                        )
+                        emitter.emit(
+                            "retrieval_completed",
+                            {
+                                "source_count": len(sources),
+                                "source_ids": [
+                                    hashlib.sha256(str(source).encode()).hexdigest()[
+                                        :16
+                                    ]
+                                    for source in sources[:20]
+                                ],
+                                "result_available": bool(result),
+                            },
+                            **correlation,
+                        )
+                    except Exception:
+                        emitter.emit(
+                            "error",
+                            {"component": "telemetry", "code": "RetrievalAdapterError"},
+                        )
+                return result
             except asyncio.CancelledError:
                 status = "cancelled"
                 raise
@@ -425,6 +510,7 @@ def observed(purpose=None):
                     ),
                     **correlation,
                 )
+                trace_scope.reset(trace_token)
 
         return wrapped
 

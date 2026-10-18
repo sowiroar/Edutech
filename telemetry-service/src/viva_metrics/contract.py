@@ -1,4 +1,4 @@
-"""Versioned, content-free events. Never accept arbitrary telemetry payloads."""
+"""Versioned technical events and opt-in redacted text. Never accept arbitrary telemetry payloads."""
 
 from datetime import datetime, timezone
 from typing import Annotated, Literal
@@ -36,6 +36,7 @@ def context_fields(context: dict) -> dict:
 
 class StartPayload(StrictModel):
     model: Name | None = None
+    transcript_capture: bool = False
 
 
 class EndPayload(StrictModel):
@@ -67,6 +68,23 @@ class OperationPayload(StrictModel):
     status: Literal["started", "ok", "error", "cancelled", "unknown"]
     elapsed_ms: Duration | None = None
     usage_observed: bool = False
+
+
+class RetrievalPayload(StrictModel):
+    source_count: Count
+    source_ids: list[Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{16}$")]] = Field(
+        default_factory=list, max_length=20
+    )
+    result_available: bool
+
+
+class ConversationPayload(StrictModel):
+    message_id: Name
+    role: Literal["user", "assistant"]
+    text: Annotated[str, StringConstraints(min_length=1, max_length=4000)]
+    interrupted: bool = False
+    truncated: bool = False
+    redaction: Literal["basic-v1"]
 
 
 class UsageEntry(StrictModel):
@@ -157,12 +175,14 @@ PAYLOADS = {
     "usage_recorded": UsagePayload,
     "error": ErrorPayload,
     "producer_health": HealthPayload,
+    "conversation_message": ConversationPayload,
+    "retrieval_completed": RetrievalPayload,
     **dict.fromkeys(sorted(MEDIA_TYPES), MediaPayload),
 }
 
 
 class Event(SessionContext):
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     event_id: UUID
     occurred_at: datetime
     received_at: datetime | None = None
@@ -176,6 +196,7 @@ class Event(SessionContext):
     avatar_id: Name | None = None
     trace_id: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{32}$")] | None = None
     span_id: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{16}$")] | None = None
+    parent_span_id: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{16}$")] | None = None
     type: str
     payload: dict = Field(default_factory=dict)
 
@@ -186,7 +207,15 @@ class Event(SessionContext):
         self.occurred_at = self.occurred_at.astimezone(timezone.utc)
         if self.type not in PAYLOADS:
             raise ValueError("Unknown event type")
+        if self.schema_version == 1 and (
+            self.type in ("conversation_message", "retrieval_completed")
+            or self.parent_span_id is not None
+            or "transcript_capture" in self.payload
+        ):
+            raise ValueError("This event requires schema v2")
         self.payload = PAYLOADS[self.type].model_validate(self.payload).model_dump(mode="json")
+        if self.schema_version == 1 and self.type == "session_started":
+            self.payload.pop("transcript_capture", None)
         if self.source == "collector" and (
             self.type != "session_ended" or self.payload["reason"] != "expired"
         ):
@@ -199,7 +228,7 @@ class Event(SessionContext):
 def event_schema() -> dict:
     schema = Event.model_json_schema()
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
-    schema["$id"] = "urn:vivaverse:telemetry-event:1"
+    schema["$id"] = "urn:vivaverse:telemetry-event:2"
     schema["properties"]["type"]["enum"] = list(PAYLOADS)
     definitions = schema.setdefault("$defs", {})
     schema["allOf"] = [
@@ -217,6 +246,18 @@ def event_schema() -> dict:
             },
         },
     ]
+    schema["allOf"].append(
+        {
+            "if": {"properties": {"schema_version": {"const": 1}}},
+            "then": {
+                "properties": {
+                    "type": {"not": {"enum": ["conversation_message", "retrieval_completed"]}},
+                    "parent_span_id": {"type": "null"},
+                    "payload": {"not": {"required": ["transcript_capture"]}},
+                }
+            },
+        }
+    )
     for name, model in PAYLOADS.items():
         payload = model.model_json_schema()
         definitions.update(payload.pop("$defs", {}))
