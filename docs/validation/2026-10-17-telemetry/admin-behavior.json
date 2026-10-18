@@ -1,0 +1,9 @@
+{
+  "draft_does_not_fetch": true,
+  "applied_filter_label": true,
+  "test_environment_empty": true,
+  "session_drilldown": true,
+  "event_details": true,
+  "logout": true,
+  "page_errors": 0
+}

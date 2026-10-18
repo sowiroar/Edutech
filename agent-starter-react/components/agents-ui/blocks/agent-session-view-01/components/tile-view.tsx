@@ -8,10 +8,8 @@ import {
   useTracks,
   useVoiceAssistant,
 } from '@livekit/components-react';
-import { useAvatarStream } from '@/hooks/useAvatarStream';
 import { cn } from '@/lib/shadcn/utils';
-import { AudioVisualizer } from './audio-visualizer';
-import { AvatarStage } from './avatar-stage';
+import { SpeakingAnimation } from './speaking-animation';
 
 const ANIMATION_TRANSITION: MotionProps['transition'] = {
   type: 'spring',
@@ -96,7 +94,11 @@ export function TileLayout({
   audioVisualizerGridColumnCount,
   audioVisualizerWaveLineWidth,
 }: TileLayoutProps) {
-  const { videoTrack: agentVideoTrack } = useVoiceAssistant();
+  const { state: agentState, agentAttributes } = useVoiceAssistant();
+  // Personaje activo (NEXO/LIRA/ELIAN), el mismo atributo que agent.py pone en
+  // anunciar_personaje_avatar() (Fase 2) para el avatar de Unreal — se reutiliza aquí
+  // para elegir el color de animaciones_viva, sin inventar una señal nueva.
+  const character = agentAttributes?.['avatar.character'];
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -104,13 +106,11 @@ export function TileLayout({
   const isScreenShareEnabled = screenShareTrack && !screenShareTrack.publication.isMuted;
   const hasSecondTile = isCameraEnabled || isScreenShareEnabled;
 
-  const avatarStream = useAvatarStream();
-  const showUnrealAvatar = avatarStream.videoUrl !== undefined;
+  // Obligatoria siempre (hablando o en espera): reemplaza por completo al avatar de
+  // Unreal y al visualizador de audio que había antes en este tile (animaciones_viva).
+  const isSpeaking = agentState === 'speaking';
 
   const animationDelay = isChatOpen ? 0 : 0.15;
-  const isAvatar = agentVideoTrack !== undefined && !showUnrealAvatar;
-  const videoWidth = agentVideoTrack?.publication.dimensions?.width ?? 0;
-  const videoHeight = agentVideoTrack?.publication.dimensions?.height ?? 0;
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-8 bottom-32 z-50 md:top-12 md:bottom-40">
@@ -126,105 +126,26 @@ export function TileLayout({
             ])}
           >
             <AnimatePresence mode="popLayout">
-              {showUnrealAvatar && (
-                // Avatar de Unreal (NEXO/Familia VIVA) por MJPEG (avatar-render)
-                <motion.div
-                  key="unreal-avatar"
-                  layoutId="unreal-avatar"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    ...ANIMATION_TRANSITION,
-                    delay: animationDelay,
-                  }}
-                >
-                  <AvatarStage url={avatarStream.videoUrl!} isChatOpen={isChatOpen} />
-                </motion.div>
-              )}
-
-              {!isAvatar && !showUnrealAvatar && (
-                // Audio Agent
-                <motion.div
-                  key="agent"
-                  layoutId="agent"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    ...ANIMATION_TRANSITION,
-                    delay: animationDelay,
-                  }}
-                  className={cn('relative aspect-square h-[90px]')}
-                >
-                  <AudioVisualizer
-                    key="audio-visualizer"
-                    initial={{ scale: 1 }}
-                    animate={{ scale: isChatOpen ? 0.2 : 1 }}
-                    transition={{
-                      ...ANIMATION_TRANSITION,
-                      delay: animationDelay,
-                    }}
-                    audioVisualizerType={audioVisualizerType}
-                    audioVisualizerColor={audioVisualizerColor}
-                    audioVisualizerColorShift={audioVisualizerColorShift}
-                    audioVisualizerBarCount={audioVisualizerBarCount}
-                    audioVisualizerRadialBarCount={audioVisualizerRadialBarCount}
-                    audioVisualizerRadialRadius={audioVisualizerRadialRadius}
-                    audioVisualizerGridRowCount={audioVisualizerGridRowCount}
-                    audioVisualizerGridColumnCount={audioVisualizerGridColumnCount}
-                    audioVisualizerWaveLineWidth={audioVisualizerWaveLineWidth}
-                    themeMode={themeMode}
-                    isChatOpen={isChatOpen}
-                    className={cn(
-                      'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-                      'bg-background rounded-[50px] border border-transparent transition-[border,drop-shadow]',
-                      isChatOpen && 'border-input shadow-2xl/10 delay-200'
-                    )}
-                    style={{ color: audioVisualizerColor }}
-                  />
-                </motion.div>
-              )}
-
-              {isAvatar && (
-                // Avatar Agent
-                <motion.div
-                  key="avatar"
-                  layoutId="avatar"
-                  initial={{
-                    scale: 1,
-                    opacity: 1,
-                    maskImage:
-                      'radial-gradient(circle, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 20px, transparent 20px)',
-                    filter: 'blur(20px)',
-                  }}
-                  animate={{
-                    maskImage:
-                      'radial-gradient(circle, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 500px, transparent 500px)',
-                    filter: 'blur(0px)',
-                    borderRadius: isChatOpen ? 6 : 12,
-                  }}
-                  transition={{
-                    ...ANIMATION_TRANSITION,
-                    delay: animationDelay,
-                    maskImage: {
-                      duration: 1,
-                    },
-                    filter: {
-                      duration: 1,
-                    },
-                  }}
-                  className={cn(
-                    'overflow-hidden bg-black drop-shadow-xl/80',
-                    isChatOpen ? 'h-[90px]' : 'h-auto w-full'
-                  )}
-                >
-                  <VideoTrack
-                    width={videoWidth}
-                    height={videoHeight}
-                    trackRef={agentVideoTrack}
-                    className={cn(isChatOpen && 'size-[90px] object-cover')}
-                  />
-                </motion.div>
-              )}
+              {/* animaciones_viva: único visual del agente, siempre montado (nunca se
+                  desmonta entre hablando/en espera, para no recargar el video ni saltar
+                  entre tiles) — reemplaza por completo al avatar de Unreal, al
+                  visualizador de audio y al video de agente que había antes aquí. */}
+              <motion.div
+                key="speaking-animation"
+                layoutId="speaking-animation"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  ...ANIMATION_TRANSITION,
+                  delay: animationDelay,
+                }}
+              >
+                <SpeakingAnimation
+                  isSpeaking={isSpeaking}
+                  isChatOpen={isChatOpen}
+                  character={character}
+                />
+              </motion.div>
             </AnimatePresence>
           </div>
 

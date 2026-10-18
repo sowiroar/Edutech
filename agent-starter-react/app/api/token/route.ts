@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
-import { RoomConfiguration, RoomAgentDispatch } from '@livekit/protocol';
+import { randomUUID } from 'node:crypto';
+import { RoomAgentDispatch, RoomConfiguration } from '@livekit/protocol';
+import { createContext, enabled } from '@/lib/telemetry/server';
 
 type ConnectionDetails = {
   serverUrl: string;
   roomName: string;
   participantName: string;
   participantToken: string;
+  telemetry?: { context: Record<string, unknown>; token: string };
 };
 
 // NOTE: you are expected to define the following environment variables in `.env.local`:
@@ -17,7 +20,7 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 // don't cache the results
 export const revalidate = 0;
 
-export async function POST(req: Request) {
+export async function POST() {
   // make an exception for development, vercel preview, or local docker deployment
   if (
     process.env.NODE_ENV !== 'development' &&
@@ -40,22 +43,20 @@ export async function POST(req: Request) {
       throw new Error('LIVEKIT_API_SECRET is not defined');
     }
 
-    // Parse room config from request body.
-    const body = await req.json().catch(() => ({}));
-    const roomConfig = body?.room_config
-      ? RoomConfiguration.fromJson(body.room_config, { ignoreUnknownFields: true })
-      : new RoomConfiguration();
-
-    // Ensure our agent (nexus) is always dispatched to the room
+    // Server owns dispatch and identity; never accept participant IDs or job metadata from POST.
     const targetAgent = process.env.AGENT_NAME || 'nexus';
-    if (!roomConfig.agents || roomConfig.agents.length === 0) {
-      roomConfig.agents = [new RoomAgentDispatch({ agentName: targetAgent })];
-    }
-
-    // Generate participant token
     const participantName = 'user';
-    const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
-    const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
+    const participantIdentity = `visitor_${randomUUID()}`;
+    const roomName = `viva_${randomUUID()}`;
+    const telemetry = enabled() ? await createContext(roomName, participantIdentity) : undefined;
+    const roomConfig = new RoomConfiguration({
+      agents: [
+        new RoomAgentDispatch({
+          agentName: targetAgent,
+          metadata: telemetry ? JSON.stringify({ telemetry_context: telemetry.token }) : '',
+        }),
+      ],
+    });
 
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },
@@ -78,16 +79,14 @@ export async function POST(req: Request) {
       roomName,
       participantName,
       participantToken,
+      telemetry,
     };
     const headers = new Headers({
       'Cache-Control': 'no-store',
     });
     return NextResponse.json(data, { headers });
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(error);
-      return new NextResponse(error.message, { status: 500 });
-    }
+  } catch {
+    return NextResponse.json({ error: 'No se pudo crear la sesión' }, { status: 500 });
   }
 }
 

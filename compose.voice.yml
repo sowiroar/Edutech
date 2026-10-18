@@ -1,0 +1,152 @@
+# Desarrollo local de voz. No combinar con docker-compose.yml mediante -f.
+# Mantiene el código de Jacobo; no inicia CUDA, Unreal ni el puente de avatar.
+x-agent-runtime: &agent-runtime
+  build: ./agent-starter-python
+  image: edutech-voice-local-voice-agent
+  environment:
+    LIVEKIT_URL: ws://livekit:7880
+    LIVEKIT_API_KEY: devkey
+    LIVEKIT_API_SECRET: secret
+    GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-}
+    TELEMETRY_CAPTURE_TRANSCRIPTS: ${TELEMETRY_CAPTURE_TRANSCRIPTS:-false}
+    TELEMETRY_URL: http://telemetry:8090
+    TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+    TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
+    QDRANT_HOST: qdrant
+    QDRANT_PORT: "6333"
+    KNOWLEDGE_DB: /data/knowledge.db
+    NEXUS_DOCS_DIR: /app/data/especializacion_ia
+    NEXUS_STORAGE_DIR: /app/data/nexus_storage
+    UAM_DOCS_DIR: /app/data/documentos_uam
+    UAM_STORAGE_DIR: /app/data/uam_storage
+  volumes:
+    - ./data/especializacion_ia:/app/data/especializacion_ia:ro
+    - ./data/documentos_uam:/app/data/documentos_uam:ro
+    - nexus:/app/data/nexus_storage
+    - uam:/app/data/uam_storage
+    - knowledge:/data:ro
+
+services:
+  telemetry-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_DB: telemetry
+      POSTGRES_PASSWORD: ${TELEMETRY_DB_PASSWORD:-disabled-not-for-production}
+    volumes:
+      - telemetry:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U telemetry -d telemetry"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  telemetry:
+    build: ./telemetry-service
+    environment:
+      TELEMETRY_CAPTURE_TRANSCRIPTS: ${TELEMETRY_CAPTURE_TRANSCRIPTS:-false}
+      TELEMETRY_TRANSCRIPT_RETENTION_DAYS: ${TELEMETRY_TRANSCRIPT_RETENTION_DAYS:-7}
+      DATABASE_URL: postgresql://telemetry:${TELEMETRY_DB_PASSWORD:-disabled-not-for-production}@telemetry-db:5432/telemetry
+      TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+      TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
+    depends_on:
+      telemetry-db:
+        condition: service_healthy
+    restart: unless-stopped
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant:/qdrant/storage
+  storage-init:
+    image: alpine:3.21
+    command: [sh, -c, "chown 10001:10001 /nexus /uam /knowledge"]
+    volumes:
+      - nexus:/nexus
+      - uam:/uam
+      - knowledge:/knowledge
+    restart: "no"
+  knowledge-sync:
+    build: ./knowledge-sync
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    environment:
+      DATA_DIR: /data
+      SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-24}
+      PORTAL_CONOCIMIENTO_URL: ${PORTAL_CONOCIMIENTO_URL:-https://portalconocimiento.autonoma.edu.co}
+      PORTAL_CONOCIMIENTO_USER: ${PORTAL_CONOCIMIENTO_USER:-}
+      PORTAL_CONOCIMIENTO_APP_PASSWORD: ${PORTAL_CONOCIMIENTO_APP_PASSWORD:-}
+    volumes:
+      - knowledge:/data
+  # Cold OCR/indexing can exceed the worker's 600-second initialization limit.
+  # Build once outside the worker, then load the persisted indexes there.
+  rag-init:
+    <<: *agent-runtime
+    restart: "no"
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    command:
+      - uv
+      - run
+      - python
+      - -c
+      - |
+        import logging, sys
+        sys.path.insert(0, "src")
+        logging.basicConfig(level=logging.INFO)
+        from rag_llamaindex import get_or_build_query_engine
+        from rag_nexus import get_or_build_nexus_query_engine
+        for load in (get_or_build_query_engine, get_or_build_nexus_query_engine):
+            if load() is None:
+                raise SystemExit("RAG preparation failed; voice worker not started")
+        print("RAG preparation complete", flush=True)
+  voice-agent:
+    <<: *agent-runtime
+    depends_on:
+      livekit:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      knowledge-sync:
+        condition: service_started
+      storage-init:
+        condition: service_completed_successfully
+      rag-init:
+        condition: service_completed_successfully
+  frontend:
+    build: ./agent-starter-react
+    depends_on:
+      - livekit
+    ports:
+      - "127.0.0.1:3500:3000"
+    environment:
+      # URL pública para el navegador y URL interna para verificar el token.
+      LIVEKIT_URL: ws://localhost:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      AGENT_NAME: nexus
+      ALLOW_INSECURE_ROOM_CREATION: "true"
+      AVATAR_MUTE_AGENT_AUDIO: "false"
+      AVATAR_BRIDGE_HINT_URL: http://127.0.0.1:9/hint
+      TELEMETRY_URL: http://telemetry:8090
+      TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+      TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
+      TELEMETRY_ADMIN_PASSWORD: ${TELEMETRY_ADMIN_PASSWORD:-}
+      TELEMETRY_ENVIRONMENT: ${TELEMETRY_ENVIRONMENT:-local}
+      TELEMETRY_PUBLIC_ORIGIN: ${TELEMETRY_PUBLIC_ORIGIN:-http://localhost:3500}
+      TELEMETRY_COOKIE_SECURE: ${TELEMETRY_COOKIE_SECURE:-false}
+      APP_RELEASE: ${APP_RELEASE:-unknown}
+volumes:
+  qdrant:
+  nexus:
+  uam:
+  knowledge:
+  telemetry:

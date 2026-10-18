@@ -17,6 +17,7 @@ name = "agent-starter-python"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "livekit-agents" },
     { name = "livekit-plugins-google" },
     { name = "livekit-plugins-openai" },
@@ -27,6 +28,7 @@ dependencies = [
     { name = "llama-index-llms-gemini" },
     { name = "llama-index-llms-google-genai" },
     { name = "mem0ai" },
+    { name = "pyjwt" },
     { name = "pypdf" },
     { name = "python-docx" },
     { name = "python-dotenv" },
@@ -41,6 +43,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.10,<4" },
     { name = "livekit-agents", specifier = ">=1.6.9" },
     { name = "livekit-plugins-google", specifier = ">=1.8.2" },
     { name = "livekit-plugins-openai", specifier = ">=1.8.0" },
@@ -51,6 +54,7 @@ requires-dist = [
     { name = "llama-index-llms-gemini" },
     { name = "llama-index-llms-google-genai", specifier = ">=0.11.2" },
     { name = "mem0ai", specifier = ">=2.0.0" },
+    { name = "pyjwt", specifier = ">=2.10,<3" },
     { name = "pypdf", specifier = ">=5.0.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "python-dotenv" },

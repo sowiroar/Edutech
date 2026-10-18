@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
 import textwrap
+from typing import Any
 
-import httpx
-import openai as py_openai
 from dotenv import load_dotenv
 from google.genai import types as genai_types
 from livekit.agents import (
@@ -22,7 +22,6 @@ from livekit.agents import (
     cli,
     function_tool,
     llm,
-    room_io,
 )
 from livekit.plugins import google
 
@@ -30,6 +29,8 @@ import knowledge
 import memory_manager
 import rag_llamaindex
 import rag_nexus
+import viva_telemetry
+from background_tasks import spawn_background
 
 logger = logging.getLogger("agent-multi")
 
@@ -71,15 +72,7 @@ _memoria_prefetch: dict[str, tuple[str | None, asyncio.Task]] = {}
 
 
 def _resolver_user_id(session) -> str:
-    user_id = "estudiante_uam"
-    try:
-        if session and hasattr(session, "room_io") and session.room_io:
-            participant = getattr(session.room_io, "participant", None)
-            if participant and getattr(participant, "identity", None):
-                user_id = participant.identity
-    except Exception:
-        pass
-    return user_id
+    return viva_telemetry.memory_identity(session)
 
 
 def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
@@ -137,13 +130,32 @@ class BaseEducationalAgent(Agent):
         """Avisa al avatar-bridge (vía atributo de participante de LiveKit)
         qué personaje debe mostrarse/hablar ahora. Si no hay sesión real
         (pruebas unitarias) o AVATAR_CHARACTER es None, no hace nada."""
+        with contextlib.suppress(RuntimeError):
+            viva_telemetry.agent_changed(
+                self.session, self.__class__.__name__, self.AVATAR_CHARACTER
+            )
         if not self.AVATAR_CHARACTER:
             return
         try:
-            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+            if (
+                self.session
+                and hasattr(self.session, "room_io")
+                and self.session.room_io
+            ):
                 room = getattr(self.session.room_io, "room", None)
-                if room and hasattr(room, "local_participant") and room.local_participant:
-                    room.local_participant.set_attributes(
+                if (
+                    room
+                    and hasattr(room, "local_participant")
+                    and room.local_participant
+                ):
+                    # set_attributes() es async def en el SDK de LiveKit (confirmado leyendo
+                    # su código fuente en vivo: no se ve en inspect.signature(), que no marca
+                    # async). Sin este await, la llamada solo crea la corrutina y la descarta
+                    # sin ejecutarla — el atributo nunca salía hacia LiveKit, ni una vez,
+                    # desde que se escribió esto (bug real encontrado el 2026-10-16: el video
+                    # de animaciones_viva en el frontend nunca cambiaba de personaje porque
+                    # agentAttributes nunca traía 'avatar.character').
+                    await room.local_participant.set_attributes(
                         {"avatar.character": self.AVATAR_CHARACTER}
                     )
                     logger.info(
@@ -162,13 +174,13 @@ class BaseEducationalAgent(Agent):
         except Exception:
             # self.session lanza RuntimeError si el agente no esta corriendo
             # dentro de una sesion activa (p.ej. en tests unitarios).
-            user_id = "estudiante_uam"
+            user_id = viva_telemetry.memory_identity(self)
         texto_usuario = new_message.text_content
         if not texto_usuario or not texto_usuario.strip():
             return
 
         # 1. Almacenar el mensaje/turno en memoria persistente de Mem0 en background
-        asyncio.create_task(
+        spawn_background(
             memory_manager.guardar_memoria_usuario(
                 user_id=user_id,
                 mensaje=texto_usuario,
@@ -206,11 +218,16 @@ class BaseEducationalAgent(Agent):
                 if isinstance(new_message.content, list):
                     new_message.content.append(f"\n{contexto_memoria}")
                 else:
-                    new_message.content = [str(new_message.content), f"\n{contexto_memoria}"]
+                    new_message.content = [
+                        str(new_message.content),
+                        f"\n{contexto_memoria}",
+                    ]
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
-    async def generar_respuesta_confiable(self, instructions: str, timeout: float = 6.0) -> None:
+    async def generar_respuesta_confiable(
+        self, instructions: str, timeout: float = 6.0
+    ) -> None:
         """generate_reply() con reintento si no se detecta habla.
 
         Encontrado revisando logs reales el 2026-10-08: una llamada entera
@@ -265,14 +282,24 @@ class BaseEducationalAgent(Agent):
     async def emitir_datos_frontend(self, topic: str, data: dict[str, Any]) -> None:
         """Emite datos estructurados (como fuentes de RAG) al frontend vía LiveKit DataPacket."""
         try:
-            if self.session and hasattr(self.session, "room_io") and self.session.room_io:
+            if (
+                self.session
+                and hasattr(self.session, "room_io")
+                and self.session.room_io
+            ):
                 room = getattr(self.session.room_io, "room", None)
-                if room and hasattr(room, "local_participant") and room.local_participant:
+                if (
+                    room
+                    and hasattr(room, "local_participant")
+                    and room.local_participant
+                ):
                     payload = json.dumps({"topic": topic, "payload": data})
                     await room.local_participant.publish_data(payload.encode("utf-8"))
                     logger.info("Datos emitidos al frontend: topic=%s", topic)
         except Exception:
-            logger.debug("No se pudo emitir datos al frontend (sala no vinculada o cliente desconectado)")
+            logger.debug(
+                "No se pudo emitir datos al frontend (sala no vinculada o cliente desconectado)"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +345,7 @@ class LiraAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
         logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
@@ -326,6 +354,7 @@ class LiraAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
         logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
@@ -387,7 +416,10 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
     )
-    async def consultas_especializacion_ia(self, context: RunContext, consulta: str) -> str:
+    @viva_telemetry.observed()
+    async def consultas_especializacion_ia(
+        self, context: RunContext, consulta: str
+    ) -> str:
         """Busca en el repositorio de documentos y guías curriculares de la Especialización en IA de la UAM.
 
         Args:
@@ -402,7 +434,7 @@ class NexusAgent(BaseEducationalAgent):
         fuentes = resultado["fuentes"]
 
         # Emitir las fuentes al frontend en background para trazabilidad gráfica/UI
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_sources",
                 data={
@@ -419,6 +451,7 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Lista los documentos, guías y programas curriculares de la Especialización en Inteligencia Artificial disponibles en el repositorio."
     )
+    @viva_telemetry.observed()
     async def listar_documentos_especializacion_ia(self, context: RunContext) -> str:
         """Retorna el catálogo de documentos oficiales de la Especialización en IA disponibles para consulta."""
         documentos = rag_nexus.listar_documentos_especializacion()
@@ -426,7 +459,7 @@ class NexusAgent(BaseEducationalAgent):
             return "Actualmente no hay documentos cargados en el repositorio de la especialización."
 
         # Emitir catálogo completo al frontend
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_catalog",
                 data={
@@ -443,6 +476,7 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales general, carreras de pregrado, admisiones o campus. NO intentes responder la pregunta tú mismo."
     )
+    @viva_telemetry.observed()
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
         logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
@@ -508,6 +542,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
     )
+    @viva_telemetry.observed()
     async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
         """Busca en la base de conocimiento oficial de la UAM mediante RAG LlamaIndex con Gemini Embedding.
 
@@ -522,7 +557,7 @@ class ElianAgent(BaseEducationalAgent):
                 res_bm25 = await asyncio.to_thread(knowledge.buscar, consulta)
                 if res_bm25:
                     fuentes = [r.titulo for r in res_bm25]
-                    asyncio.create_task(
+                    spawn_background(
                         self.emitir_datos_frontend(
                             topic="rag_sources",
                             data={
@@ -547,7 +582,7 @@ class ElianAgent(BaseEducationalAgent):
         fuentes = resultado.get("fuentes", [])
 
         # Emitir fuentes al frontend vía DataPacket sin interrumpir la síntesis de voz
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_sources",
                 data={
@@ -564,6 +599,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Lista los reglamentos, acuerdos, políticas y guías oficiales de la UAM que están registrados en la base de datos."
     )
+    @viva_telemetry.observed()
     async def listar_documentos_uam(self, context: RunContext) -> str:
         """Retorna el catálogo de documentos oficiales de la UAM registrados en el sistema."""
         documentos = rag_llamaindex.listar_documentos_uam()
@@ -572,9 +608,11 @@ class ElianAgent(BaseEducationalAgent):
             if docs_bm25:
                 titulos = [d["titulo"] for d in docs_bm25]
                 return f"Tenemos {len(titulos)} documentos institucionales disponibles, incluyendo: {', '.join(titulos[:4])}."
-            return "Actualmente no se pudieron listar los documentos oficiales de la UAM."
+            return (
+                "Actualmente no se pudieron listar los documentos oficiales de la UAM."
+            )
 
-        asyncio.create_task(
+        spawn_background(
             self.emitir_datos_frontend(
                 topic="rag_catalog",
                 data={
@@ -590,6 +628,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
         logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
@@ -684,6 +723,8 @@ async def multiagent_session(ctx: JobContext):
         ),
     )
 
+    viva_telemetry.install(session, ctx, model_name)
+
     def _on_user_transcript(ev) -> None:
         """Dispara el prefetch de Mem0 con el PRIMER fragmento de cada turno
         (identificado por item_id), no con el final — ver _memoria_prefetch
@@ -707,7 +748,9 @@ async def multiagent_session(ctx: JobContext):
     session.on("user_input_transcribed", _on_user_transcript)
 
     # Inicia la sesión asociando el agente inicial (Lira) con audio WebRTC nativo
-    logger.info("Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini).")
+    logger.info(
+        "Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini)."
+    )
     await session.start(
         agent=initial_agent,
         room=ctx.room,

@@ -1,3 +1,8 @@
+## Coordinación vigente (17 octubre 2026)
+
+Leer ../../AGENTS.md y ../../docs/mvp/SPEC_TELEMETRY.md. Base backp-fase1;
+no confundir los escenarios de CI con aceptación de voz real.
+
 # AGENTS.md
 
 This is a LiveKit Agents project. LiveKit Agents is a Python SDK for building voice AI agents. This project is intended to be used with LiveKit Cloud. See @README.md for more about the rest of the LiveKit ecosystem.

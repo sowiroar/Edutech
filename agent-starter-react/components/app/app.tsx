@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Room, TokenSource } from 'livekit-client';
 import { type UseSessionReturn, useSession } from '@livekit/components-react';
 import { WarningIcon } from '@phosphor-icons/react/dist/ssr';
@@ -11,6 +11,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useAgentErrors } from '@/hooks/useAgentErrors';
 import { AvatarStreamProvider, useAvatarStream } from '@/hooks/useAvatarStream';
 import { useDebugMode } from '@/hooks/useDebug';
+import { MediaTelemetry } from '@/lib/telemetry/client';
 
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
 
@@ -47,7 +48,23 @@ interface AppProps {
 }
 
 export function App({ agentName = 'nexus' }: AppProps) {
-  const tokenSource = useMemo(() => TokenSource.endpoint('/api/token'), []);
+  const mediaTelemetry = useMemo(() => new MediaTelemetry(), []);
+  const tokenSource = useMemo(
+    () =>
+      TokenSource.custom(async () => {
+        mediaTelemetry.beginSession();
+        const response = await fetch('/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        if (!response.ok) throw new Error('No se pudo iniciar la sesión');
+        const data = await response.json();
+        mediaTelemetry.setToken(data.telemetry?.token || '');
+        return data;
+      }),
+    [mediaTelemetry]
+  );
 
   // Room propio (en vez de dejar que useSession cree el suyo por defecto)
   // solo para poder pedir voiceIsolation además de lo que ya viene activado
@@ -70,6 +87,7 @@ export function App({ agentName = 'nexus' }: AppProps) {
     []
   );
 
+  useEffect(() => mediaTelemetry.attach(room), [mediaTelemetry, room]);
   const session = useSession(tokenSource, { agentName, room });
 
   return (

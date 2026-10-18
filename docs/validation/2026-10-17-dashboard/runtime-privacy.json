@@ -1,0 +1,64 @@
+{
+  "scenario": "privacy",
+  "microphone": false,
+  "synthetic_input": true,
+  "audio_samples": 1612320,
+  "nonzero_frames": 3292,
+  "agent_states": [
+    "speaking",
+    "listening",
+    "thinking",
+    "listening",
+    "thinking",
+    "speaking",
+    "listening"
+  ],
+  "avatars": [
+    "NEXO"
+  ],
+  "token_status": 200,
+  "session_id": "b1913329-4767-491d-850c-b9a279e95db4",
+  "greeting_completed": true,
+  "handoff_announced": true,
+  "followup_completed": true,
+  "admin_login_status": 200,
+  "events_status": 200,
+  "persisted_event_counts": {
+    "response_completed": 4,
+    "conversation_message": 4,
+    "usage_recorded": 7,
+    "producer_health": 3,
+    "response_started": 4,
+    "operation_completed": 1,
+    "tool_completed": 2,
+    "retrieval_completed": 1,
+    "operation_started": 1,
+    "tool_started": 2,
+    "agent_changed": 2,
+    "session_started": 1
+  },
+  "logical_agents": [
+    "LiraAgent",
+    "NexusAgent"
+  ],
+  "usage_providers": [
+    "google"
+  ],
+  "transcript_messages": 4,
+  "transcript_roles": [
+    "assistant",
+    "user"
+  ],
+  "redaction_verified": true,
+  "trace_spans_present": true,
+  "producer_health": [
+    {
+      "dropped": 0,
+      "enqueued": 28,
+      "persisted": 28,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00045900014811195433,
+      "write_failed": 0
+    }
+  ]
+}

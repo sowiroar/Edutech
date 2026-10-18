@@ -1,0 +1,16 @@
+{
+  "synthetic_silent_microphone": true,
+  "page_errors": 0,
+  "playing_events": 1,
+  "media_http_statuses": [
+    200
+  ],
+  "session_id": "9adba402-a5cd-4038-a41c-2890a3b03e83",
+  "persisted_media_counts": {
+    "media_connect_started": 1,
+    "media_connected": 1,
+    "audio_playback_started": 1
+  },
+  "one_correlated_attempt": true,
+  "no_dropped_events": true
+}

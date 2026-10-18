@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, "feature/**", "bugfix/**", "release/**", "hotfix/**"]
+    branches: [main, backp-fase1, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
   pull_request:
-    branches: [main, develop]
+    branches: [main, backp-fase1]
 
 permissions:
   contents: read
@@ -14,6 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workspace:
+    name: Flujo compartido y voz local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s scripts/tests -v
+      - run: python scripts/voice_demo.py init
+      - run: python scripts/voice_demo.py config
+
   agent:
     name: Agente Python (ruff + pytest)
     runs-on: ubuntu-latest
@@ -39,6 +51,35 @@ jobs:
 
       - name: Tests
         run: uv run pytest -v
+
+  telemetry:
+    name: Telemetría (contrato, PostgreSQL, auth y costos)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test -d test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://test:test@localhost:5432/test
+    defaults:
+      run:
+        working-directory: telemetry-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
 
   knowledge-sync:
     name: Knowledge sync (ruff + pytest)
@@ -80,20 +121,26 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: agent-starter-react/package-lock.json
 
       - name: Instalar dependencias
         run: npm ci --legacy-peer-deps
 
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Pruebas de instrumentación del navegador
+        run: node --test tests/*.test.cjs
+      - name: Lint de telemetría
+        run: npx eslint app/admin app/api/admin app/api/telemetry lib/telemetry app/api/token components/app/app.tsx
       - name: Build
         run: npm run build
 
   docker:
     name: Docker Compose (config + imágenes)
     runs-on: ubuntu-latest
-    needs: [agent, knowledge-sync, frontend]
+    needs: [workspace, agent, knowledge-sync, frontend, telemetry]
     steps:
       - uses: actions/checkout@v4
 
@@ -105,3 +152,6 @@ jobs:
       # whisper-stt no se construye aquí: su imagen con PyTorch+CUDA supera el disco de los runners.
       - name: Construir imágenes del agente, knowledge-sync y frontend
         run: docker compose build voice-agent knowledge-sync frontend
+
+      - name: Construir colector de telemetría
+        run: docker build -t edutech-telemetry-ci ./telemetry-service
