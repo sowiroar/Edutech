@@ -1,0 +1,17 @@
+{
+  "scenario": "greeting",
+  "microphone": false,
+  "synthetic_input": true,
+  "audio_samples": 229920,
+  "nonzero_frames": 461,
+  "agent_states": [
+    "speaking",
+    "listening"
+  ],
+  "avatars": [],
+  "token_status": 200,
+  "session_id": "7e2c9e5f-c4ae-454f-868b-f44c4a0b54f2",
+  "greeting_completed": true,
+  "admin_login_status": 200,
+  "events_status": 503
+}

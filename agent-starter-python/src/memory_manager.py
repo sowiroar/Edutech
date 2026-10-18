@@ -12,6 +12,9 @@ import os
 import time
 from typing import Any
 
+from viva_telemetry import observed
+from viva_telemetry.google_usage import wrap_client
+
 logger = logging.getLogger("memory-manager")
 
 _memory_instance: Any = None
@@ -92,6 +95,10 @@ def get_memory_instance():
 
         config = _get_mem0_config()
         _memory_instance = Memory.from_config(config)
+        _memory_instance.llm.client = wrap_client(_memory_instance.llm.client, "memory")
+        _memory_instance.embedding_model.client = wrap_client(
+            _memory_instance.embedding_model.client, "embedding"
+        )
         logger.info("Instancia de Mem0 inicializada con éxito usando Qdrant y Gemini.")
         return _memory_instance
     except Exception:
@@ -100,6 +107,7 @@ def get_memory_instance():
         return None
 
 
+@observed("memory")
 async def guardar_memoria_usuario(
     user_id: str, mensaje: str, metadata: dict[str, Any] | None = None
 ) -> None:
@@ -127,6 +135,7 @@ async def guardar_memoria_usuario(
     await asyncio.to_thread(_sync_add)
 
 
+@observed("memory")
 async def buscar_memorias_usuario(
     user_id: str, consulta: str, limite: int = 5
 ) -> list[str]:

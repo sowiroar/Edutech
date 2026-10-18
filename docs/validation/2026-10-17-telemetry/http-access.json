@@ -1,0 +1,14 @@
+{
+  "anonymous_admin_rejected": true,
+  "cross_origin_rejected": true,
+  "admin_cookie_httponly": true,
+  "visitor_and_session_isolation": true,
+  "foreign_session_rejected": true,
+  "client_cost_event_rejected": true,
+  "unsigned_context_rejected": true,
+  "start_required": true,
+  "invalid_filter_rejected": true,
+  "test_environment_sessions": 0,
+  "foreign_session_read_rejected": true,
+  "logout_revokes_cookie": true
+}

@@ -1,6 +1,12 @@
+> Actualización 17 octubre: [dashboard y trazas](TELEMETRY_DASHBOARD_Y_TRAZAS.md)
+> añade contrato v2 y texto opt-in redactado con retención, autorizado por el usuario.
+> Prevalece sobre el alcance inicial sin transcripciones descrito abajo.
+
 # Especificación: feature/telemetry — Juan
 
-Estado: acordada para implementar; no describe endpoints o tablas existentes.
+Estado: P0 implementado en feature/telemetry; implementación y límites verificables
+en TELEMETRY_IMPLEMENTACION.md y docs/validation/2026-10-17-telemetry/.
+Este documento conserva los criterios de aceptación, no amplía la evidencia real.
 Referencia aportada: informe NeoIPS del 17-oct-2026, commit b3cf60b. Se reutiliza
 su diseño de eventos/contexto/emisor/adaptadores, no su código sin disponer de él,
 ni versiones, tarifas, Pipecat, Simli, dominio clínico o datos privados.
@@ -12,7 +18,7 @@ sesión, agente, modelo, errores y consumo disponible. Panel privado mínimo con
 rango temporal, sesiones, latencias, tokens por modalidad, costos estimados y
 cobertura. La misma instrumentación servirá al modo Avatar.
 
-## Integración real de destino
+## Integración real de destino (diagnóstico previo)
 
 - Entrypoint: agent-starter-python/src/agent.py, multiagent_session y AgentSession.
 - Gemini es audio bidireccional: NO inventar etapas STT/TTS ni sumar sus precios.
@@ -36,15 +42,15 @@ ChatMessage.metrics. Implementar el ledger desde session_usage_updated y comprob
 si cada campo recibido es snapshot o delta; la versión del proveedor sigue siendo
 la autoridad. No contar además métricas del plugin como otro gasto.
 
-## Contrato v1 propuesto (compartido con Santiago)
+## Contrato v1 implementado (compartido con Santiago)
 
-Crear `contracts/telemetry-event.v1.schema.json`; sobre validado y versionado:
+Fuente generada: `contracts/telemetry-event.v1.schema.json`; sobre validado y versionado:
 
 | Campo | Regla |
 |---|---|
 | schema_version, event_id | 1; UUID, idempotencia de entrega |
 | occurred_at, received_at | UTC productor y receptor; no equivalen a reloj sincronizado |
-| source | agent / browser / bridge / renderer |
+| source | agent / browser / bridge / renderer; collector solo para expiración |
 | environment, release | local/test/uam-demo; SHA del backend y avatar cuando aplique |
 | conversation_id, app_session_id | UUID del servidor; relación estable con la sala |
 | user_id, anonymous_id, identity_source | user_id nullable; visitante separado; identidad Moodle solo verificada en servidor |
@@ -132,3 +138,22 @@ Fuentes técnicas a consultar durante implementación:
 - https://docs.livekit.io/testing/observability/data/
 - https://docs.livekit.io/reference/agents/events/
 - https://docs.livekit.io/reference/recipes/metrics_realtime/
+
+## Matriz de cierre P0 — evidencia de esta entrega
+
+| Criterio | Resultado y límite |
+|---|---|
+| Contexto común voz/avatar | Contrato y modo implementados; voz probada. Selector y renderer real pendientes de Santiago. |
+| Visitantes y handoff | Identidad aislada HTTP/unitaria, Lira→Nexus real por texto sintético. Memoria pedagógica multiusuario no aceptada. |
+| Idempotencia/snapshots | Pruebas PostgreSQL y SDK instalado correctas. |
+| Costos conocidos/desconocidos | Decimal, tarifas fechadas y null probados; subtotal real disponible, cobertura parcial explícita. |
+| Caída de base | Saludo real completo con Postgres detenido; pérdidas visibles; base recuperada. |
+| Cancelación y eventos tardíos | Prueba automatizada de origen/turno y cierre acotado; interrupción humana pendiente. |
+| Acceso y aislamiento | Panel privado, firmas, rechazo de UUID/consumo/origen ajenos y logout comprobados. |
+| Datos excluidos | Contrato sin texto/audio, evidencia sin secretos; Mem0/logs previos tienen políticas propias. |
+| Filtros y trazabilidad | SQL por entorno/modo/periodo, detalle paginado y cobertura de latencias implementados. |
+| Proveedor real | Gemini Live, RAG y reproducción Chromium con micrófono sintético probados; no aceptación humana ni UAM. |
+
+P0 de instrumentación de voz queda implementado. No declarar terminadas las pruebas
+de avatar, identidad Moodle, costos totales Mem0/bootstrap ni telemetría de GPU.
+Estos límites no se resuelven reemplazando valores ausentes por cero.

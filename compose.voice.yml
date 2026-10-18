@@ -9,6 +9,10 @@ x-agent-runtime: &agent-runtime
     LIVEKIT_API_SECRET: secret
     GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
     GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-}
+    TELEMETRY_CAPTURE_TRANSCRIPTS: ${TELEMETRY_CAPTURE_TRANSCRIPTS:-false}
+    TELEMETRY_URL: http://telemetry:8090
+    TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+    TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
     QDRANT_HOST: qdrant
     QDRANT_PORT: "6333"
     KNOWLEDGE_DB: /data/knowledge.db
@@ -24,6 +28,31 @@ x-agent-runtime: &agent-runtime
     - knowledge:/data:ro
 
 services:
+  telemetry-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_DB: telemetry
+      POSTGRES_PASSWORD: ${TELEMETRY_DB_PASSWORD:-disabled-not-for-production}
+    volumes:
+      - telemetry:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U telemetry -d telemetry"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  telemetry:
+    build: ./telemetry-service
+    environment:
+      TELEMETRY_CAPTURE_TRANSCRIPTS: ${TELEMETRY_CAPTURE_TRANSCRIPTS:-false}
+      TELEMETRY_TRANSCRIPT_RETENTION_DAYS: ${TELEMETRY_TRANSCRIPT_RETENTION_DAYS:-7}
+      DATABASE_URL: postgresql://telemetry:${TELEMETRY_DB_PASSWORD:-disabled-not-for-production}@telemetry-db:5432/telemetry
+      TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+      TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
+    depends_on:
+      telemetry-db:
+        condition: service_healthy
+    restart: unless-stopped
   livekit:
     image: livekit/livekit-server:latest
     command: --dev --bind 0.0.0.0
@@ -107,8 +136,17 @@ services:
       ALLOW_INSECURE_ROOM_CREATION: "true"
       AVATAR_MUTE_AGENT_AUDIO: "false"
       AVATAR_BRIDGE_HINT_URL: http://127.0.0.1:9/hint
+      TELEMETRY_URL: http://telemetry:8090
+      TELEMETRY_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:-}
+      TELEMETRY_SIGNING_SECRET: ${TELEMETRY_SIGNING_SECRET:-}
+      TELEMETRY_ADMIN_PASSWORD: ${TELEMETRY_ADMIN_PASSWORD:-}
+      TELEMETRY_ENVIRONMENT: ${TELEMETRY_ENVIRONMENT:-local}
+      TELEMETRY_PUBLIC_ORIGIN: ${TELEMETRY_PUBLIC_ORIGIN:-http://localhost:3500}
+      TELEMETRY_COOKIE_SECURE: ${TELEMETRY_COOKIE_SECURE:-false}
+      APP_RELEASE: ${APP_RELEASE:-unknown}
 volumes:
   qdrant:
   nexus:
   uam:
   knowledge:
+  telemetry:

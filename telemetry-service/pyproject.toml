@@ -1,0 +1,26 @@
+[project]
+name = "viva-metrics"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "asyncpg>=0.30,<1", "PyJWT>=2.10,<3"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-asyncio", "httpx", "ruff", "jsonschema"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/viva_metrics"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]

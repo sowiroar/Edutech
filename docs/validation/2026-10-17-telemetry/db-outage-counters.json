@@ -1,0 +1,170 @@
+[
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:24.680058+00:00",
+    "counters": {
+      "enqueued": 3,
+      "persisted": 0,
+      "dropped": 0,
+      "write_failed": 1,
+      "queue_depth": 2,
+      "queue_age_ms": 67.263121999531
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:24.935171+00:00",
+    "counters": {
+      "enqueued": 3,
+      "persisted": 0,
+      "dropped": 0,
+      "write_failed": 2,
+      "queue_depth": 2,
+      "queue_age_ms": 322.385220999422
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:25.451908+00:00",
+    "counters": {
+      "enqueued": 3,
+      "persisted": 0,
+      "dropped": 0,
+      "write_failed": 3,
+      "queue_depth": 2,
+      "queue_age_ms": 839.0812819998246
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:26.208945+00:00",
+    "counters": {
+      "enqueued": 4,
+      "persisted": 0,
+      "dropped": 1,
+      "write_failed": 4,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00037500012695090845
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:26.465422+00:00",
+    "counters": {
+      "enqueued": 4,
+      "persisted": 0,
+      "dropped": 1,
+      "write_failed": 5,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00033400010579498485
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:26.969008+00:00",
+    "counters": {
+      "enqueued": 4,
+      "persisted": 0,
+      "dropped": 1,
+      "write_failed": 6,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00037500012695090845
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:29.435841+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 4,
+      "write_failed": 7,
+      "queue_depth": 1,
+      "queue_age_ms": 4.35003299935488
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:29.690961+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 4,
+      "write_failed": 8,
+      "queue_depth": 1,
+      "queue_age_ms": 259.47292399996513
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:30.195628+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 4,
+      "write_failed": 9,
+      "queue_depth": 1,
+      "queue_age_ms": 764.1382579995479
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:30.951762+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 5,
+      "write_failed": 10,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00037500012695090845
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:31.207652+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 5,
+      "write_failed": 11,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00033400010579498485
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:31.713771+00:00",
+    "counters": {
+      "enqueued": 6,
+      "persisted": 0,
+      "dropped": 5,
+      "write_failed": 12,
+      "queue_depth": 0,
+      "queue_age_ms": 0.0005840001904289238
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:47.494004+00:00",
+    "counters": {
+      "enqueued": 7,
+      "persisted": 1,
+      "dropped": 6,
+      "write_failed": 12,
+      "queue_depth": 0,
+      "queue_age_ms": 0.0010829999155248515
+    }
+  },
+  {
+    "type": "producer_counters",
+    "timestamp": "2026-10-17T23:47:49.394471+00:00",
+    "counters": {
+      "enqueued": 10,
+      "persisted": 4,
+      "dropped": 6,
+      "write_failed": 12,
+      "queue_depth": 0,
+      "queue_age_ms": 0.001041999894368928
+    }
+  }
+]

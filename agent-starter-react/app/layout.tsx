@@ -63,7 +63,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
           enableSystem
           disableTransitionOnChange
         >
-          <header className="fixed top-0 left-0 z-50 hidden w-full flex-row justify-between p-6 md:flex">
+          <header
+            data-app-chrome
+            className="fixed top-0 left-0 z-50 hidden w-full flex-row justify-between p-6 md:flex"
+          >
             <a
               target="_blank"
               rel="noopener noreferrer"
@@ -93,7 +96,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           </header>
 
           {children}
-          <div className="group fixed bottom-0 left-1/2 z-50 mb-2 -translate-x-1/2">
+          <div data-app-chrome className="group fixed bottom-0 left-1/2 z-50 mb-2 -translate-x-1/2">
             <ThemeToggle className="translate-y-20 transition-transform delay-150 duration-300 group-hover:translate-y-0" />
           </div>
         </ThemeProvider>

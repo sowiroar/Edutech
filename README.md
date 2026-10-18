@@ -8,7 +8,7 @@ Agentes LiveKit + Gemini Live, frontend Next.js y opción Unreal en desarrollo.
 - [Guía del MVP y estado](docs/mvp/README.md).
 - [Arranque Mac/Windows y pruebas UAM](docs/mvp/RUNBOOK.md).
 - [Ramas, responsables y entrega](docs/mvp/FLUJO.md).
-- Juan: [feature/telemetry](docs/mvp/SPEC_TELEMETRY.md).
+- Juan: [telemetría implementada y panel privado](docs/mvp/TELEMETRY_IMPLEMENTACION.md).
 - Santiago: [feature/avatar-presentation](docs/mvp/SPEC_AVATAR_PRESENTATION.md).
 - [Pruebas realizadas](docs/mvp/VALIDACION.md) y [aceptación pendiente](docs/mvp/ACEPTACION.md).
 
@@ -38,12 +38,16 @@ No ejecutar despliegue automático al hacer pull. Usar EDUTECH_SKIP_DEPLOY=1.
 | avatar-bridge / avatar-render | Integración histórica Gemini → Unreal → MJPEG |
 | Avatar | Submódulo: SHA exacto del repositorio de assets |
 | knowledge-sync / data | Sincronización/documentos institucionales |
-| compose.voice.yml | Entorno local de voz aislado |
+| telemetry-service / contracts | Colector PostgreSQL, contrato y costos con cobertura |
+| compose.voice.yml | Entorno local de voz y telemetría aislado |
 | docs/mvp | Specs, runbook, pruebas y flujo actual |
 
 El checkout externo hermano Avatar es para edición; inicializar el submódulo
 solo cuando haga falta reproducir un build desde Edutech. No copiar .env ni assets
 manualmente entre ramas. Seis personajes visuales no implican seis roles nuevos.
 
-Estado: la base de voz se conserva; selector, telemetría y validación remota son
-trabajos explícitos de las features. No afirmar MVP institucional completo ni SSO.
+Estado: voz real y telemetría probadas localmente. Panel en http://localhost:3500/admin;
+contraseña TELEMETRY_ADMIN_PASSWORD en .env.voice. Selector/avatar y validación UAM
+siguen pendientes. No afirmar MVP institucional completo ni SSO.
+
+Panel privado claro, transcripción opt-in y trazas: [guía del dashboard](docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md).

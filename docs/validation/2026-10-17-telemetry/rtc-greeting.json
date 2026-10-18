@@ -1,0 +1,14 @@
+{
+  "test": "frontend token -> LiveKit dispatch -> Gemini greeting -> RTC audio",
+  "microphone": false,
+  "audio_samples": 210720,
+  "nonzero_frames": 426,
+  "agent_states": [
+    "speaking",
+    "listening"
+  ],
+  "greeting_completed": true,
+  "token_http_status": 200,
+  "session_id": "fe282536-f4a9-46a0-83a6-2a37247993bc",
+  "rtc_connected": true
+}
