@@ -4,7 +4,9 @@
 
 ## Estado real
 
-La voz y la telemetría están integradas en **`backp-fase1`**, mediante los PR #8 y #9. La base revisada es `43d42d9`, con CI aprobado.
+La voz y la telemetría se integraron mediante los PR #8 y #9 en `backp-fase1`
+(`43d42d9`, CI aprobado). La base vigente para continuar y probar es **`main`**,
+que incorpora esa entrega y el flujo simplificado.
 
 Podemos probar conversación por voz, panel privado, mensajes con ocultación básica,
 herramientas, RAG, cambios de agente, consumo y errores. Hay evidencia local de
@@ -78,10 +80,10 @@ agente puede preceder a la llegada del mensaje. Fuente: [eventos LiveKit](https:
 
 Conservar primero cualquier trabajo sin publicar del servidor. No hacer `reset`,
 `clean`, ni reemplazar `.env` o volúmenes. En un checkout limpio de pruebas, después
-de `git fetch origin`, crear su rama desde `origin/backp-fase1`:
+de `git fetch origin`, crear su rama desde `origin/main`:
 
 ```sh
-git switch -c feature/voice-validation origin/backp-fase1
+git switch -c feature/voice-validation origin/main
 python3 scripts/voice_demo.py init
 # Completar .env.voice local: claves/modelo habilitados; nunca subirlo.
 python3 scripts/voice_demo.py doctor
@@ -108,7 +110,7 @@ Registrar por prueba: SHA de código, entorno, ID de sesión, resultado y fallo 
 ## Próximo paso
 
 **Sí: retomar el avatar en paralelo con la aceptación de voz en UAM.** Santiago
-continúa `feature/avatar-presentation` desde la base compartida; Jacobo valida voz;
+crea una nueva feature de avatar desde origin/main; Jacobo valida voz;
 Juan continúa correlación y métricas. No mantener dos arquitecturas divergentes.
 
 Primero un avatar en una sesión: voz sincronizada, interrupción, vuelta a reposo y

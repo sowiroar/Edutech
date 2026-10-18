@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, backp-fase1, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
+    branches: [main, backp-fase1, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
   pull_request:
-    branches: [main, develop, backp-fase1]
+    branches: [main, backp-fase1]
 
 permissions:
   contents: read

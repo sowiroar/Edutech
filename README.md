@@ -1,6 +1,6 @@
 # Edutech · VIVAVerse UAM
 
-Base de integración: **backp-fase1**. Incluye la voz de Jacobo de backup-fase-2.
+Base de desarrollo e integración: **main**. Incluye la voz de Jacobo de backup-fase-2.
 Agentes LiveKit + Gemini Live, frontend Next.js y opción Unreal en desarrollo.
 
 ## Empezar
@@ -9,7 +9,7 @@ Agentes LiveKit + Gemini Live, frontend Next.js y opción Unreal en desarrollo.
 - [Arranque Mac/Windows y pruebas UAM](docs/mvp/RUNBOOK.md).
 - [Ramas, responsables y entrega](docs/mvp/FLUJO.md).
 - Juan: [telemetría implementada y panel privado](docs/mvp/TELEMETRY_IMPLEMENTACION.md).
-- Santiago: [feature/avatar-presentation](docs/mvp/SPEC_AVATAR_PRESENTATION.md).
+- Santiago: [presentación de avatares](docs/mvp/SPEC_AVATAR_PRESENTATION.md).
 - [Pruebas realizadas](docs/mvp/VALIDACION.md) y [aceptación pendiente](docs/mvp/ACEPTACION.md).
 
 Desde esta carpeta, Python 3 y motor Docker activo:

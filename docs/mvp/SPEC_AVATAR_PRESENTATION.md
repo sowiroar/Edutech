@@ -1,3 +1,6 @@
+> Flujo vigente: crear una feature nueva desde origin/main y abrir PR a main.
+> Los nombres de ramas en el alcance histórico no implican que sigan abiertas.
+
 # Especificación: feature/avatar-presentation — Santiago
 
 Estado: trabajo por implementar sobre backp-fase1 consolidada. No migrar la

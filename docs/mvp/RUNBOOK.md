@@ -104,7 +104,7 @@ No demuestra sesión Gemini. El paquete actual no contiene las seis escenas.
    rama, `git status`, commits y procesos/puertos. RDP no prueba SSH disponible.
 3. Preservar trabajo no publicado de Jacobo en su rama, publicar o guardar un
    respaldo verificable; registrar SHA antes de actualizar. Conservar .env/datos.
-4. Checkout de ensayo separado desde backp-fase1, EDUTECH_SKIP_DEPLOY=1. Revisar
+4. Checkout de ensayo separado desde main, EDUTECH_SKIP_DEPLOY=1. Revisar
    configuración original antes de iniciar nuevos contenedores; este runbook
    local no asigna puertos automáticamente para un segundo stack UAM.
 5. Abrir navegador dentro de RDP usa localhost del servidor. Para probar desde

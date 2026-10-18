@@ -7,7 +7,8 @@ el framework a Pipecat ni se copian los prompts/dominio médico de NeoIPS.
 
 ## Entrega de telemetría
 
-Voz local y telemetría implementadas en `feature/telemetry`. Ver
+Voz local y telemetría integradas; base vigente **main**.
+Cada nueva tarea se crea desde origin/main y vuelve por PR. Ver
 [operación, métricas y límites](TELEMETRY_IMPLEMENTACION.md) y
 [evidencia real](../validation/2026-10-17-telemetry/README.md).
 

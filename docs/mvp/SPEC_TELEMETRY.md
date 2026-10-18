@@ -1,3 +1,6 @@
+> Flujo vigente: crear una feature nueva desde origin/main y abrir PR a main.
+> Los nombres de ramas en el alcance histórico no implican que sigan abiertas.
+
 > Actualización 17 octubre: [dashboard y trazas](TELEMETRY_DASHBOARD_Y_TRAZAS.md)
 > añade contrato v2 y texto opt-in redactado con retención, autorizado por el usuario.
 > Prevalece sobre el alcance inicial sin transcripciones descrito abajo.

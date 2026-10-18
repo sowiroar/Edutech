@@ -1,91 +1,89 @@
-# Trabajo paralelo y trazabilidad
+# Trabajo paralelo desde main
 
-## Repositorios
+## Bases compartidas
 
-- `sowiroar/Edutech`: base compartida **backp-fase1** (ortografía exacta).
-- `SantiagoGarcia205/Avatar`: base compartida **main**, Git LFS para assets.
-- `backup-fase-2` se conserva como antecedente de la voz; no duplicar desarrollo allí.
-- Los commits históricos permanecen en las bases y respaldos; las ramas ya integradas se retiran.
-  No hacer reset, force-push ni clean para sincronizar. Ver [auditoría de ramas](AUDITORIA_RAMAS_2026-10-17.md).
+**main es la única base de desarrollo en ambos repositorios.** Cada tarea nace
+del último origin/main y vuelve mediante PR a main. No editar todos directamente
+sobre la misma rama ni reutilizar una feature que ya fue cerrada.
 
-| Responsable | Repo / rama | Propiedad principal |
+| Repositorio | Ramas que se conservan | Uso |
 |---|---|---|
-| Juan | Edutech `feature/telemetry-<tarea>` | Contrato, agente instrumentado, persistencia, API y panel |
-| Santiago | Edutech `feature/avatar-presentation` | Selector, medios, puente, render y calidad audiovisual |
-| Santiago | Avatar `feature/avatar-presentation` | Adaptación nativa de seis escenas, build y métricas NVIDIA |
-| Jacobo | Edutech `feature/voice-validation` | Voz, entorno UAM, RAG/memoria, revisión y pruebas |
+| sowiroar/Edutech | main | Voz, telemetría, frontend e integración actuales |
+| sowiroar/Edutech | backp-fase1 | Referencia de compatibilidad, alineada con main al cierre de la limpieza |
+| sowiroar/Edutech | backup-fase-2 | Respaldo intacto de la voz de Jacobo en 5e5abc3 |
+| SantiagoGarcia205/Avatar | main | Base actual de los seis diseños |
 
-Cada rama nace después de integrar la preparación en la base, no de backups viejos.
-Un nombre igual en dos repositorios no sincroniza sus commits automáticamente.
+backp-fase1 no se sincroniza automáticamente ni recibe features: la fuente actual
+es main. Gemini MVP ya está integrado y se retira su nombre de rama; también
+se retiran develop, release/1.0.0 y las features terminadas. Sus commits permanecen.
+[Auditoría y recuperación](AUDITORIA_RAMAS_2026-10-17.md).
 
-## Crear o actualizar una rama
+## Santiago empieza una rama nueva
 
-Desde Edutech, shell Bash/Git Bash:
+En Edutech, desde un checkout sin cambios pendientes:
 
 ```sh
 export EDUTECH_SKIP_DEPLOY=1
 git status --short
 git fetch --prune origin
-# Para una tarea nueva, con el checkout limpio:
-git switch --no-track -c feature/nombre-de-tarea origin/backp-fase1
+git switch main
+git merge --ff-only origin/main
+git switch -c feature/avatar-presentation
 ```
 
-Para Santiago, si la rama ya existe localmente:
+PowerShell: usar `$env:EDUTECH_SKIP_DEPLOY='1'` antes de los comandos Git.
+Si main no existe localmente: `git switch --track origin/main`.
+Si la feature antigua todavía existe en su PC, no reemplazarla: revisar sus commits
+con `git log origin/main..feature/avatar-presentation --oneline` y conservar cambios
+sin publicar. Puede comenzar con otro nombre, por ejemplo feature/avatar-video,
+y trasladar solo los commits necesarios tras revisarlos. No usar reset/clean/stash
+ni borrado forzado para sincronizar. `fetch --prune` no borra ramas locales.
 
-```sh
-git switch feature/avatar-presentation
-git merge --ff-only origin/feature/avatar-presentation
-git merge origin/backp-fase1
-```
+En Avatar, cerrar Unreal y usar el mismo flujo desde origin/main. Las ramas de
+ambos repositorios son independientes. Compartir nombre no sincroniza cambios.
 
-Si aún no existe localmente: `git switch --track origin/feature/avatar-presentation`.
-Jacobo usa el mismo flujo con `feature/voice-validation`. Si `--ff-only` falla,
-no forzar: hay divergencia y debe revisarse antes de integrar. Si alguien tiene
-cambios sin publicar, primero los conserva en su rama; nunca stash automático.
-PowerShell: primero `$env:EDUTECH_SKIP_DEPLOY='1'`, luego los mismos comandos Git.
+Juan crea su próxima tarea como feature/telemetry-turns; Jacobo puede usar
+feature/voice-validation. Son ejemplos para ramas nuevas, no ramas permanentes
+que todos deben mantener. Las nuevas tareas pueden trabajar en paralelo.
 
-`backp-fase1` es la base de integración, no una rama donde todos editan directamente.
-Las tareas vuelven por PR; después de merge y verificación de ascendencia se elimina
-la rama terminada. No reutilizar una feature cerrada para trabajo distinto.
-`git fetch --prune` limpia referencias remotas, no borra ramas locales ni archivos.
+## Publicar y cerrar una tarea
 
-PR de feature/bugfix/chore/hotfix hacia `backp-fase1`. CI cubre esa base.
-No desplegar por cambiar de rama. Usar comandos explícitos del runbook.
-El mecanismo histórico de hooks existe; `EDUTECH_SKIP_DEPLOY=1` evita que actúe.
-Los workflows no equivalen a protección de rama: esta cuenta tiene WRITE, no ADMIN.
+1. Publicar la feature y abrir PR a main con pruebas y límites explícitos.
+2. Revisar CI y conflictos. Integrar mediante merge, sin reescribir historia.
+3. Comprobar que el tip de la rama quedó contenido en main y eliminar la feature.
+4. Para otra tarea, crear una rama nueva desde origin/main actualizado.
 
-## Límites para evitar conflictos
+CI de Edutech admite feature/bugfix/chore y release/hotfix versionados hacia main.
+La publicación de una release versionada conserva tags/notas, sin crear develop
+ni desplegar UAM. Los checks no equivalen a protección de rama: la cuenta tiene
+WRITE, no ADMIN. No se ha configurado una protección administrativa nueva.
 
-Juan define el sobre y el helper público de eventos; Santiago consume ese contrato,
-no crea otra tabla de sesiones ni otro contabilizador del proveedor. Los cambios en
-`app/api/token/route.ts` se coordinan: Juan lleva identidad/correlación; Santiago
-agrega modalidad/capacidad sin reemplazar autenticación ni el despacho del agente.
-Los cambios de rama no modifican prompts, nombres de roles ni voces por accidente.
+## Responsabilidades y coordinación
 
-Avatar: actualizar desde `origin/main`, una persona por mapa/Blueprint y locks LFS.
-Las candidatas aprobadas Lira/Elian/Noa se conservan; Noa usa SK_Noa_AlternateFace.
-Subir LFS antes del PR. El gitlink Edutech/Avatar se avanza por PR a un commit
-publicado y validado de Avatar. No copiar Content a Edutech ni subir ejecutables.
-Un checkout externo `../Avatar` es el lugar de edición; el submódulo es el pin de
-reproducción. Solo inicializarlo si se construye desde ese checkout, evitando dos
-bibliotecas de assets por necesidad inexistente.
+- Juan: telemetría, identidad/correlación, costos y panel privado.
+- Santiago: selector, medios, puente, render, escenas y calidad audiovisual.
+- Jacobo: aceptación de voz, entorno UAM, RAG/memoria y revisión.
 
-## Entrega a Jacobo
+Compartir el contrato de telemetría y sesión. Coordinar cambios en
+app/api/token/route.ts; no duplicar tablas ni contabilizadores por presentación.
+Mantener roles, prompts y arquitectura; una falla de renderer no debe tumbar voz.
 
-Compartir enlace a esta carpeta docs/mvp, SHA de Edutech, gitlink de Avatar,
-modalidad, sistema/driver, comando de arranque y pruebas hechas/pendientes.
-Antes de actualizar UAM: revisar `git status`, rama y commits locales de Jacobo;
-guardar/publicar lo pendiente, registrar configuración solo por nombres y hacer
-respaldo de los datos persistentes. Probar en checkout separado con puertos propios.
-No sobrescribir .env ni ejecutar `docker compose down -v`.
+Unreal: una persona por mapa/Blueprint, locks LFS y assets por PR a Avatar main.
+Subir LFS antes del SHA. Lira/Elian/Noa aceptadas no se rediseñan; Noa conserva
+SK_Noa_AlternateFace. El pin de Edutech/Avatar avanza en otro PR tras validar
+la entrega nativa. No copiar Content ni ejecutables a Edutech.
 
-Los cambios de UAM no publicados no aparecen por fetch. Un merge local no los valida.
+## Pruebas y servidor UAM
 
-## Workspace de otro colaborador
+Seguir [RUNBOOK.md](RUNBOOK.md). Antes de actualizar UAM, identificar rama,
+commits/procesos y trabajo local de Jacobo; conservar .env y datos. No ejecutar
+hooks de despliegue por cambiar de rama. EDUTECH_SKIP_DEPLOY=1 en operaciones Git.
+Los cambios del servidor que no estén publicados no se recuperan con fetch.
+Esta limpieza no certifica aceptación en UAM ni concurrencia audiovisual.
 
-Clonar los dos repositorios como carpetas hermanas Edutech y Avatar. No se necesita
-copiar archive/tmp de Juan: son conservación local de su historia.
-Desde la carpeta padre, copiar docs de contexto versionados:
+## Workspace para el equipo
+
+Clonar Edutech y Avatar como carpetas hermanas. Desde la carpeta padre:
 
 ```sh
 cp Edutech/docs/mvp/workspace/AGENTS.md AGENTS.md
@@ -93,7 +91,5 @@ cp Edutech/docs/mvp/workspace/CLAUDE.md CLAUDE.md
 cp Edutech/docs/mvp/workspace/README.md README.md
 ```
 
-Las menciones a archive/tmp son condicionales al workspace original, no requisitos
-para arrancar voz. Reemplazar solo el apartado de rutas locales si el equipo usa
-otro layout; el contrato técnico y las ramas siguen iguales. Los históricos de
-Santiago permanecen en Git; no borrar mapas para que solo aparezcan seis carpetas.
+No copiar archive, cachés o secretos del PC de Juan. Los respaldos históricos
+locales no son requisitos para arrancar la voz actual.

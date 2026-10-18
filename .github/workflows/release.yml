@@ -2,7 +2,7 @@ name: Release
 
 # Al fusionar release/X.Y.Z o hotfix/X.Y.Z en main:
 #   1. crea el tag vX.Y.Z y la GitHub Release con notas automáticas
-#   2. abre el PR de back-merge main -> develop que exige gitflow
+# No crea ramas de desarrollo ni despliega servicios.
 on:
   pull_request:
     branches: [main]
@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   release:
@@ -30,9 +29,3 @@ jobs:
           VERSION="v${HEAD_REF#*/}"
           gh release create "$VERSION" --target "$MERGE_SHA" --title "$VERSION" --generate-notes
 
-      - name: Abrir back-merge main -> develop
-        run: |
-          gh pr create --base develop --head main \
-            --title "chore: back-merge ${HEAD_REF} a develop" \
-            --body "Back-merge automático tras publicar \`${HEAD_REF}\` en main." \
-            || echo "No se abrió el PR (puede que develop ya esté al día)."
