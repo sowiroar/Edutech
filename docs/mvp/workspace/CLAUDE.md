@@ -31,7 +31,7 @@ Avatar conserva seis IDs prioritarios y originales históricos. Lira/Elian/Noa
 aceptadas, Noa con SK_Noa_AlternateFace; no rediseñar. PR/LFS antes del pin Edutech.
 Memoria medida antes corresponde al proceso Mac, no VRAM ni escalabilidad UAM.
 
-archive/Edutech-legacy conserva la rama antigua y archivos locales; su .git contiene
+archive/Edutech-legacy conserva el commit antiguo (HEAD separado) y archivos locales; su .git contiene
 metadatos de worktrees activos. NO BORRAR ni mover archive a ciegas. Las carpetas
 Avatares y Edutech-integracion de la raíz son enlaces de compatibilidad, no clones.
 Los worktrees tmp históricos se retiraron por petición del usuario, después de

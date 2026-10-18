@@ -111,9 +111,10 @@ feature/edutech-integration y feature/noa-design. No se perdieron esos commits
 al retirar las ramas locales. El checkpoint de Noa no es una mejora pendiente:
 es el guardado previo a la optimización aprobada.
 
-Edutech conserva una excepción local: feature/avatar-bridge, con ocho commits
-históricos no integrados, usada por el worktree archive/Edutech-legacy. No se
-publicó esa rama ni se borró el worktree: contiene el bridge de las demos WAV.
+Los ocho commits históricos no integrados de Edutech feature/avatar-bridge se
+conservan en el tag local archive/2026-10-17/feature/avatar-bridge. El worktree
+archive/Edutech-legacy queda en el mismo ac68409, con HEAD separado de una rama,
+sin cambios de archivos. Se retira el nombre de rama; se conserva el bridge WAV.
 No confundirlo con el puente Gemini ni volver a fusionarlo automáticamente.
 
 Para recuperar una rama remota retirada, desde un clon actualizado:
