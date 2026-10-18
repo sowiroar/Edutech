@@ -1,6 +1,7 @@
 """Exercise the actual workflow shell, without copying its branch regex."""
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import textwrap
 import unittest
@@ -9,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class BranchPolicyTests(unittest.TestCase):
+    @unittest.skipUnless(os.name != "nt" and shutil.which("bash"), "Shell policy is validated on the Linux CI runner")
     def test_main_workflow_and_compatibility_base(self):
         workflow = (ROOT / '.github/workflows/gitflow.yml').read_text()
         command = textwrap.dedent(workflow.split('        run: |\n', 1)[1])

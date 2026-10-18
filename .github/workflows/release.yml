@@ -28,4 +28,3 @@ jobs:
         run: |
           VERSION="v${HEAD_REF#*/}"
           gh release create "$VERSION" --target "$MERGE_SHA" --title "$VERSION" --generate-notes
-
