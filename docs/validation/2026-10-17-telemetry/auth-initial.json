@@ -1,0 +1,14 @@
+{
+  "unauthorized_admin": 401,
+  "wrong_origin_login": 403,
+  "wrong_password": 401,
+  "login": 200,
+  "health_status": 200,
+  "metrics_status": 200,
+  "health": {
+    "ready": true,
+    "accepted": 0,
+    "write_failed": 0
+  },
+  "session_count": 0
+}

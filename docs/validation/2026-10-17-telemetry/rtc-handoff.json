@@ -1,0 +1,55 @@
+{
+  "scenario": "handoff",
+  "microphone": false,
+  "synthetic_input": true,
+  "audio_samples": 1340640,
+  "nonzero_frames": 2747,
+  "agent_states": [
+    "speaking",
+    "listening",
+    "thinking",
+    "listening",
+    "thinking",
+    "speaking",
+    "listening"
+  ],
+  "avatars": [
+    "NEXO"
+  ],
+  "token_status": 200,
+  "session_id": "2381d74c-3ba4-43ea-81bd-2cef9d57f1b6",
+  "greeting_completed": true,
+  "handoff_announced": true,
+  "followup_completed": true,
+  "admin_login_status": 200,
+  "events_status": 200,
+  "persisted_event_counts": {
+    "response_completed": 4,
+    "usage_recorded": 7,
+    "producer_health": 2,
+    "response_started": 4,
+    "tool_completed": 2,
+    "operation_completed": 1,
+    "operation_started": 1,
+    "tool_started": 2,
+    "agent_changed": 2,
+    "session_started": 1
+  },
+  "logical_agents": [
+    "LiraAgent",
+    "NexusAgent"
+  ],
+  "usage_providers": [
+    "google"
+  ],
+  "producer_health": [
+    {
+      "dropped": 0,
+      "enqueued": 23,
+      "persisted": 23,
+      "queue_depth": 0,
+      "queue_age_ms": 0.00037500012695090845,
+      "write_failed": 0
+    }
+  ]
+}

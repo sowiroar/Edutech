@@ -5,7 +5,13 @@ con presentaciones Voz / Avatar y una telemetría común. La voz de Jacobo es el
 recorrido base; la presentación Unreal se integra de forma optativa. No se cambia
 el framework a Pipecat ni se copian los prompts/dominio médico de NeoIPS.
 
-## Estado de partida comprobado
+## Entrega de telemetría
+
+Voz local y telemetría implementadas en `feature/telemetry`. Ver
+[operación, métricas y límites](TELEMETRY_IMPLEMENTACION.md) y
+[evidencia real](../validation/2026-10-17-telemetry/README.md).
+
+## Estado de partida histórico (antes de la entrega)
 
 - `origin/backp-fase1`: f1ccd3c; `origin/backup-fase-2`: 5e5abc3, 18 commits encima.
 - Fase 2 ya contiene la historia del MJPEG, pero su tile usa SpeakingAnimation.

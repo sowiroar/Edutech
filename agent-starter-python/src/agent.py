@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -28,6 +29,7 @@ import knowledge
 import memory_manager
 import rag_llamaindex
 import rag_nexus
+import viva_telemetry
 from background_tasks import spawn_background
 
 logger = logging.getLogger("agent-multi")
@@ -70,15 +72,7 @@ _memoria_prefetch: dict[str, tuple[str | None, asyncio.Task]] = {}
 
 
 def _resolver_user_id(session) -> str:
-    user_id = "estudiante_uam"
-    try:
-        if session and hasattr(session, "room_io") and session.room_io:
-            participant = getattr(session.room_io, "participant", None)
-            if participant and getattr(participant, "identity", None):
-                user_id = participant.identity
-    except Exception:
-        pass
-    return user_id
+    return viva_telemetry.memory_identity(session)
 
 
 def get_realtime_model(voice: str = "Aoede") -> google.realtime.RealtimeModel:
@@ -136,6 +130,10 @@ class BaseEducationalAgent(Agent):
         """Avisa al avatar-bridge (vía atributo de participante de LiveKit)
         qué personaje debe mostrarse/hablar ahora. Si no hay sesión real
         (pruebas unitarias) o AVATAR_CHARACTER es None, no hace nada."""
+        with contextlib.suppress(RuntimeError):
+            viva_telemetry.agent_changed(
+                self.session, self.__class__.__name__, self.AVATAR_CHARACTER
+            )
         if not self.AVATAR_CHARACTER:
             return
         try:
@@ -176,7 +174,7 @@ class BaseEducationalAgent(Agent):
         except Exception:
             # self.session lanza RuntimeError si el agente no esta corriendo
             # dentro de una sesion activa (p.ej. en tests unitarios).
-            user_id = "estudiante_uam"
+            user_id = viva_telemetry.memory_identity(self)
         texto_usuario = new_message.text_content
         if not texto_usuario or not texto_usuario.strip():
             return
@@ -347,6 +345,7 @@ class LiraAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
         logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
@@ -355,6 +354,7 @@ class LiraAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
         logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
@@ -416,6 +416,7 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
     )
+    @viva_telemetry.observed()
     async def consultas_especializacion_ia(
         self, context: RunContext, consulta: str
     ) -> str:
@@ -450,6 +451,7 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Lista los documentos, guías y programas curriculares de la Especialización en Inteligencia Artificial disponibles en el repositorio."
     )
+    @viva_telemetry.observed()
     async def listar_documentos_especializacion_ia(self, context: RunContext) -> str:
         """Retorna el catálogo de documentos oficiales de la Especialización en IA disponibles para consulta."""
         documentos = rag_nexus.listar_documentos_especializacion()
@@ -474,6 +476,7 @@ class NexusAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales general, carreras de pregrado, admisiones o campus. NO intentes responder la pregunta tú mismo."
     )
+    @viva_telemetry.observed()
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
         logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
@@ -539,6 +542,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
     )
+    @viva_telemetry.observed()
     async def buscar_informacion_uam(self, context: RunContext, consulta: str) -> str:
         """Busca en la base de conocimiento oficial de la UAM mediante RAG LlamaIndex con Gemini Embedding.
 
@@ -595,6 +599,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Lista los reglamentos, acuerdos, políticas y guías oficiales de la UAM que están registrados en la base de datos."
     )
+    @viva_telemetry.observed()
     async def listar_documentos_uam(self, context: RunContext) -> str:
         """Retorna el catálogo de documentos oficiales de la UAM registrados en el sistema."""
         documentos = rag_llamaindex.listar_documentos_uam()
@@ -623,6 +628,7 @@ class ElianAgent(BaseEducationalAgent):
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta tú mismo, simplemente llama a esta herramienta."
     )
+    @viva_telemetry.observed()
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
         logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
@@ -716,6 +722,8 @@ async def multiagent_session(ctx: JobContext):
             },
         ),
     )
+
+    viva_telemetry.install(session, ctx, model_name)
 
     def _on_user_transcript(ev) -> None:
         """Dispara el prefetch de Mem0 con el PRIMER fragmento de cada turno

@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T23:59:32.599712+00:00",
+  "title": "Design System: VIVAVerse",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "background",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "muted-foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "border",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "destructive": {
+        "role": "error",
+        "displayName": "destructive",
+        "tonalRamp": [
+          "oklch(15% 0.245 27.325)",
+          "oklch(26% 0.245 27.325)",
+          "oklch(38% 0.245 27.325)",
+          "oklch(49% 0.245 27.325)",
+          "oklch(61% 0.245 27.325)",
+          "oklch(72% 0.245 27.325)",
+          "oklch(84% 0.245 27.325)",
+          "oklch(95% 0.245 27.325)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "primary",
+        "tonalRamp": [
+          "oklch(15% 0.27 265)",
+          "oklch(26% 0.27 265)",
+          "oklch(38% 0.27 265)",
+          "oklch(49% 0.27 265)",
+          "oklch(61% 0.27 265)",
+          "oklch(72% 0.27 265)",
+          "oklch(84% 0.27 265)",
+          "oklch(95% 0.27 265)"
+        ]
+      },
+      "dark-background": {
+        "role": "neutral",
+        "displayName": "dark-background",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-foreground": {
+        "role": "neutral",
+        "displayName": "dark-foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "dark-muted",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-muted-foreground": {
+        "role": "neutral",
+        "displayName": "dark-muted-foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "dark-border",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-destructive": {
+        "role": "error",
+        "displayName": "dark-destructive",
+        "tonalRamp": [
+          "oklch(15% 0.191 22.216)",
+          "oklch(26% 0.191 22.216)",
+          "oklch(38% 0.191 22.216)",
+          "oklch(49% 0.191 22.216)",
+          "oklch(61% 0.191 22.216)",
+          "oklch(72% 0.191 22.216)",
+          "oklch(84% 0.191 22.216)",
+          "oklch(95% 0.191 22.216)"
+        ]
+      },
+      "dark-primary": {
+        "role": "primary",
+        "displayName": "dark-primary",
+        "tonalRamp": [
+          "oklch(15% 0.16 215)",
+          "oklch(26% 0.16 215)",
+          "oklch(38% 0.16 215)",
+          "oklch(49% 0.16 215)",
+          "oklch(61% 0.16 215)",
+          "oklch(72% 0.16 215)",
+          "oklch(84% 0.16 215)",
+          "oklch(95% 0.16 215)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Título principal",
+        "purpose": "Título de la superficie operativa; 1.7rem en móvil."
+      },
+      "metric": {
+        "displayName": "Cifra de actividad",
+        "purpose": "Magnitudes con cifras tabulares."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "admin-mobile",
+        "value": "700px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón normal",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Control administrativo; altura mínima de 42px y foco visible.",
+      "html": "<button class=\"ds-button-default\">Actualizar</button>",
+      "css": ".ds-button-default{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;}.ds-button-default:hover{background:var(--muted,oklch(0.97 0 0));}.ds-button-default:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}.ds-button-default:disabled{opacity:0.55;cursor:wait;}"
+    },
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Control administrativo; altura mínima de 42px y foco visible.",
+      "html": "<button class=\"ds-button-primary\">Entrar al panel</button>",
+      "css": ".ds-button-primary{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;background:var(--foreground,oklch(0.145 0 0));color:var(--background,white);}.ds-button-primary:hover{opacity:0.85;}.ds-button-primary:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}.ds-button-primary:disabled{opacity:0.55;cursor:wait;}"
+    },
+    {
+      "name": "Campo etiquetado",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiqueta persistente y control nativo.",
+      "html": "<label class=\"ds-field\">Desde<input type=\"datetime-local\" value=\"2026-10-17T08:00\"></label>",
+      "css": ".ds-field{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));display:grid;gap:7px;font-size:0.875rem;}.ds-field input{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);}.ds-field input:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}"
+    },
+    {
+      "name": "Navegación operativa",
+      "kind": "nav",
+      "description": "Regreso a voz y cierre de sesión.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Navegación de telemetría\"><a href=\"#voz\">Volver a voz</a><button>Cerrar sesión</button></nav>",
+      "css": ".ds-nav{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));display:flex;align-items:center;gap:20px;}.ds-nav a{color:inherit;text-decoration:underline;text-underline-offset:4px;}.ds-nav button{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));border:1px solid var(--border,oklch(0.922 0 0));border-radius:8px;min-height:42px;padding:8px 12px;background:var(--background,white);font-weight:550;cursor:pointer;}.ds-nav button:hover{background:var(--muted,oklch(0.97 0 0));}.ds-nav :focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}@media(max-width:700px){.ds-nav{justify-content:space-between;}}"
+    },
+    {
+      "name": "Tabla operativa",
+      "kind": "custom",
+      "refersTo": "table-heading",
+      "description": "Encabezado tonal, cifras alineadas y región desplazable.",
+      "html": "<div class=\"ds-table\" role=\"region\" aria-label=\"Tabla desplazable\" tabindex=\"0\"><table><thead><tr><th>Medición</th><th>Muestras</th><th>Cobertura</th></tr></thead><tbody><tr><td>Inicio de respuesta</td><td>2</td><td>2 / 7<small>Eventos registrados</small></td></tr></tbody></table></div>",
+      "css": ".ds-table{font-family:var(--font-public-sans, \"Public Sans\"),sans-serif;font-size:1rem;color:var(--foreground,oklch(0.145 0 0));overflow-x:auto;border-top:1px solid var(--border,oklch(0.922 0 0));font-variant-numeric:tabular-nums;}.ds-table table{width:100%;border-collapse:collapse;text-align:left;font-size:0.875rem;}.ds-table th{font-weight:600;background:var(--muted,oklch(0.97 0 0));}.ds-table th,.ds-table td{padding:13px 16px;border-bottom:1px solid var(--border,oklch(0.922 0 0));vertical-align:top;}.ds-table th:first-child,.ds-table td:first-child{padding-left:10px;}.ds-table small{display:block;font-size:0.75rem;margin-top:5px;color:var(--muted-foreground,oklch(0.556 0 0));}.ds-table:focus-visible{outline:2px solid var(--foreground,oklch(0.145 0 0));outline-offset:3px;}@media(max-width:700px){.ds-table table{min-width:560px;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Continuidad del frontend VIVAVerse",
+    "overview": "La superficie operativa hereda Public Sans, los colores semánticos y el cambio claro/oscuro del frontend existente. La jerarquía se construye con tipografía, espacio y divisores; las tablas conservan la relación entre datos, unidades y cobertura. No se establece una identidad visual nueva.",
+    "keyCharacteristics": [
+      "Tipografía continua con el frontend de voz.",
+      "Superficies planas y contraste semántico.",
+      "Cifras tabulares y contexto de medición visible.",
+      "Controles etiquetados y desplazamiento horizontal local."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Theme Rule",
+        "body": "Los componentes consumen las variables compartidas para que texto, fondo y estados cambien juntos con el tema.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measured Number Rule",
+        "body": "Tamaño y alineación ayudan a comparar cifras; la unidad, el denominador y la ausencia de dato permanecen visibles junto a ellas.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do conservar Public Sans y los tokens semánticos compartidos.",
+      "Do acompañar cifras con unidades, cobertura y estados de ausencia de dato.",
+      "Do mantener foco visible y regiones de tabla accesibles por teclado.",
+      "Do mantener la densidad legible mediante desplazamiento de tablas en móvil."
+    ],
+    "donts": [
+      "Don’t convertir las secciones operativas en tarjetas decorativas.",
+      "Don’t representar ausencia de medición como cero ni estimación como factura.",
+      "Don’t aplicar la composición de /admin al recorrido de voz sin revisar su contexto."
+    ]
+  }
+}

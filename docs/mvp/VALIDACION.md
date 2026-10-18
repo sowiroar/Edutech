@@ -103,3 +103,13 @@ no nulos, estados speaking → listening. No es prueba de micrófono ni handoffs
 El ensayo inicial fallido queda conservado; no se reconstruye su uso/costo a
 partir del audio. La telemetría todavía no estaba implementada en este ensayo.
 PR #7 integrado, CI completo aprobado, base f0724557d1a8dd8c81e9ac14b6d297cad2669590.
+
+## Actualización final: telemetría P0
+
+La telemetría ya está implementada en `feature/telemetry`. El estado anterior de
+este informe describe la preparación histórica. Ver
+[resultado reproducible](../validation/2026-10-17-telemetry/README.md) y
+[implementación](TELEMETRY_IMPLEMENTACION.md): voz/handoff/RAG real, primer audio
+Chromium y voz con Postgres detenido comprobados; 31 pruebas del agente, 14 del
+colector con PostgreSQL y dos del lanzador. TypeScript y lint ejecutados aparte
+del build. No prueba humana de micrófono, avatar, UAM ni costos completos.

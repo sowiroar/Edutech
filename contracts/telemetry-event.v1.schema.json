@@ -1,0 +1,1384 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "app_session_id": {
+      "format": "uuid",
+      "title": "App Session Id",
+      "type": "string"
+    },
+    "conversation_id": {
+      "format": "uuid",
+      "title": "Conversation Id",
+      "type": "string"
+    },
+    "anonymous_id": {
+      "format": "uuid",
+      "title": "Anonymous Id",
+      "type": "string"
+    },
+    "user_id": {
+      "default": null,
+      "title": "User Id",
+      "type": "null"
+    },
+    "identity_source": {
+      "const": "visitor",
+      "default": "visitor",
+      "title": "Identity Source",
+      "type": "string"
+    },
+    "environment": {
+      "enum": [
+        "local",
+        "test",
+        "uam-demo",
+        "production"
+      ],
+      "title": "Environment",
+      "type": "string"
+    },
+    "release": {
+      "default": "unknown",
+      "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+      "title": "Release",
+      "type": "string"
+    },
+    "avatar_release": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avatar Release"
+    },
+    "presentation_mode": {
+      "default": "voice",
+      "enum": [
+        "voice",
+        "avatar"
+      ],
+      "title": "Presentation Mode",
+      "type": "string"
+    },
+    "channel": {
+      "const": "voice",
+      "default": "voice",
+      "title": "Channel",
+      "type": "string"
+    },
+    "room_name": {
+      "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+      "title": "Room Name",
+      "type": "string"
+    },
+    "participant_identity": {
+      "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+      "title": "Participant Identity",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "received_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Received At"
+    },
+    "source": {
+      "enum": [
+        "agent",
+        "browser",
+        "bridge",
+        "renderer",
+        "collector"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "turn_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Turn Id"
+    },
+    "request_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Request Id"
+    },
+    "tool_call_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool Call Id"
+    },
+    "media_session_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Media Session Id"
+    },
+    "connection_attempt_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Connection Attempt Id"
+    },
+    "agent_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent Id"
+    },
+    "avatar_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avatar Id"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{32}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "span_id": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{16}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Span Id"
+    },
+    "type": {
+      "title": "Type",
+      "type": "string",
+      "enum": [
+        "session_started",
+        "session_ended",
+        "agent_changed",
+        "response_started",
+        "response_completed",
+        "response_interrupted",
+        "tool_started",
+        "tool_completed",
+        "operation_started",
+        "operation_completed",
+        "usage_recorded",
+        "error",
+        "producer_health",
+        "audio_playback_started",
+        "avatar_unavailable",
+        "media_connect_started",
+        "media_connected",
+        "media_disconnected",
+        "media_quality_sample",
+        "media_recovered",
+        "media_stalled",
+        "presentation_changed",
+        "video_first_frame"
+      ]
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    }
+  },
+  "required": [
+    "app_session_id",
+    "conversation_id",
+    "anonymous_id",
+    "environment",
+    "room_name",
+    "participant_identity",
+    "event_id",
+    "occurred_at",
+    "source",
+    "type"
+  ],
+  "title": "Event",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vivaverse:telemetry-event:1",
+  "$defs": {
+    "StartPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        }
+      },
+      "title": "StartPayload",
+      "type": "object"
+    },
+    "EndPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "enum": [
+            "completed",
+            "participant_left",
+            "error",
+            "shutdown",
+            "expired",
+            "unknown"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        }
+      },
+      "required": [
+        "reason"
+      ],
+      "title": "EndPayload",
+      "type": "object"
+    },
+    "AgentPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "previous_agent_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Agent Id"
+        },
+        "agent_id": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Agent Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agent_id"
+      ],
+      "title": "AgentPayload",
+      "type": "object"
+    },
+    "ResponsePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "default": "realtime",
+          "enum": [
+            "say",
+            "generate_reply",
+            "realtime"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "server_response_start_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Server Response Start Ms"
+        },
+        "boundary": {
+          "default": "speech_handle",
+          "enum": [
+            "speech_handle",
+            "sdk_message"
+          ],
+          "title": "Boundary",
+          "type": "string"
+        }
+      },
+      "title": "ResponsePayload",
+      "type": "object"
+    },
+    "ToolPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "started",
+            "ok",
+            "error",
+            "cancelled",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        }
+      },
+      "required": [
+        "name",
+        "status"
+      ],
+      "title": "ToolPayload",
+      "type": "object"
+    },
+    "OperationPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "enum": [
+            "rag",
+            "memory",
+            "embedding"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "started",
+            "ok",
+            "error",
+            "cancelled",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "usage_observed": {
+          "default": false,
+          "title": "Usage Observed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "purpose",
+        "name",
+        "status"
+      ],
+      "title": "OperationPayload",
+      "type": "object"
+    },
+    "UsageEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "default": "tokens",
+          "enum": [
+            "tokens",
+            "seconds",
+            "characters",
+            "requests"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "input",
+            "output"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "modality": {
+          "enum": [
+            "text",
+            "audio",
+            "image",
+            "unspecified"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "cached": {
+          "default": false,
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "quantity": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Quantity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "direction",
+        "modality",
+        "quantity"
+      ],
+      "title": "UsageEntry",
+      "type": "object"
+    },
+    "UsagePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Model",
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "conversation",
+            "rag",
+            "memory",
+            "embedding"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/UsageEntry"
+          },
+          "maxItems": 24,
+          "title": "Entries",
+          "type": "array"
+        },
+        "accounting_source": {
+          "enum": [
+            "provider",
+            "derived",
+            "unavailable"
+          ],
+          "title": "Accounting Source",
+          "type": "string"
+        },
+        "coverage_reason": {
+          "enum": [
+            "complete",
+            "modality_unknown",
+            "usage_missing",
+            "inconsistent",
+            "estimated"
+          ],
+          "title": "Coverage Reason",
+          "type": "string"
+        },
+        "counter_reset": {
+          "default": false,
+          "title": "Counter Reset",
+          "type": "boolean"
+        },
+        "snapshot_sequence": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Sequence"
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attempt"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "purpose",
+        "accounting_source",
+        "coverage_reason"
+      ],
+      "title": "UsagePayload",
+      "type": "object"
+    },
+    "ErrorPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "agent",
+            "provider",
+            "tool",
+            "rag",
+            "memory",
+            "browser",
+            "telemetry",
+            "renderer"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "code": {
+          "pattern": "^[A-Za-z0-9_.:/+ -]{1,192}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "code"
+      ],
+      "title": "ErrorPayload",
+      "type": "object"
+    },
+    "HealthPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "enqueued": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Enqueued",
+          "type": "integer"
+        },
+        "persisted": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Persisted",
+          "type": "integer"
+        },
+        "dropped": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Dropped",
+          "type": "integer"
+        },
+        "write_failed": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Write Failed",
+          "type": "integer"
+        },
+        "queue_depth": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Queue Depth",
+          "type": "integer"
+        },
+        "queue_age_ms": {
+          "maximum": 86400000,
+          "minimum": 0,
+          "title": "Queue Age Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enqueued",
+        "persisted",
+        "dropped",
+        "write_failed",
+        "queue_depth",
+        "queue_age_ms"
+      ],
+      "title": "HealthPayload",
+      "type": "object"
+    },
+    "MediaPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "connecting",
+                "reconnecting",
+                "disconnected",
+                "unavailable",
+                "error",
+                "playing",
+                "connected",
+                "user"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "voice",
+                "avatar"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "packets_lost": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Packets Lost"
+        },
+        "packets_received": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Packets Received"
+        },
+        "jitter_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Jitter Ms"
+        },
+        "round_trip_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Round Trip Ms"
+        },
+        "fps": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fps"
+        }
+      },
+      "title": "MediaPayload",
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "enum": [
+              "browser",
+              "bridge",
+              "renderer"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "type": {
+            "enum": [
+              "audio_playback_started",
+              "avatar_unavailable",
+              "media_connect_started",
+              "media_connected",
+              "media_disconnected",
+              "media_quality_sample",
+              "media_recovered",
+              "media_stalled",
+              "presentation_changed",
+              "video_first_frame"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "const": "collector"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "type": {
+            "const": "session_ended"
+          },
+          "payload": {
+            "properties": {
+              "reason": {
+                "const": "expired"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "session_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/StartPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "session_ended"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/EndPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "agent_changed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/AgentPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "response_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ResponsePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "response_completed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ResponsePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "response_interrupted"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ResponsePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tool_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ToolPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tool_completed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ToolPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "operation_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/OperationPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "operation_completed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/OperationPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "usage_recorded"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/UsagePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "error"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ErrorPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "producer_health"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/HealthPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "audio_playback_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "avatar_unavailable"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_connect_started"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_connected"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_disconnected"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_quality_sample"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_recovered"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "media_stalled"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "presentation_changed"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "video_first_frame"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    }
+  ]
+}

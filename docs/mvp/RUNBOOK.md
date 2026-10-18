@@ -116,3 +116,12 @@ No demuestra sesión Gemini. El paquete actual no contiene las seis escenas.
 El acceso por RDP no da por sí mismo una terminal remota a Codex. El flujo inicial
 es Git + comandos ejecutados en esa sesión. SSH/runner se configura solo después
 de comprobar disponibilidad y alcance, no se presupone ni se abre a Internet.
+
+## Panel de telemetría (implementado)
+
+`voice_demo.py up` prepara los secretos faltantes y arranca Postgres/colector en
+la red privada del Compose. Abrir http://localhost:3500/admin; usar la contraseña
+`TELEMETRY_ADMIN_PASSWORD` del `.env.voice` local. La conversación sigue en `/`.
+Ver [implementación y pruebas](TELEMETRY_IMPLEMENTACION.md) para variables, cobertura,
+API para Santiago, pruebas sin proveedor y ensayo real con `--live`.
+No ejecutar las pruebas PostgreSQL sobre la base de métricas de la demo.

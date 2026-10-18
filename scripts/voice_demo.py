@@ -68,7 +68,16 @@ def main():
         raise SystemExit("Ejecuta primero: python3 scripts/voice_demo.py init")
     if args.action == "up" and missing_settings():
         raise SystemExit("Completa GOOGLE_API_KEY y GEMINI_LIVE_MODEL en .env.voice antes de iniciar el agente.")
-    subprocess.run(command(args.action), cwd=ROOT, check=True)
+    if args.action == "up":
+        from telemetry_setup import initialize
+        initialize()
+    runtime_env = dict(os.environ)
+    if args.action in ("up", "web"):
+        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
+        if revision.returncode == 0:
+            dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True)
+            runtime_env["APP_RELEASE"] = revision.stdout.strip() + ("-dirty" if dirty.stdout.strip() else "")
+    subprocess.run(command(args.action), cwd=ROOT, env=runtime_env, check=True)
 
 
 if __name__ == "__main__":

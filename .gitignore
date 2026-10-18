@@ -57,3 +57,7 @@ data/knowledge.db
 agent-starter-python/data/
 **/data/mem0/
 **/data/llamaindex_storage/
+
+# Local design inspection state (selected evidence is under docs/validation)
+.impeccable/*
+!.impeccable/design.json

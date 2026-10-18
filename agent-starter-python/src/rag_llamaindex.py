@@ -16,6 +16,9 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+from viva_telemetry import observed
+from viva_telemetry.google_usage import wrap_client
+
 logger = logging.getLogger("rag-uam")
 
 load_dotenv(".env.local")
@@ -306,6 +309,8 @@ def get_or_build_query_engine():
             api_key=api_key,
             temperature=0.2,
         )
+        embed_model._client = wrap_client(embed_model._client, "embedding")
+        llm._client = wrap_client(llm._client, "rag")
 
         storage_dir = _get_storage_dir()
         docstore_file = storage_dir / "docstore.json"
@@ -361,6 +366,7 @@ def get_or_build_query_engine():
         return None
 
 
+@observed("rag")
 async def consultar_uam(consulta: str) -> dict[str, Any] | None:
     """Ejecuta una consulta asíncrona sobre la base de conocimiento de la UAM sin bloquear el event loop."""
     if not consulta or not consulta.strip():

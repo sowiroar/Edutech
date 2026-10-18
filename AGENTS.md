@@ -1,3 +1,19 @@
+## Telemetría implementada — 17 octubre 2026, noche
+
+Rama activa `feature/telemetry`, base `backp-fase1` f072455. Leer
+`docs/mvp/TELEMETRY_IMPLEMENTACION.md` y `docs/validation/2026-10-17-telemetry/README.md`.
+Colector PostgreSQL separado, cola acotada, contrato v1, ledger/tarifas versionadas,
+visitante firmado y panel privado `/admin` implementados. `voice_demo.py up` genera
+secretos faltantes en `.env.voice`; contraseña administrativa solo allí.
+Voz predeterminada y prompts conservados; no modificar assets/roles ni presentar
+Moodle, renderer o despliegue UAM como terminados. Costos parciales: no factura.
+Uso Live por snapshot/delta, alias SDK Gemini→google. RAG/memoria con cobertura
+explícita; Mem0 con hilos internos y embeddings sin usage no tienen costo completo.
+Prueba real Lira→Nexus+RAG correcta; navegador con micrófono sintético, audio playing.
+Postgres detenido: voz sigue; 12 fallos/6 descartes observados; base restaurada.
+No confundir pruebas sintéticas habladas por Gemini con aceptación humana de voz.
+Selector Voz/Avatar sigue siendo feature/avatar-presentation de Santiago.
+
 # Contexto vigente — 17 octubre 2026
 
 Leer README.md y docs/mvp/README.md; este documento prevalece sobre instrucciones
@@ -7,7 +23,7 @@ Juan feature/telemetry; Santiago feature/avatar-presentation; Jacobo
 feature/voice-validation. Specs en docs/mvp, CI incluye PR a backp-fase1.
 
 - Mantener LiveKit/Gemini, prompts/roles y RAG/Mem0. No copiar Pipecat/IPS de NeoIPS.
-- Voz predeterminada; selector Voz/Avatar y telemetría todavía por implementar.
+- Voz predeterminada; selector Voz/Avatar pendiente. Telemetría: ver bloque vigente arriba.
 - La falla del renderer no debe tumbar voz. No compartir video/audio de una sala
   con otra; validar lease antes de concurrencia Unreal.
 - Identidad Moodle pendiente: separar visitante de usuario autenticado. No usar
