@@ -1,0 +1,129 @@
+{
+  "scope": "runtime dependencies reported by npm audit, not exploitability assessment",
+  "totals": {
+    "info": 0,
+    "low": 7,
+    "moderate": 4,
+    "high": 5,
+    "critical": 0,
+    "total": 16
+  },
+  "packages": [
+    {
+      "name": "@ai-sdk/gateway",
+      "severity": "moderate",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "@ai-sdk/provider-utils",
+      "severity": "moderate",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "@fastify/busboy",
+      "severity": "high",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "ai",
+      "severity": "moderate",
+      "direct": true,
+      "fix_available": true
+    },
+    {
+      "name": "dompurify",
+      "severity": "low",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "katex",
+      "severity": "low",
+      "direct": false,
+      "fix_available": {
+        "name": "streamdown",
+        "version": "2.7.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "mermaid",
+      "severity": "low",
+      "direct": false,
+      "fix_available": {
+        "name": "streamdown",
+        "version": "2.7.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "micromark-extension-math",
+      "severity": "low",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "next",
+      "severity": "moderate",
+      "direct": true,
+      "fix_available": {
+        "name": "next",
+        "version": "16.4.2",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "postcss",
+      "severity": "high",
+      "direct": false,
+      "fix_available": {
+        "name": "next",
+        "version": "16.4.2",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "rehype-katex",
+      "severity": "low",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "remark-math",
+      "severity": "low",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "sharp",
+      "severity": "high",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "source-map-js",
+      "severity": "high",
+      "direct": false,
+      "fix_available": true
+    },
+    {
+      "name": "streamdown",
+      "severity": "low",
+      "direct": true,
+      "fix_available": {
+        "name": "streamdown",
+        "version": "2.7.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "undici",
+      "severity": "high",
+      "direct": false,
+      "fix_available": true
+    }
+  ]
+}

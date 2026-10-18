@@ -75,3 +75,12 @@ versiones. Se fijan `livekit-server-sdk` 2.18.0 y protocolo 1.48.0, manteniendo
 la versión del SDK ya usada por Docker/npm, y se actualizan ambos lockfiles.
 También se precisa el literal `linear` de una transición existente, sin cambiar
 su comportamiento. Se conserva el chequeo TypeScript independiente en CI.
+
+Se actualiza además Next.js 15.5.18 → 15.5.28, dentro de la misma serie,
+por el [aviso oficial del 14 de octubre](https://nextjs.org/blog/nextjs-security-update-october-14-2026).
+La auditoría npm de dependencias runtime posterior ya no reporta críticos, pero
+conserva 16 entradas (5 altas, 4 moderadas, 7 bajas); ver dependency-audit.json.
+Son hallazgos de dependencias, no una evaluación de explotabilidad. Algunos
+requieren migraciones mayores: esta entrega no ejecuta `audit fix --force` ni
+certifica seguridad para exposición pública. Resolver ese mantenimiento antes
+de producción externa; el entorno entregado sigue ligado a loopback.
