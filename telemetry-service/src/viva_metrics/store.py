@@ -312,7 +312,7 @@ class Store:
             )
             quality = dict(
                 await conn.fetchrow(
-                    f"""SELECT count(DISTINCT e.session_id) FILTER(WHERE type='error') sessions_with_errors,
+                    f"""SELECT count(DISTINCT e.session_id) FILTER(WHERE type='error' OR (type IN ('tool_completed','operation_completed') AND data->'payload'->>'status'='error')) sessions_with_errors,
                 count(*) FILTER(WHERE type='agent_changed' AND data->'payload'->>'previous_agent_id' IS NOT NULL
                     AND data->'payload'->>'previous_agent_id'<>data->'payload'->>'agent_id') handoffs,
                 count(*) FILTER(WHERE type='response_interrupted') interrupted,

@@ -57,3 +57,9 @@ Ver `../../mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md`. `test_telemetry_runtime.py --li
 --scenario privacy` consume API; usa texto ficticio, no datos personales. El smoke
 browser requiere Playwright y la sesión sintética generada. PostgreSQL tests solo
 con `TEST_DATABASE_URL` a base llamada `test`, nunca al volumen real.
+
+Cierre de auditoría: el contador de sesiones con errores incluye también tools y
+operaciones finalizadas con `status=error`, deduplicando por sesión; regresión
+verificada. Al recrear la base desechable, una ejecución comenzó antes de que
+PostgreSQL estuviera listo (9 errores de conexión en fixtures). Tras `pg_isready`,
+las 21 pruebas pasaron. No fue un fallo ni reinicio de la base del usuario.

@@ -279,6 +279,7 @@ async def test_operations_handoffs_and_latest_health(store):
     assert m["operations"][0]["calls"] == 2 and m["operations"][0]["errors"] == 1
     assert m["operations"][0]["p50"] == 200
     assert m["quality"]["handoffs"] == 1
+    assert m["quality"]["sessions_with_errors"] == 1
     assert len(m["producers"]) == 1 and m["producers"][0]["payload"]["enqueued"] == 20
 
 
