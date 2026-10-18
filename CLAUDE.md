@@ -1,3 +1,14 @@
+## Campos de telemetría y base integrada — 17 octubre 2026, cierre
+
+PR #8 ya fusionado en `backp-fase1` `3abca14`; CI de la base aprobado
+(run 39086759054). El log antiguo de 15 errores Ruff no corresponde a esta base.
+Nueva rama `feature/telemetry-field-clarity` desde esa base: detalle técnico
+muestra campos disponibles y explica ausentes, conserva contrato/historial y
+nulls de mediciones. Leer `docs/mvp/GUIA_METRICAS_EQUIPO.md`. No inventar agente,
+turno ni costo por mensaje; aún falta correlación mensaje → turno → reproducción.
+Jacobo puede probar voz/telemetría; UAM y renderer siguen sin validación nueva.
+El frontend local se reconstruyó; backend, prompts, activos y datos sin cambios.
+
 ## Panel y texto opt-in — 17 octubre 2026 (vigente)
 
 Leer `docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md` desde la raíz del repo.

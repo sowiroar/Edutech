@@ -51,3 +51,5 @@ contraseña TELEMETRY_ADMIN_PASSWORD en .env.voice. Selector/avatar y validació
 siguen pendientes. No afirmar MVP institucional completo ni SSO.
 
 Panel privado claro, transcripción opt-in y trazas: [guía del dashboard](docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md).
+
+Guía para el equipo: [métricas, campos vacíos y pruebas de Jacobo](docs/mvp/GUIA_METRICAS_EQUIPO.md).

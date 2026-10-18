@@ -120,7 +120,7 @@ Probar correo ficticio `prueba@example.com`: debe verse `[CORREO]`. No usar secr
 reales para comprobar la ocultación.
 
 Pruebas automatizadas: pytest agente, pytest colector con PostgreSQL **desechable
-llamado `test`**, Node `--test tests/media-telemetry.test.cjs`, tsc y ESLint. Evidencia
+llamado `test`**, Node `--test tests/*.test.cjs`, tsc y ESLint. Evidencia
 actual en `docs/validation/2026-10-17-dashboard/README.md`. No truncar la base real.
 
 Referencias revisadas: [eventos LiveKit](https://docs.livekit.io/reference/agents/events/),
@@ -138,3 +138,5 @@ El smoke de navegador `scripts/test_telemetry_dashboard.cjs` necesita Playwright
 instalado en el entorno de pruebas (o `PLAYWRIGHT_MODULE` apuntando a su módulo).
 Usa la sesión sintética anterior y credencial privada leída en memoria. No imprime
 contraseñas ni texto del usuario. Produce capturas locales y `browser.json`.
+
+Guía de lectura y prueba compartida: [GUIA_METRICAS_EQUIPO.md](GUIA_METRICAS_EQUIPO.md). PR #8 integrado en backp-fase1 `3abca14`; CI de la base aprobado.

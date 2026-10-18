@@ -274,6 +274,13 @@ del lienzo, padding de 16px y máximo de 320px de alto con desplazamiento propio
 Estados vacíos, carga, error, texto retirado y ausencia de transcripción se expresan
 con mensajes explícitos. Paginar conserva la consulta aplicada y la vista elegida.
 
+El detalle técnico muestra los campos disponibles y agrupa los campos superiores
+sin dato en «Campos sin dato y su significado», un desplegable con explicaciones
+de las correlaciones ausentes. El JSON conserva `null`, cero y `false` dentro de
+`payload`; el texto de conversación aparece arriba sin duplicarse allí. La versión
+`unknown` se presenta como «No registrada». Esta presentación no modifica el
+contrato almacenado ni atribuye agentes, turnos o costos sin evidencia.
+
 ## Do's and Don'ts
 
 ### Do:
