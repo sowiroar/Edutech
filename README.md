@@ -53,3 +53,5 @@ siguen pendientes. No afirmar MVP institucional completo ni SSO.
 Panel privado claro, transcripción opt-in y trazas: [guía del dashboard](docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md).
 
 Guía para el equipo: [métricas, campos vacíos y pruebas de Jacobo](docs/mvp/GUIA_METRICAS_EQUIPO.md).
+
+Ramas y arranque de Santiago: [flujo de trabajo](docs/mvp/FLUJO.md) y [auditoría de limpieza](docs/mvp/AUDITORIA_RAMAS_2026-10-17.md).

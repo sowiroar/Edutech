@@ -1,9 +1,21 @@
+## Flujo depurado para continuar — 17 octubre 2026
+
+Los PR #8 y #9 ya están integrados en `backp-fase1` (base funcional `43d42d9`,
+CI aprobado). Leer `Edutech/docs/mvp/FLUJO.md` y `Edutech/docs/mvp/AUDITORIA_RAMAS_2026-10-17.md`.
+Las ramas terminadas de telemetría/RAG/preparación se retiraron después de verificar
+que sus commits están en las bases. No volver a crear las ramas retiradas por
+seguir instrucciones históricas. Juan crea una feature nueva desde origin/backp-fase1
+para cada tarea; Santiago conserva feature/avatar-presentation; Jacobo
+feature/voice-validation. Ambas se actualizan por avance directo al cerrar la limpieza,
+sin reemplazar trabajo nuevo de un colaborador. Avatar usa main y su propia feature.
+No hubo despliegue UAM ni cambios de runtime/assets; falta aceptación del equipo en UAM.
+
 # Workspace VIVAVerse — 17 octubre 2026
 
 Carpetas activas: Avatar/ (SantiagoGarcia205/Avatar) y Edutech/ (sowiroar/Edutech).
 Leer instrucciones propias de cada repo. Esta raíz no es un repositorio Git.
 Base agentes: backp-fase1, voz de backup-fase-2 5e5abc3. Base assets: main.
-Juan: Edutech feature/telemetry. Santiago: feature/avatar-presentation en Edutech
+Juan: una nueva feature/telemetry-<tarea> desde origin/backp-fase1. Santiago: feature/avatar-presentation en Edutech
 (interfaz/medios) y Avatar (assets/build). Jacobo: feature/voice-validation.
 
 Fuentes actuales: Edutech/docs/mvp/README.md, specs, RUNBOOK y VALIDACION.

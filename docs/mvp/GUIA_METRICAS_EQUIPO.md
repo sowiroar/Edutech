@@ -4,15 +4,11 @@
 
 ## Estado real
 
-La voz y la telemetría están integradas en **`backp-fase1`**, mediante el PR #8,
-merge `3abca14`. El [CI de esa base](https://github.com/sowiroar/Edutech/actions/runs/39086759054)
-pasó. El registro antiguo con 15 errores Ruff no describe esta versión:
-Ruff y las 36 pruebas del agente pasan nuevamente en la revisión local.
+La voz y la telemetría están integradas en **`backp-fase1`**, mediante los PR #8 y #9. La base revisada es `43d42d9`, con CI aprobado.
 
 Podemos probar conversación por voz, panel privado, mensajes con ocultación básica,
 herramientas, RAG, cambios de agente, consumo y errores. Hay evidencia local de
-Gemini, cambio Lira → Nexus y consulta RAG. **Falta aceptación humana en UAM**;
-CI verde no demuestra funcionamiento del micrófono, red o modelos en ese servidor.
+Gemini, cambio Lira → Nexus y consulta RAG. **Falta revisión en UAM**.
 
 La integración audiovisual de los seis avatares y su rendimiento concurrente siguen
 pendientes de validación. No declaramos terminado el MVP completo.

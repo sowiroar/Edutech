@@ -1,3 +1,15 @@
+## Flujo depurado para continuar — 17 octubre 2026
+
+Los PR #8 y #9 ya están integrados en `backp-fase1` (base funcional `43d42d9`,
+CI aprobado). Leer `docs/mvp/FLUJO.md` y `docs/mvp/AUDITORIA_RAMAS_2026-10-17.md`.
+Las ramas terminadas de telemetría/RAG/preparación se retiraron después de verificar
+que sus commits están en las bases. No volver a crear las ramas retiradas por
+seguir instrucciones históricas. Juan crea una feature nueva desde origin/backp-fase1
+para cada tarea; Santiago conserva feature/avatar-presentation; Jacobo
+feature/voice-validation. Ambas se actualizan por avance directo al cerrar la limpieza,
+sin reemplazar trabajo nuevo de un colaborador. Avatar usa main y su propia feature.
+No hubo despliegue UAM ni cambios de runtime/assets; falta aceptación del equipo en UAM.
+
 ## Campos de telemetría y base integrada — 17 octubre 2026, cierre
 
 PR #8 ya fusionado en `backp-fase1` `3abca14`; CI de la base aprobado

@@ -5,11 +5,12 @@
 - `sowiroar/Edutech`: base compartida **backp-fase1** (ortografía exacta).
 - `SantiagoGarcia205/Avatar`: base compartida **main**, Git LFS para assets.
 - `backup-fase-2` se conserva como antecedente de la voz; no duplicar desarrollo allí.
-- Ramas históricas permanecen. No hacer reset, force-push ni clean para sincronizar.
+- Los commits históricos permanecen en las bases y respaldos; las ramas ya integradas se retiran.
+  No hacer reset, force-push ni clean para sincronizar. Ver [auditoría de ramas](AUDITORIA_RAMAS_2026-10-17.md).
 
 | Responsable | Repo / rama | Propiedad principal |
 |---|---|---|
-| Juan | Edutech `feature/telemetry` | Contrato, agente instrumentado, persistencia, API y panel |
+| Juan | Edutech `feature/telemetry-<tarea>` | Contrato, agente instrumentado, persistencia, API y panel |
 | Santiago | Edutech `feature/avatar-presentation` | Selector, medios, puente, render y calidad audiovisual |
 | Santiago | Avatar `feature/avatar-presentation` | Adaptación nativa de seis escenas, build y métricas NVIDIA |
 | Jacobo | Edutech `feature/voice-validation` | Voz, entorno UAM, RAG/memoria, revisión y pruebas |
@@ -24,17 +25,29 @@ Desde Edutech, shell Bash/Git Bash:
 ```sh
 export EDUTECH_SKIP_DEPLOY=1
 git status --short
-git fetch origin
-git switch backp-fase1
-git merge --ff-only origin/backp-fase1
-# Si ya existe publicada, usar git switch --track origin/feature/telemetry.
-git switch -c feature/telemetry
+git fetch --prune origin
+# Para una tarea nueva, con el checkout limpio:
+git switch --no-track -c feature/nombre-de-tarea origin/backp-fase1
 ```
 
+Para Santiago, si la rama ya existe localmente:
+
+```sh
+git switch feature/avatar-presentation
+git merge --ff-only origin/feature/avatar-presentation
+git merge origin/backp-fase1
+```
+
+Si aún no existe localmente: `git switch --track origin/feature/avatar-presentation`.
+Jacobo usa el mismo flujo con `feature/voice-validation`. Si `--ff-only` falla,
+no forzar: hay divergencia y debe revisarse antes de integrar. Si alguien tiene
+cambios sin publicar, primero los conserva en su rama; nunca stash automático.
 PowerShell: primero `$env:EDUTECH_SKIP_DEPLOY='1'`, luego los mismos comandos Git.
-Si hay cambios locales, conservarlos en su rama antes de cambiar; nunca stash automático.
-Si la rama de trabajo ya existe, `git switch feature/telemetry` y fusionar
-`origin/backp-fase1` en ella. No usar `pull` ambiguo entre distintas bases.
+
+`backp-fase1` es la base de integración, no una rama donde todos editan directamente.
+Las tareas vuelven por PR; después de merge y verificación de ascendencia se elimina
+la rama terminada. No reutilizar una feature cerrada para trabajo distinto.
+`git fetch --prune` limpia referencias remotas, no borra ramas locales ni archivos.
 
 PR de feature/bugfix/chore/hotfix hacia `backp-fase1`. CI cubre esa base.
 No desplegar por cambiar de rama. Usar comandos explícitos del runbook.
