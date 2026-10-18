@@ -1,6 +1,7 @@
 # Telemetría P0: implementación y operación
 
-Rama `feature/telemetry`, sobre `backp-fase1` f072455. Mantiene LiveKit/Gemini,
+Rama `feature/telemetry`, PR [#8](https://github.com/sowiroar/Edutech/pull/8),
+sobre `backp-fase1` f072455. Mantiene LiveKit/Gemini,
 prompts y roles de Jacobo. No modifica assets ni el gitlink Avatar.
 
 ## Arranque local

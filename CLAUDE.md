@@ -1,6 +1,7 @@
 ## Telemetría implementada — 17 octubre 2026, noche
 
-Rama activa `feature/telemetry`, base `backp-fase1` f072455. Leer
+Publicado por PR #8 https://github.com/sowiroar/Edutech/pull/8 contra
+`backp-fase1` f072455, sin merge ni deploy. Rama activa `feature/telemetry`. Leer
 `docs/mvp/TELEMETRY_IMPLEMENTACION.md` y `docs/validation/2026-10-17-telemetry/README.md`.
 Colector PostgreSQL separado, cola acotada, contrato v1, ledger/tarifas versionadas,
 visitante firmado y panel privado `/admin` implementados. `voice_demo.py up` genera

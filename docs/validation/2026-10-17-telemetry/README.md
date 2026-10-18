@@ -66,3 +66,12 @@ tiempos. No se usan para facturación. Costo conocido y ausencia de dato se sepa
 Los scripts de acceso/runtime están en scripts/; requieren uv del agente.
 `--live` señala consumo real de API. Sin grabación de audio ni transcripciones
 persistidas en estos archivos. No hay credenciales en evidencia.
+
+## Instalación limpia y CI
+
+El primer CI falló en TypeScript: npm resolvía `@livekit/protocol` 1.51.0
+junto a la copia 1.48.0 del SDK servidor; la instalación pnpm local tenía otras
+versiones. Se fijan `livekit-server-sdk` 2.18.0 y protocolo 1.48.0, manteniendo
+la versión del SDK ya usada por Docker/npm, y se actualizan ambos lockfiles.
+También se precisa el literal `linear` de una transición existente, sin cambiar
+su comportamiento. Se conserva el chequeo TypeScript independiente en CI.
