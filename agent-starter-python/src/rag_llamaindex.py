@@ -279,6 +279,18 @@ def get_or_build_query_engine():
             model="models/gemini-2.5-flash",
             api_key=api_key,
             temperature=0.2,
+            # Si falta max_tokens O context_window (es un "or": no basta con dar uno
+            # solo, probado en vivo), el constructor de GoogleGenAI hace una llamada de
+            # red SÍNCRONA (client.models.get(...)) para averiguar los límites reales
+            # del modelo. Encontrado en vivo (2026-10-18): esa llamada específica se
+            # cuelga indefinidamente contra la API de Google en este entorno (DNS e
+            # IPv4/IPv6 sí funcionan por separado, confirmado aparte) y se come el
+            # timeout completo de arranque del worker (600s) sin terminar nunca —
+            # ninguna llamada nueva podía atenderse mientras tanto. Dar los dos evita
+            # esa llamada por completo (confirmado: sin esto, 1048576 es la ventana de
+            # contexto real de gemini-2.5-flash).
+            max_tokens=2048,
+            context_window=1048576,
         )
 
         storage_dir = _get_storage_dir()
