@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { describeEvent } from '@/lib/telemetry/event-detail';
 
 type TraceEvent = {
   event_id: string;
@@ -163,7 +164,12 @@ export default function SessionDetail({ id, onClose }: { id: string; onClose: ()
           </span>
           <span>{data.session.ended_at ? 'Cerrada' : 'Activa'}</span>
           <span>
-            Versión <code>{data.session.context.release}</code>
+            Versión{' '}
+            <code>
+              {data.session.context.release === 'unknown'
+                ? 'No registrada'
+                : data.session.context.release}
+            </code>
           </span>
         </div>
       )}
@@ -254,19 +260,36 @@ export default function SessionDetail({ id, onClose }: { id: string; onClose: ()
               )}
               <details>
                 <summary>Detalle técnico</summary>
-                <pre>
-                  {JSON.stringify(
-                    {
-                      ...e,
-                      payload: {
-                        ...e.payload,
-                        ...(e.type === 'conversation_message' ? { text: undefined } : {}),
-                      },
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
+                <p className="telemetry-caption">
+                  Campos disponibles del evento. Los datos ausentes se explican debajo; no equivalen
+                  a cero ni a un fallo de la conversación.
+                  {e.type === 'conversation_message' &&
+                    ' El texto se muestra arriba y no se repite en el JSON.'}
+                </p>
+                {(e as TraceEvent & { release?: string }).release === 'unknown' && (
+                  <p>
+                    Versión no registrada al iniciar esta sesión. No se puede atribuir
+                    retrospectivamente al código actual.
+                  </p>
+                )}
+                <pre>{JSON.stringify(describeEvent(e).available, null, 2)}</pre>
+                {!!describeEvent(e).missing.length && (
+                  <details>
+                    <summary>
+                      Campos sin dato y su significado ({describeEvent(e).missing.length})
+                    </summary>
+                    <dl>
+                      {describeEvent(e).missing.map(({ field, meaning }) => (
+                        <div key={field}>
+                          <dt>
+                            <code>{field}</code>
+                          </dt>
+                          <dd>{meaning}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                )}
               </details>
             </div>
           </li>

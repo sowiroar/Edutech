@@ -1,0 +1,12 @@
+{
+  "session_id": "9adba402-a5cd-4038-a41c-2890a3b03e83",
+  "checks": {
+    "available_only_and_false_preserved": true,
+    "missing_explained": true,
+    "desktop_no_overflow": true,
+    "tablet_no_overflow": true,
+    "mobile_no_overflow": true,
+    "narrow_zoom_viewport": true
+  },
+  "page_errors": 0
+}
