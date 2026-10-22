@@ -1,0 +1,31 @@
+{
+  "branch": "feature/avatar-web-delivery",
+  "changedOrNewPaths": 119,
+  "textFilesScanned": 107,
+  "secretFindings": [],
+  "brokenLocalLinks": [],
+  "filesOver20MiB": [],
+  "models": [
+    {
+      "character": "lira",
+      "shaMatches": true,
+      "bytesMatch": true,
+      "glbCount": 1,
+      "manifestVersionable": true,
+      "modelIgnored": true
+    },
+    {
+      "character": "nexo",
+      "shaMatches": true,
+      "bytesMatch": true,
+      "glbCount": 1,
+      "manifestVersionable": true,
+      "modelIgnored": true
+    }
+  ],
+  "bundleVerified": true,
+  "bundleBytes": 8044215,
+  "bundleSha256": "000fc4f69647212c65e14ae1781638a510556e36c3ab1d19ecb61f05769ba58e",
+  "generatedDatabasePresentLocally": true,
+  "generatedDatabaseRemovedFromIndex": true
+}

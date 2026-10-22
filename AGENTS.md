@@ -1,78 +1,88 @@
-## Main es la base única de desarrollo — 17 octubre 2026, cierre
+# Edutech — instrucciones y estado vigente
 
-Decisión final del usuario: trabajar desde origin/main en Edutech y Avatar.
-Edutech conserva main, backp-fase1 (alineada al cerrar esta limpieza, sin sincronía
-automática) y backup-fase-2 (respaldo intacto de Jacobo 5e5abc3). Avatar conserva main.
-Gemini MVP y las features anteriores ya están integradas; se retiran sus nombres.
-No recrear develop ni las ramas cerradas por seguir bloques históricos debajo.
-Santiago crea una feature nueva desde origin/main actualizado; Juan y Jacobo igual.
-PR a main, checks, merge y retiro de la rama terminada. Leer docs/mvp/FLUJO.md y
-AUDITORIA_RAMAS_2026-10-17.md en esa carpeta. CI permite features a main; releases
-no abren back-merge a develop ni despliegan UAM. La cuenta WRITE no configura protección.
-Las bases anteriores y pruebas se conservan en la historia. UAM/renderer/concurrencia
-siguen pendientes de aceptación; este cambio no altera runtime, prompts ni assets.
+Actualizado el 21 de octubre de 2026. Leer README.md y docs/mvp/README.md.
+Este repositorio contiene agentes, frontend y telemetría. La autoría Unreal
+vive en el repositorio hermano ../Avatar; el submódulo Avatar fija un SHA.
 
-## Campos de telemetría y base integrada — 17 octubre 2026, cierre
+## Trabajo y conservación
 
-PR #8 ya fusionado en `backp-fase1` `3abca14`; CI de la base aprobado
-(run 39086759054). El log antiguo de 15 errores Ruff no corresponde a esta base.
-Nueva rama `feature/telemetry-field-clarity` desde esa base: detalle técnico
-muestra campos disponibles y explica ausentes, conserva contrato/historial y
-nulls de mediciones. Leer `docs/mvp/GUIA_METRICAS_EQUIPO.md`. No inventar agente,
-turno ni costo por mensaje; aún falta correlación mensaje → turno → reproducción.
-Jacobo puede probar voz/telemetría; UAM y renderer siguen sin validación nueva.
-El frontend local se reconstruyó; backend, prompts, activos y datos sin cambios.
+- Base de desarrollo: main. Features/bugfix/chore vuelven por PR a main.
+  backp-fase1 es compatibilidad; backup-fase-2 conserva el respaldo histórico.
+- Definir EDUTECH_SKIP_DEPLOY=1 al operar Git. No ejecutar setup/deploy o UAM
+  por sincronizar archivos. No usar reset/clean/force-push ni stash automático.
+- Conservar cambios ajenos, datos, voces, prompts, roles y RAG/Mem0.
+- No versionar .env, tokens, contraseñas, bases generadas, cachés o exportaciones.
+- Leer instrucciones del componente antes de modificarlo. No confundir una
+  compilación o test sintético con aceptación de conversación, arte o despliegue.
 
-## Panel y texto opt-in — 17 octubre 2026 (vigente)
+## Avatar web vigente
 
-Leer `docs/mvp/TELEMETRY_DASHBOARD_Y_TRAZAS.md` desde la raíz del repo.
-Usuario autorizó futuras transcripciones con ocultación básica, sin audio;
-prevalece sobre la prohibición histórica de texto debajo. Contrato v2, compatible
-con v1, texto separado con TTL (7 días local), captura desactivada por defecto.
-No reconstruir sesiones antiguas. `/admin` claro como NeoIPS; voz visual intacta.
-Pruebas PostgreSQL solo base `test`. No borrar datos reales. Sin despliegue UAM.
+- Tres modelos web locales: LIRA de Juan, NEXO y ELIAN; no afirmar seis.
+- LIRA procede de /Game/VIVA/Avatars/Lira/Maps/L_Lira y BP_Lira. No sustituir
+  por /Game/UniversityVirtualAssistant/FamiliaVIVA/LIRA/NewMap_LIRA_Studio.
+- LiraAgent/Aoede recibe; NexusAgent anuncia NEXO/Puck. ElianAgent/Kore mantiene
+  su avatar original. ATLAS/NOVA/NOA aún no tienen clases de agente en este worker.
+  El worker nexus no es el personaje inicial.
+- ctx.connect() precede a session.start(); preservar el anuncio inicial.
+- El cliente admite hasta 90 s para la llegada del agente cuando se prepara en
+  frío; el intento completo se limita a 95 s. Una desconexión debe abortar la
+  espera de start() y liberar el botón. Ver lib/session-start.ts en el frontend
+  y docs/validation/2026-10-21-lira-startup; no ocultar errores de red como arte.
+- El frontend sigue avatar.character. Sin señal no elige NEXO por defecto.
+  Un único modelo activo; liberar recursos al transferir y conservar voz ante fallo.
+- Ropa y rostro usan canales comunes del cuerpo. No reintroducir el retarget
+  por offsets de referencia que produjo intersecciones. Ver AVATAR_WEB.md.
+- Boca por RMS y bandas espectrales (apertura/redondeo/extensión), sin reconocer
+  fonemas. No afirmar sincronía fonética. Reexportar reinicia la revisión a
+  pending; no aprobar automáticamente nuevas variantes ni cambiar assets originales.
+- ELIAN usa /Game/VIVA/Avatars/Elian/Maps/L_Elian. Su exportación incluye materiales
+  de ojos/dientes horneados sobre su propia malla; no usar la esfera de previsualización.
+  LIRA, NEXO y ELIAN comparten Uam-virtual por petición del usuario.
+- NEXO web usa ahora la geometría LOD3 del DNA original de CH_Nexo_MateoNative
+  (5.048 triángulos de piel), con los huesos/bind matrices del ensamblado original.
+  Se conservan torso, ropa, pelo y mapas. La subdivisión anterior fue rechazada
+  visualmente por el usuario; no describirla como aprobada. Ver
+  docs/validation/2026-10-21-nexo-repair/README.md para evidencia y límites.
+- El reintento de saludo termina ante transferencia, cierre o interrupción;
+  no confundirlos con silencio. Las preguntas ambiguas de NEXO se aclaran antes
+  de enviar a ELIAN. No cambiar sus voces ni ampliar los dominios por este arreglo.
+  LIRA reconoce Nexo/Nexus como el mismo especialista y transfiere también ante
+  la petición explícita de hablar con él, aunque aún no haya una pregunta técnica.
+- La síntesis documental conserva Gemini 2.5 Flash, temperatura 0,2, prompts y
+  fuentes. rag_config.py limita solo el razonamiento interno a 512 tokens; no
+  limita la longitud de respuesta. La inicialización RAG de NEXO se ejecuta fuera
+  del bucle de audio. No aplicar esa configuración al modelo de voz Gemini Live.
+- NEXO tiene piel mate en el visor: reducir reflejos no requiere reexportar ni
+  cambiar texturas, cuerpo o rig. Los ojos conservan su material independiente.
+- Modelos y fondos fuera de Git. Manifiestos y código sí se versionan.
+  Seguir public/avatars/README.md dentro del frontend y THIRD_PARTY_AVATARS.md.
+- No iniciar avatar_local.py, renderer nativo, --avatar o MJPEG para el visor web.
+  La app no necesita Unreal en ejecución. Conservar los antecedentes nativos.
 
-## Telemetría implementada — 17 octubre 2026, noche
+## Operación y evidencia
 
-Publicado por PR #8 https://github.com/sowiroar/Edutech/pull/8 contra
-`backp-fase1` f072455, sin merge ni deploy. Rama activa `feature/telemetry`. Leer
-`docs/mvp/TELEMETRY_IMPLEMENTACION.md` y `docs/validation/2026-10-17-telemetry/README.md`.
-Colector PostgreSQL separado, cola acotada, contrato v1, ledger/tarifas versionadas,
-visitante firmado y panel privado `/admin` implementados. `voice_demo.py up` genera
-secretos faltantes en `.env.voice`; contraseña administrativa solo allí.
-Voz predeterminada y prompts conservados; no modificar assets/roles ni presentar
-Moodle, renderer o despliegue UAM como terminados. Costos parciales: no factura.
-Uso Live por snapshot/delta, alias SDK Gemini→google. RAG/memoria con cobertura
-explícita; Mem0 con hilos internos y embeddings sin usage no tienen costo completo.
-Prueba real Lira→Nexus+RAG correcta; navegador con micrófono sintético, audio playing.
-Postgres detenido: voz sigue; 12 fallos/6 descartes observados; base restaurada.
-No confundir pruebas sintéticas habladas por Gemini con aceptación humana de voz.
-Selector Voz/Avatar sigue siendo feature/avatar-presentation de Santiago.
+compose.voice.yml es el perfil local. Frontend 3000 y 3500, vista avatar-preview,
+panel /admin. El frontend histórico no debe ocupar 3000. down conserva volúmenes.
+Para reconstruir solo la web: python scripts/voice_demo.py web.
+Scripts de exportación: avatar_web.py; configuración y resultados en
+data/local-avatar (ignorado). El equipo actual conserva caché en D:/EdutechRuntime.
 
-# Contexto vigente — 17 octubre 2026
+Evidencia vigente en docs/validation/2026-10-21-lira-web y
+2026-10-21-avatar-resources. LIRA y NEXO: ~30 FPS a 960x540; RAM privada residente
+media/pico navegador 596,6/642,7 MiB y 555,9/616,9 MiB. Docker medio 1708,2/1729,8
+MiB. Pruebas de 60 s con entrada sintética y Unreal cerrado, no estrés ni fugas.
+GPU AMD 740M integrada; no atribuirles VRAM global NVIDIA. No sumar memoria
+compartida otra vez, Docker a WSL, ni compromiso privado a RAM residente.
+La verificación posterior 2026-10-21-avatar-speech-style comprueba las formas
+de labios y LIRA → NEXO → ELIAN en llamada. No reemplaza el benchmark de memoria.
 
-Leer README.md y docs/mvp/README.md; este documento prevalece sobre instrucciones
-históricas de ramas. Base compartida Edutech: backp-fase1. Voz de backup-fase-2
-5e5abc3 incorporada sin migrar arquitectura. Trabajar por PR desde la base:
-Juan feature/telemetry; Santiago feature/avatar-presentation; Jacobo
-feature/voice-validation. Specs en docs/mvp, CI incluye PR a backp-fase1.
+## Telemetría y límites
 
-- Mantener LiveKit/Gemini, prompts/roles y RAG/Mem0. No copiar Pipecat/IPS de NeoIPS.
-- Voz predeterminada; selector Voz/Avatar pendiente. Telemetría: ver bloque vigente arriba.
-- La falla del renderer no debe tumbar voz. No compartir video/audio de una sala
-  con otra; validar lease antes de concurrencia Unreal.
-- Identidad Moodle pendiente: separar visitante de usuario autenticado. No usar
-  estudiante_uam como identificador único para métricas/memoria de todos.
-- Sin datos de costo/latencia: null y cobertura. Medir reproducción en cliente
-  aparte de generación. Sin credenciales no hay prueba de conversación real.
-- Arranque local: python3 scripts/voice_demo.py init/doctor/up. Windows usa python.
-  compose.voice.yml aislado, sin CUDA, sin deploy UAM; .env.voice fuera de Git.
-- EDUTECH_SKIP_DEPLOY=1 al operar Git. No ejecutar scripts/setup o deploy sin
-  revisar host/puertos/datos. Nunca reset/clean/force-push para "sincronizar".
-- Assets en repo independiente Avatar, gitlink por SHA publicado y probado.
-  No traer el bridge histórico VVA1 de archive al código de Gemini.
-- Leer agent-starter-python/AGENTS.md antes de editar agente. uv y lock existentes.
-- Medir RAM de proceso y VRAM por separado; Mac unificada no prueba Windows.
-- No divulgar claves, tokens, DSN o credenciales VPN/RDP en evidencia.
-- No afirmar deploy, autenticación, voz, seis mapas cocinados o UI probados por
-  un simple catálogo/CI. Ver docs/mvp/VALIDACION.md.
+Conservar contratos, TTL y captura opt-in de transcripciones; no guardar audio.
+Desconocido se expresa null, no cero. No inventar costos completos o identidades.
+Pruebas PostgreSQL solo en base test; no borrar datos reales. Moodle/SSO,
+despliegue UAM, aceptación artística y concurrencia siguen sin certificación nueva.
+
+Entrega y verificaciones: docs/mvp/ENTREGA_WEB_2026-10-21.md.
+Las notas anteriores se conservan en docs/history/AGENTS-through-20261021.md;
+son antecedentes, no instrucciones vigentes de arranque o ramas.

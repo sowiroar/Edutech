@@ -1,31 +1,73 @@
-import { cn } from '@/lib/shadcn/utils';
+'use client';
 
-interface AvatarStageProps {
-  /** /api/avatar/stream: MJPEG (multipart/x-mixed-replace) de avatar-render. */
-  url: string;
+import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { type RemoteAudioTrack, createAudioAnalyser } from 'livekit-client';
+import { useRoomContext, useVoiceAssistant } from '@livekit/components-react';
+import { type MouthPose, REST_MOUTH, createSpeechMotion } from '@/components/avatar/speech-motion';
+import type { BrowserAvatar } from '@/lib/browser-avatar';
+
+const BrowserAvatarStage = dynamic(() => import('@/components/avatar/browser-avatar-stage'), {
+  ssr: false,
+});
+
+export function AvatarStage({
+  asset,
+  isChatOpen,
+  onFailure,
+  onReady,
+}: {
+  asset: BrowserAvatar;
   isChatOpen: boolean;
-  className?: string;
-}
-
-/**
- * Muestra al avatar (NEXO/Familia VIVA) vía MJPEG — reemplaza al Pixel Streaming de
- * Unreal, que nunca llegó a verse en el navegador (ver avatar-render/README.md). Un
- * <img> normal basta: multipart/x-mixed-replace es un formato que el navegador ya sabe
- * mostrar como si fueran frames de video, sin códecs ni JS de por medio. Unreal anima al
- * avatar con la voz del agente que esté hablando; con el chat abierto se reduce a una
- * miniatura.
- */
-export function AvatarStage({ url, isChatOpen, className }: AvatarStageProps) {
+  onFailure: () => void;
+  onReady: () => void;
+}) {
+  const { audioTrack } = useVoiceAssistant();
+  const room = useRoomContext();
+  const speech = useRef<() => MouthPose>(() => REST_MOUTH);
+  const track = audioTrack?.publication.track;
+  useEffect(() => {
+    if (!track || (!asset.mouthMorph && !asset.rigProfile)) return;
+    // Analyse already received audio; LiveKit remains the only audio output.
+    let analyser: ReturnType<typeof createAudioAnalyser> | undefined;
+    try {
+      analyser = createAudioAnalyser(track as RemoteAudioTrack, {
+        fftSize: 2048,
+        smoothingTimeConstant: 0.05,
+        minDecibels: -85,
+        maxDecibels: -20,
+      });
+      const node = analyser.analyser;
+      const pcm = new Float32Array(node.fftSize);
+      const spectrum = new Float32Array(node.frequencyBinCount);
+      const motion = createSpeechMotion();
+      let previous = performance.now();
+      void (node.context as AudioContext).resume().catch(() => {});
+      speech.current = () => {
+        const now = performance.now();
+        const dt = (now - previous) / 1000;
+        previous = now;
+        if (!room.canPlaybackAudio || track.isMuted || node.context.state !== 'running')
+          return motion.reset();
+        node.getFloatTimeDomainData(pcm);
+        node.getFloatFrequencyData(spectrum);
+        return motion.read(pcm, spectrum, node.context.sampleRate, dt);
+      };
+    } catch {
+      /* Voice continues if the optional analyser cannot start. */
+    }
+    return () => {
+      speech.current = () => REST_MOUTH;
+      if (analyser) void analyser.cleanup();
+    };
+  }, [track, asset.mouthMorph, asset.rigProfile, room]);
   return (
-    <div
-      className={cn(
-        'pointer-events-auto overflow-hidden rounded-xl bg-black drop-shadow-xl/80',
-        isChatOpen ? 'h-[120px] w-[213px]' : 'aspect-video w-[min(100vw-2rem,42rem)]',
-        className
-      )}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- MJPEG no es un <Image> de next/image: es un stream infinito, no un archivo que optimizar. */}
-      <img src={url} alt="Avatar" className="size-full object-cover" />
-    </div>
+    <BrowserAvatarStage
+      asset={asset}
+      compact={isChatOpen}
+      speech={speech}
+      onFailure={onFailure}
+      onReady={onReady}
+    />
   );
 }

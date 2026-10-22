@@ -1,6 +1,6 @@
-## Coordinación vigente (17 octubre 2026)
+## Coordinación vigente (21 octubre 2026)
 
-Leer ../../AGENTS.md y ../../docs/mvp/SPEC_TELEMETRY.md. Base backp-fase1;
+Leer ../AGENTS.md y ../docs/mvp/SPEC_TELEMETRY.md. Base main;
 no confundir los escenarios de CI con aceptación de voz real.
 
 # AGENTS.md

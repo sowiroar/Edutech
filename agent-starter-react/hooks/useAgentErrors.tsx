@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { toast as sonnerToast } from 'sonner';
 import { useAgent, useSessionContext } from '@livekit/components-react';
 import { WarningIcon } from '@phosphor-icons/react';
@@ -27,39 +27,26 @@ function toastAlert(toast: ToastProps) {
 export function useAgentErrors() {
   const agent = useAgent();
   const { isConnected, end } = useSessionContext();
+  const handled = useRef(false);
 
   useEffect(() => {
-    if (isConnected && agent.state === 'failed') {
-      const reasons = agent.failureReasons;
-
+    if (!isConnected || agent.state !== 'failed') {
+      handled.current = false;
+      return;
+    }
+    if (!handled.current) {
+      handled.current = true;
       toastAlert({
-        title: 'Session ended',
+        title: 'No se pudo conectar con el asistente',
         description: (
-          <>
-            {reasons.length > 1 && (
-              <ul className="list-inside list-disc">
-                {reasons.map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
-            )}
-            {reasons.length === 1 && <p className="w-full">{reasons[0]}</p>}
-            <p className="w-full">
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://docs.livekit.io/agents/start/voice-ai/"
-                className="whitespace-nowrap underline"
-              >
-                See quickstart guide
-              </a>
-              .
-            </p>
-          </>
+          <p className="w-full">
+            La conexión se interrumpió o el asistente no terminó de prepararse. Puedes iniciar otra
+            llamada en unos segundos.
+          </p>
         ),
       });
 
-      end();
+      void end().catch(() => undefined);
     }
   }, [agent, isConnected, end]);
 }

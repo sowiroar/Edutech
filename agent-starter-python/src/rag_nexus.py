@@ -16,6 +16,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+from rag_config import document_generation_config
 from viva_telemetry import observed
 from viva_telemetry.google_usage import wrap_client
 
@@ -289,6 +290,7 @@ def get_or_build_nexus_query_engine():
             model="models/gemini-2.5-flash",
             api_key=api_key,
             temperature=0.2,
+            generation_config=document_generation_config(),
         )
         embed_model._client = wrap_client(embed_model._client, "embedding")
         llm._client = wrap_client(llm._client, "rag")
@@ -346,7 +348,7 @@ async def consultar_especializacion_ia(consulta: str) -> dict[str, Any] | None:
     if not consulta or not consulta.strip():
         return None
 
-    engine = get_or_build_nexus_query_engine()
+    engine = await asyncio.to_thread(get_or_build_nexus_query_engine)
     if engine is None:
         return None
 

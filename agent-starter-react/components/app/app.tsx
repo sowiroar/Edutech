@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { Room, TokenSource } from 'livekit-client';
-import { type UseSessionReturn, useSession } from '@livekit/components-react';
+import { Room, RoomEvent, TokenSource } from 'livekit-client';
+import { useSession } from '@livekit/components-react';
 import { WarningIcon } from '@phosphor-icons/react/dist/ssr';
 import { AgentSessionProvider } from '@/components/agents-ui/agent-session-provider';
 import { StartAudioButton } from '@/components/agents-ui/start-audio-button';
@@ -11,6 +11,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useAgentErrors } from '@/hooks/useAgentErrors';
 import { AvatarStreamProvider, useAvatarStream } from '@/hooks/useAvatarStream';
 import { useDebugMode } from '@/hooks/useDebug';
+import { AGENT_CONNECT_TIMEOUT_MS } from '@/lib/session-start';
 import { MediaTelemetry } from '@/lib/telemetry/client';
 
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
@@ -22,32 +23,13 @@ function AppSetup() {
   return null;
 }
 
-/**
- * Sesión del agente. Con Unreal conectado, el audio lo emite Unreal (con los labios
- * sincronizados) y el de LiveKit se silencia para no oír la voz duplicada — con o sin
- * video de Pixel Streaming en la web.
- */
-function AgentSession({
-  session,
-  children,
-}: {
-  session: UseSessionReturn;
-  children: React.ReactNode;
-}) {
-  const avatar = useAvatarStream();
-
-  return (
-    <AgentSessionProvider session={session} muted={avatar.unrealConnected && avatar.muteAgentAudio}>
-      {children}
-    </AgentSessionProvider>
-  );
-}
-
 interface AppProps {
   agentName?: string;
 }
 
-export function App({ agentName = 'nexus' }: AppProps) {
+function SessionApp({ agentName = 'nexus' }: AppProps) {
+  const avatar = useAvatarStream();
+  const { mode, activate } = avatar;
   const mediaTelemetry = useMemo(() => new MediaTelemetry(), []);
   const tokenSource = useMemo(
     () =>
@@ -56,14 +38,15 @@ export function App({ agentName = 'nexus' }: AppProps) {
         const response = await fetch('/api/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ presentation_mode: mode }),
         });
-        if (!response.ok) throw new Error('No se pudo iniciar la sesión');
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo iniciar la sesión');
+        activate(data.avatars || []);
         mediaTelemetry.setToken(data.telemetry?.token || '');
         return data;
       }),
-    [mediaTelemetry]
+    [mediaTelemetry, mode, activate]
   );
 
   // Room propio (en vez de dejar que useSession cree el suyo por defecto)
@@ -88,31 +71,50 @@ export function App({ agentName = 'nexus' }: AppProps) {
   );
 
   useEffect(() => mediaTelemetry.attach(room), [mediaTelemetry, room]);
-  const session = useSession(tokenSource, { agentName, room });
+  useEffect(() => {
+    room.on(RoomEvent.Disconnected, avatar.release);
+    return () => {
+      room.off(RoomEvent.Disconnected, avatar.release);
+    };
+  }, [room, avatar.release]);
+  useEffect(() => {
+    if (avatar.failed) mediaTelemetry.avatarUnavailable();
+  }, [avatar.failed, mediaTelemetry]);
+  const session = useSession(tokenSource, {
+    agentName,
+    room,
+    agentConnectTimeoutMilliseconds: AGENT_CONNECT_TIMEOUT_MS,
+  });
 
   return (
+    <AgentSessionProvider session={session} muted={false}>
+      <AppSetup />
+      <main className="grid h-svh grid-cols-1 place-content-center">
+        <ViewController />
+      </main>
+      <StartAudioButton label="Start Audio" />
+      <Toaster
+        icons={{
+          warning: <WarningIcon weight="bold" />,
+        }}
+        position="top-center"
+        className="toaster group"
+        style={
+          {
+            '--normal-bg': 'var(--popover)',
+            '--normal-text': 'var(--popover-foreground)',
+            '--normal-border': 'var(--border)',
+          } as React.CSSProperties
+        }
+      />
+    </AgentSessionProvider>
+  );
+}
+
+export function App(props: AppProps) {
+  return (
     <AvatarStreamProvider>
-      <AgentSession session={session}>
-        <AppSetup />
-        <main className="grid h-svh grid-cols-1 place-content-center">
-          <ViewController />
-        </main>
-        <StartAudioButton label="Start Audio" />
-        <Toaster
-          icons={{
-            warning: <WarningIcon weight="bold" />,
-          }}
-          position="top-center"
-          className="toaster group"
-          style={
-            {
-              '--normal-bg': 'var(--popover)',
-              '--normal-text': 'var(--popover-foreground)',
-              '--normal-border': 'var(--border)',
-            } as React.CSSProperties
-          }
-        />
-      </AgentSession>
+      <SessionApp {...props} />
     </AvatarStreamProvider>
   );
 }

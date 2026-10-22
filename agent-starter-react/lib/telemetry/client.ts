@@ -31,6 +31,10 @@ export class MediaTelemetry {
     this.token = token;
     if (this.pending.length) this.schedule();
   }
+  avatarUnavailable() {
+    this.emit('avatar_unavailable', { reason: 'unavailable' });
+  }
+
   private emit(type: string, payload: Record<string, unknown> = {}) {
     if (!this.attempt || this.closed || this.pending.length >= 50) return;
     this.pending.push({

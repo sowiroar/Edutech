@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
 import { randomUUID } from 'node:crypto';
 import { RoomAgentDispatch, RoomConfiguration } from '@livekit/protocol';
-import { createContext, enabled } from '@/lib/telemetry/server';
+import type { BrowserAvatar } from '@/lib/browser-avatar';
+import { browserAvatars } from '@/lib/browser-avatar-server';
+import { body, createContext, enabled, sameOrigin } from '@/lib/telemetry/server';
 
 type ConnectionDetails = {
   serverUrl: string;
@@ -10,6 +12,8 @@ type ConnectionDetails = {
   participantName: string;
   participantToken: string;
   telemetry?: { context: Record<string, unknown>; token: string };
+  avatar?: BrowserAvatar;
+  avatars?: BrowserAvatar[];
 };
 
 // NOTE: you are expected to define the following environment variables in `.env.local`:
@@ -20,7 +24,16 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 // don't cache the results
 export const revalidate = 0;
 
-export async function POST() {
+export async function POST(req: Request) {
+  if (!sameOrigin(req)) return new Response(null, { status: 403 });
+  let requested;
+  try {
+    requested = await body(req, 1024);
+  } catch {
+    return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
+  }
+  const mode = requested?.presentation_mode ?? 'voice';
+  if (mode !== 'voice' && mode !== 'avatar') return new Response(null, { status: 400 });
   // make an exception for development, vercel preview, or local docker deployment
   if (
     process.env.NODE_ENV !== 'development' &&
@@ -48,7 +61,9 @@ export async function POST() {
     const participantName = 'user';
     const participantIdentity = `visitor_${randomUUID()}`;
     const roomName = `viva_${randomUUID()}`;
-    const telemetry = enabled() ? await createContext(roomName, participantIdentity) : undefined;
+    const telemetry = enabled()
+      ? await createContext(roomName, participantIdentity, mode)
+      : undefined;
     const roomConfig = new RoomConfiguration({
       agents: [
         new RoomAgentDispatch({
@@ -64,14 +79,16 @@ export async function POST() {
       roomConfig
     );
 
-    // Avisa al puente del avatar que hay una sala nueva, para que se una de
-    // inmediato en vez de esperar a su siguiente poll (ver RoomFollower.hint
-    // en avatar-bridge/livekit_source.py). Si el puente no está disponible o
-    // tarda, no debe frenar el inicio de la llamada: se limita el tiempo de
-    // espera (300ms) y cualquier error se ignora en silencio. Se espera
-    // (await) porque en Next.js una promesa sin await puede quedar cortada
-    // apenas la función retorna la respuesta (Claude, 2026-09-29).
-    await hintAvatarBridge();
+    let avatars: BrowserAvatar[] | undefined;
+    if (mode === 'avatar') {
+      avatars = await browserAvatars();
+      if (!avatars.length) {
+        return NextResponse.json(
+          { error: 'Los modelos aún no están disponibles. Puedes elegir Voz.' },
+          { status: 409 }
+        );
+      }
+    }
 
     // Return connection details
     const data: ConnectionDetails = {
@@ -80,6 +97,8 @@ export async function POST() {
       participantName,
       participantToken,
       telemetry,
+      avatar: avatars?.find((asset) => asset.character === 'LIRA'),
+      avatars,
     };
     const headers = new Headers({
       'Cache-Control': 'no-store',
@@ -87,20 +106,6 @@ export async function POST() {
     return NextResponse.json(data, { headers });
   } catch {
     return NextResponse.json({ error: 'No se pudo crear la sesión' }, { status: 500 });
-  }
-}
-
-async function hintAvatarBridge(): Promise<void> {
-  const hintUrl = process.env.AVATAR_BRIDGE_HINT_URL || 'http://avatar-bridge:8766/hint';
-  try {
-    // GET, no POST: el servidor websockets de Python (avatar-bridge) solo
-    // acepta GET en su gancho process_request (rechaza cualquier otro
-    // método antes de que nuestro código lo vea).
-    await fetch(hintUrl, { method: 'GET', signal: AbortSignal.timeout(300) });
-  } catch {
-    // El avatar es opcional: si el puente no responde a tiempo o no está
-    // levantado, la llamada sigue igual (el puente cae de vuelta a su poll
-    // de respaldo).
   }
 }
 

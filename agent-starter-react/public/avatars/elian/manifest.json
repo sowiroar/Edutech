@@ -1,0 +1,21 @@
+{
+  "bytes": 4592212,
+  "sha256": "d833245bb6380240dc4de22f4c317449e367a48b891a5cfe3f7ff8fa4f20f40d",
+  "triangles": 61977,
+  "skins": 3,
+  "joints": 215,
+  "animations": 1,
+  "mouthMorphCandidates": [],
+  "character": "ELIAN",
+  "source_scene": "/Game/VIVA/Avatars/Elian/Maps/L_Elian",
+  "source_author": "Familia VIVA / proyecto del equipo",
+  "frontYaw": 1.5707963267948966,
+  "visual_review": "passed",
+  "motion_review": "passed",
+  "mouth_mapping": "amplitude-verified",
+  "web_profile": 2,
+  "export_profile": 3,
+  "background_source": "Uam-virtual.jpg (shared web background requested by user)",
+  "rigProfile": "metahuman-web-v1",
+  "review_scope": "Local technical review: source appearance, idle, jaw and lip controls; not artistic approval or phoneme validation"
+}

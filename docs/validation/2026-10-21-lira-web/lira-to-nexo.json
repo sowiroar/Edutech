@@ -1,0 +1,232 @@
+{
+  "scope": "local-livekit-call-with-synthetic-silent-input",
+  "timestamp": "2026-10-21T22:27:01.973Z",
+  "tokenStatuses": [
+    200,
+    200
+  ],
+  "telemetryStatuses": [
+    409,
+    200
+  ],
+  "errors": [],
+  "tokenAssets": [
+    "LIRA",
+    "NEXO"
+  ],
+  "initial": {
+    "agents": [
+      "LIRA"
+    ],
+    "canvasLabels": [
+      "LIRA, avatar 3D"
+    ],
+    "renderedCharacters": [
+      "LIRA"
+    ]
+  },
+  "observations": [
+    {
+      "canvasCount": 1,
+      "connections": [
+        "connected"
+      ],
+      "audioBytes": 96105,
+      "audioEnergy": 1.9104209278668336,
+      "playingAudio": 1,
+      "samples": 9,
+      "status": [],
+      "agentAttributes": [
+        {
+          "character": "NEXO",
+          "state": "speaking"
+        }
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "character": "LIRA",
+      "timestamp": "2026-10-21T22:27:10.780Z",
+      "fps": 1.128986734405633,
+      "renderSubmissionMs": 855.6000000005588,
+      "drawCalls": 15,
+      "triangles": 76031,
+      "geometries": 14,
+      "textures": 24,
+      "pageJsHeapBytes": 45227620,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 4666084,
+      "loadMs": 548.6000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 39146852,
+      "geometryDataBytes": 3610962
+    },
+    {
+      "character": "LIRA",
+      "timestamp": "2026-10-21T22:27:11.793Z",
+      "fps": 29.96616723054616,
+      "renderSubmissionMs": 1.8483870967982277,
+      "drawCalls": 15,
+      "triangles": 76031,
+      "geometries": 14,
+      "textures": 24,
+      "pageJsHeapBytes": 36641421,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 4666084,
+      "loadMs": 548.6000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 39146852,
+      "geometryDataBytes": 3610962
+    },
+    {
+      "character": "LIRA",
+      "timestamp": "2026-10-21T22:27:12.791Z",
+      "fps": 30,
+      "renderSubmissionMs": 1.3966666668032606,
+      "drawCalls": 15,
+      "triangles": 76031,
+      "geometries": 14,
+      "textures": 24,
+      "pageJsHeapBytes": 42836787,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 4666084,
+      "loadMs": 548.6000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 39146852,
+      "geometryDataBytes": 3610962
+    },
+    {
+      "character": "LIRA",
+      "timestamp": "2026-10-21T22:27:13.825Z",
+      "fps": 28.99391127863152,
+      "renderSubmissionMs": 1.3433333332339923,
+      "drawCalls": 15,
+      "triangles": 76031,
+      "geometries": 14,
+      "textures": 24,
+      "pageJsHeapBytes": 37628390,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 4666084,
+      "loadMs": 548.6000000014901,
+      "width": 213,
+      "height": 120,
+      "animationClips": 1,
+      "textureBytesEstimate": 39146852,
+      "geometryDataBytes": 3610962
+    },
+    {
+      "character": "NEXO",
+      "timestamp": "2026-10-21T22:27:15.693Z",
+      "fps": 14.934289127843066,
+      "renderSubmissionMs": 38.88666666659216,
+      "drawCalls": 7,
+      "triangles": 59578,
+      "geometries": 7,
+      "textures": 18,
+      "pageJsHeapBytes": 61679171,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5721776,
+      "loadMs": 457.1000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2358468
+    },
+    {
+      "character": "NEXO",
+      "timestamp": "2026-10-21T22:27:16.692Z",
+      "fps": 30,
+      "renderSubmissionMs": 1.0933333331719042,
+      "drawCalls": 7,
+      "triangles": 59578,
+      "geometries": 7,
+      "textures": 18,
+      "pageJsHeapBytes": 52351339,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5721776,
+      "loadMs": 457.1000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2358468
+    },
+    {
+      "character": "NEXO",
+      "timestamp": "2026-10-21T22:27:17.726Z",
+      "fps": 29.963270829306,
+      "renderSubmissionMs": 0.9516129031056358,
+      "drawCalls": 7,
+      "triangles": 59578,
+      "geometries": 7,
+      "textures": 18,
+      "pageJsHeapBytes": 57154288,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5721776,
+      "loadMs": 457.1000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2358468
+    },
+    {
+      "character": "NEXO",
+      "timestamp": "2026-10-21T22:27:18.727Z",
+      "fps": 30,
+      "renderSubmissionMs": 0.8333333333954215,
+      "drawCalls": 7,
+      "triangles": 59578,
+      "geometries": 7,
+      "textures": 18,
+      "pageJsHeapBytes": 61808029,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5721776,
+      "loadMs": 457.1000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2358468
+    },
+    {
+      "character": "NEXO",
+      "timestamp": "2026-10-21T22:27:19.755Z",
+      "fps": 30.164444876909634,
+      "renderSubmissionMs": 0.8548387094370781,
+      "drawCalls": 7,
+      "triangles": 59578,
+      "geometries": 7,
+      "textures": 18,
+      "pageJsHeapBytes": 32444664,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5721776,
+      "loadMs": 457.1000000014901,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2358468
+    }
+  ],
+  "success": true,
+  "buttons": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "End callEnd",
+    "Enable dark color scheme",
+    "Enable light color scheme",
+    "Enable system color scheme"
+  ]
+}

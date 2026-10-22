@@ -1,75 +1,89 @@
 'use client';
 
-import { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react';
+import type { BrowserAvatar } from '@/lib/browser-avatar';
 
-export interface AvatarStreamState {
-  /** Unreal está conectado al puente y reproduciendo el audio del agente ahora mismo. */
-  unrealConnected: boolean;
-  /** Video de Pixel Streaming para mostrar (solo si está configurado y unrealConnected). */
-  videoUrl?: string;
-  /** Silenciar el audio de LiveKit mientras Unreal esté reproduciendo (evita doble voz). */
-  muteAgentAudio: boolean;
+type Mode = 'voice' | 'avatar';
+interface AvatarState {
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+  availability: 'offline' | 'available';
+  assets: BrowserAvatar[];
+  availableCharacters: BrowserAvatar['character'][];
+  activate: (assets: BrowserAvatar[]) => void;
+  release: () => void;
+  ready: boolean;
+  markReady: () => void;
+  resetPlayback: () => void;
+  failed: boolean;
+  fail: () => void;
 }
-
-const POLL_INTERVAL_MS = 3000;
-
-const OFF: AvatarStreamState = { unrealConnected: false, muteAgentAudio: true };
-
-const AvatarStreamContext = createContext<AvatarStreamState>(OFF);
-
-async function fetchAvatarState(): Promise<AvatarStreamState> {
-  try {
-    const response = await fetch('/api/avatar', { cache: 'no-store' });
-    if (!response.ok) {
-      return OFF;
-    }
-    const data = await response.json();
-    return {
-      unrealConnected: data.unrealConnected === true,
-      videoUrl: typeof data.videoUrl === 'string' ? data.videoUrl : undefined,
-      muteAgentAudio: data.muteAgentAudio !== false,
-    };
-  } catch {
-    return OFF;
-  }
-}
-
-/**
- * Consulta cada pocos segundos si Unreal está conectado al puente del avatar. Sigue
- * consultando siempre: Unreal puede conectarse o desconectarse en cualquier momento.
- */
+const AvatarContext = createContext<AvatarState | null>(null);
+// Name retained for existing callers; this loads local WebGL assets, not video.
 export function AvatarStreamProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AvatarStreamState>(OFF);
-
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    const poll = async () => {
-      const next = await fetchAvatarState();
-      if (cancelled) {
-        return;
-      }
-      setState((current) =>
-        current.unrealConnected === next.unrealConnected &&
-        current.videoUrl === next.videoUrl &&
-        current.muteAgentAudio === next.muteAgentAudio
-          ? current
-          : next
-      );
-      timer = setTimeout(poll, POLL_INTERVAL_MS);
-    };
-    poll();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
+  const [mode, setMode] = useState<Mode>('voice');
+  const [availability, setAvailability] = useState<AvatarState['availability']>('offline');
+  const [assets, setAssets] = useState<BrowserAvatar[]>([]);
+  const [availableCharacters, setAvailableCharacters] = useState<BrowserAvatar['character'][]>([]);
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const activate = useCallback((value: BrowserAvatar[]) => {
+    setAssets(value);
+    setReady(false);
+    setFailed(false);
   }, []);
-
-  return <AvatarStreamContext.Provider value={state}>{children}</AvatarStreamContext.Provider>;
+  const release = useCallback(() => {
+    setAssets([]);
+    setReady(false);
+    setFailed(false);
+  }, []);
+  const fail = useCallback(() => {
+    setReady(false);
+    setFailed(true);
+  }, []);
+  const markReady = useCallback(() => setReady(true), []);
+  const resetPlayback = useCallback(() => {
+    setReady(false);
+    setFailed(false);
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/avatar', { cache: 'no-store', signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setAvailability(data.availability === 'available' ? 'available' : 'offline');
+          setAvailableCharacters((data.assets || []).map((item: BrowserAvatar) => item.character));
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAvailability('offline');
+      });
+    return () => controller.abort();
+  }, [mode]);
+  return (
+    <AvatarContext.Provider
+      value={{
+        mode,
+        setMode,
+        availability,
+        assets,
+        availableCharacters,
+        activate,
+        release,
+        ready,
+        markReady,
+        resetPlayback,
+        failed,
+        fail,
+      }}
+    >
+      {children}
+    </AvatarContext.Provider>
+  );
 }
-
-export function useAvatarStream(): AvatarStreamState {
-  return useContext(AvatarStreamContext);
+export function useAvatarStream() {
+  const value = useContext(AvatarContext);
+  if (!value) throw new Error('Missing AvatarStreamProvider');
+  return value;
 }

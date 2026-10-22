@@ -1,0 +1,66 @@
+{
+  "modelSha256": "98e8754c1b6c5af760dce59f06bbf88c2750a6c8dfe6fa893b51a2bfcb96639a",
+  "timestamp": "2026-10-21T20:01:13.943Z",
+  "scope": "production-headless-browser-preview-without-voice",
+  "summary": {
+    "samples": 38,
+    "meanFps": 29.995518532873582,
+    "minFps": 29.794418512265327,
+    "meanRenderSubmissionMs": 0.4335342388163176,
+    "modelBytes": 5721776,
+    "textureBytesEstimate": 25165834,
+    "geometryDataBytes": 2358468,
+    "maxPageJsHeapBytes": 38832589,
+    "browserPrivateBytesBaseline": 332984320,
+    "browserPrivateBytesIdle": 518262784,
+    "browserPrivateBytesMouth": 521748480,
+    "cpuPercentOneCore": 19.22979967159278,
+    "cpuPercentWholeMachine": 1.602483305966065
+  },
+  "gpu": {
+    "devices": [
+      {
+        "vendorId": 4098,
+        "deviceId": 6401,
+        "subSysId": 2379223100,
+        "revision": 202,
+        "vendorString": "",
+        "deviceString": "AMD Radeon 740M Graphics",
+        "driverVendor": "AMD",
+        "driverVersion": "32.0.22042.8003"
+      },
+      {
+        "vendorId": 4318,
+        "deviceId": 10401,
+        "subSysId": 2379223100,
+        "revision": 161,
+        "vendorString": "",
+        "deviceString": "NVIDIA GeForce RTX 4050 Laptop GPU",
+        "driverVendor": "",
+        "driverVersion": "32.0.16.1664"
+      },
+      {
+        "vendorId": 5140,
+        "deviceId": 140,
+        "subSysId": 0,
+        "revision": 0,
+        "vendorString": "",
+        "deviceString": "Microsoft Basic Render Driver",
+        "driverVendor": "",
+        "driverVersion": "10.0.26100.9711"
+      }
+    ],
+    "glRenderer": "ANGLE (AMD, AMD Radeon 740M Graphics (0x00001901) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.22042.8003)"
+  },
+  "errors": [],
+  "externalOrigins": [],
+  "visibility": {
+    "state": "visible",
+    "before": 44,
+    "after": 46,
+    "resumed": 48,
+    "verified": false
+  },
+  "unmountedCanvasCount": 0,
+  "note": "Chrome test-process private memory includes browser, renderer and GPU subprocesses. NVIDIA memory is global and cannot be attributed solely to NEXO. No microphone, live call or phonetic lip-sync test."
+}

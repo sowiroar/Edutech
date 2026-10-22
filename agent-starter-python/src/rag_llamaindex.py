@@ -16,6 +16,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+from rag_config import document_generation_config
 from viva_telemetry import observed
 from viva_telemetry.google_usage import wrap_client
 
@@ -308,6 +309,7 @@ def get_or_build_query_engine():
             model="models/gemini-2.5-flash",
             api_key=api_key,
             temperature=0.2,
+            generation_config=document_generation_config(),
         )
         embed_model._client = wrap_client(embed_model._client, "embedding")
         llm._client = wrap_client(llm._client, "rag")

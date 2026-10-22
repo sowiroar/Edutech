@@ -26,10 +26,9 @@ def test_agent_voices_and_initialization():
 
 
 def test_agent_avatar_character_mapping():
-    """Verifica el personaje de la Familia VIVA (Fase 2) asociado a cada
-    agente: Lira->LIRA y Elian->ELIAN coinciden por nombre; Nexus->NEXO
-    (no ATLAS) porque NEXO es el único con animación de habla verificada
-    (ver Avatar/FAMILIA_VIVA.md)."""
+    """Conserva la correspondencia entre agentes y personajes visibles:
+    Lira->LIRA, Nexus->NEXO y Elian->ELIAN. El nombre del worker nexus
+    no cambia el personaje inicial LIRA."""
     assert LiraAgent().AVATAR_CHARACTER == "LIRA"
     assert NexusAgent().AVATAR_CHARACTER == "NEXO"
     assert ElianAgent().AVATAR_CHARACTER == "ELIAN"

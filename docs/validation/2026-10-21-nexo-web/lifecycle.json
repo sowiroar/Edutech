@@ -1,0 +1,9 @@
+{
+  "scope": "synthetic-visibility-event-no-real-tab-visibility",
+  "before": 3,
+  "during": 3,
+  "after": 5,
+  "paused": true,
+  "resumed": true,
+  "errors": []
+}

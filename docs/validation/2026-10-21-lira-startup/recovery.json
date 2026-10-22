@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-22T03:59:24.728Z",
+  "errors": [],
+  "test": "isolated synthetic rooms; no real microphone; no audio recording",
+  "retryButtonEnabled": true,
+  "failureMessage": "Se perdió la conexión con el asistente. Puedes iniciar otra llamada.",
+  "stayedConnectedPastOldDeadline": true,
+  "delayedLira": {
+    "visible": true,
+    "audio": true,
+    "singleAvatar": true
+  },
+  "nextCall": {
+    "lira": true,
+    "audio": true,
+    "singleAvatar": true
+  },
+  "success": true
+}

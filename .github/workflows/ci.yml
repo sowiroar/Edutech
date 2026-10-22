@@ -52,6 +52,10 @@ jobs:
       - name: Tests
         run: uv run pytest -v
 
+      - name: Contratos del puente nativo conservado
+        working-directory: avatar-bridge
+        run: uv run --project ../agent-starter-python pytest -q -p no:cacheprovider
+
   telemetry:
     name: Telemetría (contrato, PostgreSQL, auth y costos)
     runs-on: ubuntu-latest
@@ -131,9 +135,9 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
       - name: Pruebas de instrumentación del navegador
-        run: node --test tests/*.test.cjs
-      - name: Lint de telemetría
-        run: npx eslint app/admin app/api/admin app/api/telemetry lib/telemetry app/api/token components/app/app.tsx
+        run: npm test
+      - name: Lint de la integración web y telemetría
+        run: npm run lint
       - name: Build
         run: npm run build
 

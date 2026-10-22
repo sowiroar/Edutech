@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 
 from livekit import api, rtc
 
@@ -55,6 +56,7 @@ class RoomFollower:
         # (error 429 al conectar). Con hint() el poll vuelve a ser solo un
         # respaldo por si el aviso directo falla (Claude, 2026-09-29).
         poll_seconds: float = 2.0,
+        leases=None,
     ) -> None:
         self._bridge = bridge
         self._url = url
@@ -65,6 +67,25 @@ class RoomFollower:
         self._readers: dict[str, asyncio.Task[None]] = {}
         self._tasks: set[asyncio.Task[None]] = set()
         self._hint_event = asyncio.Event()
+        self.leases = leases
+        self._binding = None
+        self._ready_at = float("inf")
+
+    def ready_for(self, room, token):
+        return bool(
+            self.leases
+            and self.leases.matches(room, token)
+            and self._binding == (room, token)
+            and self._bridge.link
+            and self._room
+            and self._room.connection_state == rtc.ConnectionState.CONN_CONNECTED
+            and time.monotonic() >= self._ready_at
+        )
+
+    def _owns_room(self, binding):
+        return self.leases is None or bool(
+            binding and self._binding == binding and self.leases.matches(*binding)
+        )
 
     def hint(self) -> None:
         """Despierta el bucle de inmediato en vez de esperar al proximo poll.
@@ -87,7 +108,9 @@ class RoomFollower:
         ) as lkapi:
             while True:
                 try:
-                    await asyncio.wait_for(self._step(lkapi), timeout=self._STEP_TIMEOUT)
+                    await asyncio.wait_for(
+                        self._step(lkapi), timeout=self._STEP_TIMEOUT
+                    )
                 except asyncio.CancelledError:
                     await self._leave()
                     raise
@@ -111,6 +134,13 @@ class RoomFollower:
         if self._bridge.link is None:
             await self._leave()  # sin Unreal no hace falta estar en ninguna sala
             return
+        if self.leases is not None:
+            lease = self.leases.current
+            desired = (lease.room, lease.token) if lease else None
+            if self._binding != desired:
+                await self._leave()
+            if desired is None:
+                return
         if self._room is not None:
             humans = [
                 p for p in self._room.remote_participants.values() if p.kind == STANDARD
@@ -126,6 +156,27 @@ class RoomFollower:
             await self._join(name)
 
     async def _find_room(self, lkapi: api.LiveKitAPI) -> str | None:
+        if self.leases is not None:
+            lease = self.leases.current
+            if lease is None:
+                return None
+            # Never enumerate another session's participants in managed mode.
+            rooms = (
+                await lkapi.room.list_rooms(api.ListRoomsRequest(names=[lease.room]))
+            ).rooms
+            if not any(r.name == lease.room for r in rooms):
+                return None
+            listing = await lkapi.room.list_participants(
+                api.ListParticipantsRequest(room=lease.room)
+            )
+            return (
+                lease.room
+                if any(
+                    p.kind == STANDARD and p.identity != BRIDGE_IDENTITY
+                    for p in listing.participants
+                )
+                else None
+            )
         rooms = (await lkapi.room.list_rooms(api.ListRoomsRequest())).rooms
         for room in sorted(rooms, key=lambda r: r.creation_time, reverse=True):
             listing = await lkapi.room.list_participants(
@@ -142,6 +193,10 @@ class RoomFollower:
         return None
 
     async def _join(self, room_name: str) -> None:
+        if self.leases is not None:
+            current = self.leases.current
+            if not current or current.room != room_name:
+                return
         token = (
             api.AccessToken(self._key, self._secret)
             .with_identity(BRIDGE_IDENTITY)
@@ -159,11 +214,32 @@ class RoomFollower:
             .to_jwt()
         )
         room = rtc.Room()
-        room.on("track_subscribed", self._on_track_subscribed)
-        room.on("track_unsubscribed", self._on_track_unsubscribed)
-        room.on("participant_attributes_changed", self._on_attributes_changed)
-        await room.connect(self._url, token)
+        lease = self.leases.current if self.leases else None
+        if self.leases is not None and (not lease or lease.room != room_name):
+            return
+        self._binding = (lease.room, lease.token) if lease else None
+        binding = self._binding
+
+        def guarded(callback):
+            def handle(*args):
+                if self._room is room and self._owns_room(binding):
+                    callback(*args)
+
+            return handle
+
+        room.on("track_subscribed", guarded(self._on_track_subscribed))
+        room.on("track_unsubscribed", guarded(self._on_track_unsubscribed))
+        room.on("participant_attributes_changed", guarded(self._on_attributes_changed))
         self._room = room
+        try:
+            await room.connect(self._url, token)
+        except BaseException:
+            await self._leave()
+            raise
+        if not self._owns_room(binding):
+            await self._leave()
+            return
+        self._ready_at = time.monotonic() + 1.0
         logger.info("Siguiendo la sala %s", room_name)
         for participant in room.remote_participants.values():
             if participant.kind == AGENT:
@@ -172,10 +248,16 @@ class RoomFollower:
 
     async def _leave(self) -> None:
         room, self._room = self._room, None
+        self._binding = None
+        self._ready_at = float("inf")
+        for task in self._tasks:
+            task.cancel()
+        self._tasks.clear()
         for task in self._readers.values():
             task.cancel()
         self._readers.clear()
         if room is not None:
+            await self._bridge.reset_playback()
             with contextlib.suppress(Exception):
                 await room.disconnect()
             logger.info("Sala liberada")
@@ -189,6 +271,12 @@ class RoomFollower:
             task.cancel()
         self._readers.clear()
         self._room = None
+        self._binding = None
+        self._ready_at = float("inf")
+        for task in self._tasks:
+            task.cancel()
+        self._tasks.clear()
+        self._spawn(self._bridge.reset_playback())
 
     # -- eventos de la sala (llamadas sincronas) ------------------------------------
 
@@ -233,19 +321,28 @@ class RoomFollower:
     def _forward_state(self, participant: rtc.Participant) -> None:
         state = participant.attributes.get(ATTRIBUTE_AGENT_STATE)
         if state:
-            self._spawn(self._bridge.on_agent_state(state))
+            self._spawn(self._forward_if_owner(self._binding, "on_agent_state", state))
 
     def _forward_character(self, participant: rtc.Participant) -> None:
         name = participant.attributes.get(ATTRIBUTE_CHARACTER)
         if name:
-            self._spawn(self._bridge.on_agent_character(name))
+            self._spawn(
+                self._forward_if_owner(self._binding, "on_agent_character", name)
+            )
+
+    async def _forward_if_owner(self, binding, method, value):
+        if self._owns_room(binding):
+            await getattr(self._bridge, method)(value)
 
     async def _read_audio(self, track: rtc.Track) -> None:
+        binding = self._binding
         stream = rtc.AudioStream(
             track, sample_rate=48000, num_channels=1, frame_size_ms=20
         )
         try:
             async for event in stream:
+                if not self._owns_room(binding):
+                    break
                 await self._bridge.on_frame(bytes(event.frame.data))
         finally:
             await stream.aclose()

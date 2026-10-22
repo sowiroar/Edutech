@@ -54,6 +54,19 @@ class Bridge:
             if link is not None:
                 await self._apply(link, self._segmenter.feed(pcm, self._clock()))
 
+    async def reset_playback(self) -> None:
+        """Drain the previous room before accepting another room's audio."""
+        async with self._lock:
+            self._segmenter.reset()
+            link = self.link
+            if link is not None:
+                try:
+                    await link.cancel(strict=True)
+                    await link.set_state("idle")
+                except (ConnectionClosed, TimeoutError):
+                    await link.ws.close(1011, "playback reset failed")
+                    self.detach(link)
+
     async def on_tick(self) -> None:
         """Llamar a menudo: cierra el enunciado cuando el agente calla."""
         async with self._lock:

@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine AS base
+# Debian includes glibc; no extra Alpine compatibility package is needed.
+FROM node:24-bookworm-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on package-lock.json
@@ -31,8 +31,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs \
+    && useradd --system --uid 1001 --gid nodejs --no-create-home nextjs
 
 COPY --from=builder /app/public ./public
 

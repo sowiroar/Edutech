@@ -50,6 +50,12 @@ __pycache__/
 # Generated vector storages
 data/*_storage/
 data/knowledge.db
+data/local-avatar/
+# Private runtime assets; reviewed manifests and installation docs are versioned.
+agent-starter-react/public/avatars/**/*.glb
+agent-starter-react/public/avatars/**/*.jpg
+agent-starter-react/public/avatars/**/*.png
+agent-starter-react/public/avatars/**/manifest.next.json
 .vscode/
 .idea/
 

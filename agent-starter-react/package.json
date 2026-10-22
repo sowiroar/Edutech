@@ -9,10 +9,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "test": "node --test tests/*.test.cjs",
+    "lint": "eslint app/admin app/api/admin app/api/telemetry lib/telemetry app/api/token app/api/avatar app/avatar-preview components/app/app.tsx components/app/welcome-view.tsx components/app/view-controller.tsx components/avatar components/agents-ui/blocks/agent-session-view-01/components/avatar-stage.tsx components/agents-ui/blocks/agent-session-view-01/components/tile-view.tsx hooks/useAvatarStream.tsx hooks/useAgentErrors.tsx lib/avatar-server.ts lib/browser-avatar.ts lib/browser-avatar-server.ts lib/session-start.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "shadcn:install": "pnpm dlx shadcn@latest add --yes @agents-ui/all && pnpm format"
+    "shadcn:install": "npx shadcn@latest add --yes @agents-ui/all && npm run format"
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.20",
@@ -57,6 +58,7 @@
     "sonner": "^2.0.7",
     "streamdown": "^1.6.9",
     "tailwind-merge": "^3.3.1",
+    "three": "^0.186.1",
     "tokenlens": "^1.3.1",
     "use-stick-to-bottom": "^1.1.1"
   },
@@ -67,6 +69,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "eslint-config-prettier": "^10.1.5",
@@ -77,6 +80,5 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.0",
     "typescript": "^5"
-  },
-  "packageManager": "pnpm@9.15.9"
+  }
 }
