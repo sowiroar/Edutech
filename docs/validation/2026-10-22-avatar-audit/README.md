@@ -109,6 +109,20 @@ Copiar su carpeta `avatars/` a `agent-starter-react/public/avatars/`, conservand
   ausentes se omiten explícitamente, no se cuentan como aprobados.
 - La compilación no sustituye la aceptación de arte, audio humano o UAM.
 
+### CI remoto del PR 11
+
+El commit `9af3181` pasó los checks de agente Python, frontend, telemetría
+(PostgreSQL, autenticación, contratos y costos), sincronización de conocimiento,
+flujo local y construcción de imágenes Docker. Ejecución del PR: `39896806383`;
+política de ramas: `39896806474`, también aprobada. Evidencia resumida en
+[ci-pr11.json](ci-pr11.json). El PR sigue en borrador; CI no habilita candidatos
+ni despliega UAM. Los GLB privados no se suben a CI.
+
+Al retomar, el escritorio del Mac ya respondió. Epic abrió su pantalla de inicio
+de sesión; se solicitó al usuario autenticarse en el Launcher para acceder a la
+descarga oficial de Core Data. El atlas sigue sin instalarse. Esto es un bloqueo
+de acceso al recurso original, no un fallo de los checks ni de NEXO/ELIAN.
+
 ## Medición local del arranque
 
 Tres pares secuenciales con el SDK instalado y acceso real al endpoint de

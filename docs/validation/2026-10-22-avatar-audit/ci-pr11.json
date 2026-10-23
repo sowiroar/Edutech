@@ -1,0 +1,44 @@
+{
+  "headSha": "9af3181b40345a48679ab05d25b54ab0d6c092f3",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383",
+  "jobs": [
+    {
+      "name": "Frontend (build Next.js)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229033323"
+    },
+    {
+      "name": "Knowledge sync (ruff + pytest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229033549"
+    },
+    {
+      "name": "Flujo compartido y voz local",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229033595"
+    },
+    {
+      "name": "Telemetr\u00eda (contrato, PostgreSQL, auth y costos)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229033600"
+    },
+    {
+      "name": "Agente Python (ruff + pytest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229033626"
+    },
+    {
+      "name": "Docker Compose (config + im\u00e1genes)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sowiroar/Edutech/actions/runs/39896806383/job/120229572448"
+    }
+  ]
+}
