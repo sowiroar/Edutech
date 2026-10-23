@@ -30,7 +30,7 @@ Después de instalar modelos: `python scripts/voice_demo.py web`.
 
 ## Exportación única desde Unreal
 
-Requisitos de autoría: Windows, Python 3, Unreal 5.8 y el proyecto hermano
+Requisitos de autoría: Windows o macOS, Python 3, Unreal 5.8 y el proyecto hermano
 `../Avatar/Avatar1.uproject` con los assets necesarios. Instalar dependencias:
 
 ```powershell
@@ -49,6 +49,42 @@ Ejecutar una exportación a la vez. El exportador usa un proceso de Unreal,
 lee los assets y termina sin guardar modificaciones de autoría. No necesita
 MCP, Docker ni un renderer continuo. El usuario final no necesita Unreal o Python.
 
+En Mac, Unreal se busca en `/Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor-Cmd`.
+Para otra instalación definir `UNREAL_EDITOR_CMD` con la ruta completa. Xcode
+debe tener Metal disponible (`xcrun -sdk macosx metal --version`); si informa que
+falta, instalar el componente con `xcodebuild -downloadComponent MetalToolchain`.
+La licencia de Xcode debe haber sido aceptada por el usuario.
+LIRA también necesita **MetaHuman Creator Core Data** en las opciones de la
+instalación de Unreal del Epic Games Launcher: su atlas original SlightArch
+vive en el contenido opcional del motor, no en el repo Avatar. El exportador
+comprueba esta dependencia antes de hornear materiales. No sustituirla por
+una textura genérica. [Instalación oficial de MetaHuman](https://dev.epicgames.com/documentation/en-us/metahuman/getting-started-with-metahuman-creator).
+
+Para generar un candidato **sin sustituir manifiestos o modelos publicados**:
+
+```sh
+python3 scripts/avatar_web.py export --character LIRA --no-install
+```
+
+Repetir después con NEXO y ELIAN. En Mac, los resultados y la caché quedan por
+defecto en `data/local-avatar/runtime/`, ignorado por Git. La primera compilación
+de shaders puede tardar; no equivale al tiempo de carga del avatar en el navegador.
+Ctrl+C detiene únicamente el grupo de procesos de esa exportación.
+Para inspeccionar un candidato sin alterar la entrega de llamadas:
+`python3 scripts/avatar_web.py install --path RUTA_EXPORTACION --preview-only`.
+Esto escribe `manifest.preview.json` y `uam-background.preview.jpg`, locales e
+ignorados por Git. Solo `/avatar-preview` los utiliza; las llamadas siempre leen
+el manifiesto canónico. Se conservan los archivos y aprobaciones de producción.
+El instalador deja las revisiones del candidato en `pending`:
+se puede inspeccionar en `/avatar-preview`, pero no se ofrece en llamadas hasta
+verificar apariencia, animación y boca. No copiar las aprobaciones de otro hash.
+Si Python en Mac no permite instalar paquetes globales, ejecutar el instalador
+aislado: `uv run --no-project --python 3.12 --with Pillow==12.0.0 python scripts/avatar_web.py install --path RUTA_EXPORTACION --preview-only`.
+No usar `sudo pip` ni cambiar las dependencias del agente para exportar modelos.
+El modo histórico sin `--preview-only` reemplaza el manifiesto canónico y guarda
+un respaldo en la carpeta de exportación; también reinicia sus revisiones. No
+usarlo para evaluar una variante mientras el equipo depende de la entrega actual.
+
 El almacenamiento se configura en `data/local-avatar/web-storage.json`, fuera
 de Git. En el equipo de autoría, la caché, shaders, temporales y resultados
 están en `D:/EdutechRuntime`. `avatar_web.py storage` prepara esa ubicación;
@@ -56,7 +92,7 @@ no mueve el proyecto ni el archivo de paginación. El script exige espacio libre
 y no vuelve automáticamente a C: si D: falla.
 
 Para diagnosticar, revisar `web-export/<fecha-hora>/` en esa ubicación.
-`avatar_web.py cancel` detiene únicamente exportadores identificados por el script.
+En Windows, `avatar_web.py cancel` detiene únicamente exportadores identificados por el script.
 No iniciar varios editores para reintentar el mismo fallo.
 
 ## Fuentes y calidad

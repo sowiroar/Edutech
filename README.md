@@ -8,6 +8,9 @@ Cada modelo procede de su escena original de Unreal.
 Los avatares se dibujan en el navegador. **Unreal no tiene que permanecer abierto**:
 se utiliza para preparar y exportar los modelos una sola vez.
 
+[Auditoría y plan de aceptación del 22 de octubre](docs/validation/2026-10-22-avatar-audit/README.md):
+arranque RAG, caché de modelos y generación de candidatos desde Mac.
+
 ## Arranque local
 
 Requisitos: Python 3 y Docker con Compose activo. Desde esta carpeta:

@@ -289,6 +289,10 @@ def get_or_build_nexus_query_engine():
         llm = GoogleGenAI(
             model="models/gemini-2.5-flash",
             api_key=api_key,
+            # Native model limits avoid a synchronous models.get on cold start.
+            # generation_config still leaves max_output_tokens unset.
+            context_window=1_048_576,
+            max_tokens=65_536,
             temperature=0.2,
             generation_config=document_generation_config(),
         )

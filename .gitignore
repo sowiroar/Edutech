@@ -56,6 +56,8 @@ agent-starter-react/public/avatars/**/*.glb
 agent-starter-react/public/avatars/**/*.jpg
 agent-starter-react/public/avatars/**/*.png
 agent-starter-react/public/avatars/**/manifest.next.json
+agent-starter-react/public/avatars/**/manifest.preview.json
+agent-starter-react/public/avatars/**/manifest.preview.next.json
 .vscode/
 .idea/
 

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/avatars/lira/lira-58cf5210f7f58c75ee6de82f3b086b817ae0ba6ea8e87fb703be483815297022.glb",
+    "status": 200,
+    "cache_control": "public, max-age=31536000, immutable"
+  },
+  {
+    "path": "/avatars/lira/manifest.json",
+    "status": 200,
+    "cache_control": "public, max-age=0"
+  }
+]

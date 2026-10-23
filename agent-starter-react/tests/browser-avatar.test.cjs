@@ -5,11 +5,14 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const path = require('node:path');
 
-function reader(manifest, fileBytes = 1024) {
+function reader(manifest, fileBytes = 1024, previewManifest = null) {
   const readPaths = [];
   const mockedFs = {
-    readFile: async () => {
-      if (!manifest) throw new Error('missing');
+    readFile: async (name) => {
+      const selected = name.endsWith('/manifest.preview.json') ? previewManifest : manifest;
+      if (name.endsWith('/manifest.preview.json') && !selected)
+        throw Object.assign(new Error('no preview'), { code: 'ENOENT' });
+      if (!selected) throw new Error('missing');
       return JSON.stringify({
         web_profile: 2,
         export_profile: 3,
@@ -17,7 +20,7 @@ function reader(manifest, fileBytes = 1024) {
         motion_review: 'passed',
         mouth_mapping: 'amplitude-verified',
         animations: 1,
-        ...manifest,
+        ...selected,
       });
     },
     stat: async (name) => {
@@ -181,4 +184,17 @@ test('ELIAN requires her original scene and retains its validated studio color',
     ).backgroundColor,
     undefined
   );
+});
+
+test('a separate candidate never replaces the model advertised for calls', async () => {
+  const approved = { sha256: 'a'.repeat(64), bytes: 1024, frontYaw: 0 };
+  const candidate = { ...approved, sha256: 'b'.repeat(64), visual_review: 'pending' };
+  const fixture = reader(approved, 1024, candidate);
+  assert.equal((await fixture.get()).sha256, approved.sha256);
+  assert.equal((await fixture.get({ preview: true })).sha256, candidate.sha256);
+  assert.equal(
+    (await fixture.get({ preview: true })).backgroundUrl,
+    '/avatars/nexo/uam-background.preview.jpg'
+  );
+  assert.equal((await fixture.get()).backgroundUrl, '/avatars/nexo/uam-background.jpg');
 });

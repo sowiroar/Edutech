@@ -6,6 +6,7 @@ import json
 import math
 import os
 import shutil
+import signal
 import struct
 import subprocess
 import sys
@@ -33,6 +34,26 @@ def export_failure(export_dir, returncode):
                     details.append(message)
     cause = "\n" + "\n".join(details[-8:]) if details else ""
     return f"Unreal no completo la exportacion (codigo {returncode}).{cause}\nRevisa {export_dir}"
+
+
+def validate_export_files(export_dir, character, *, require_native_face=True):
+    """A report alone is not success: Unreal can exit zero after script failures."""
+    names = ["export.json", f"{character.lower()}-source.glb"]
+    if character == "LIRA":
+        names += ["lira-brows.glb", "lira-brows-attribute.tga"]
+    elif character == "ELIAN":
+        names += [f"elian-face-material-{i}.glb" for i in (1, 2, 3)]
+    elif character == "NEXO":
+        names += ["nexo-original-color.glb"]
+        if require_native_face:
+            names += ["nexo-native-lod3.glb", "native-face.json"]
+    missing = [
+        name
+        for name in names
+        if not (export_dir / name).is_file() or (export_dir / name).stat().st_size == 0
+    ]
+    if missing:
+        raise ValueError("Exportacion incompleta; no se instala: " + ", ".join(missing))
 
 
 def inspect_glb(path):
@@ -101,11 +122,12 @@ def inspect_glb(path):
     }
 
 
-def install(export_dir):
+def install(export_dir, *, preview_only=False):
     report = json.loads((export_dir / "export.json").read_text(encoding="utf-8"))
     character = report.get("character", "NEXO")
     if character not in ("NEXO", "LIRA", "ELIAN"):
         raise ValueError("Personaje de exportacion desconocido.")
+    validate_export_files(export_dir, character)
     slug = character.lower()
     if report.get("saved_authoring_assets") is not False or not math.isfinite(
         report["frontYaw"]
@@ -137,13 +159,31 @@ def install(export_dir):
     destination = public / f"{slug}-{info['sha256']}.glb"
     if not destination.exists():
         shutil.copyfile(source, destination)
-    background_dest = public / "uam-background.jpg"
+    background_dest = public / (
+        "uam-background.preview.jpg" if preview_only else "uam-background.jpg"
+    )
     if background_dest.exists():
-        shutil.copyfile(background_dest, export_dir / "previous-background.jpg")
+        shutil.copyfile(
+            background_dest,
+            export_dir
+            / (
+                "previous-preview-background.jpg"
+                if preview_only
+                else "previous-background.jpg"
+            ),
+        )
     shutil.copyfile(background, background_dest)
-    manifest = public / "manifest.json"
+    manifest = public / ("manifest.preview.json" if preview_only else "manifest.json")
     if manifest.exists():
-        shutil.copyfile(manifest, export_dir / "previous-manifest.json")
+        shutil.copyfile(
+            manifest,
+            export_dir
+            / (
+                "previous-preview-manifest.json"
+                if preview_only
+                else "previous-manifest.json"
+            ),
+        )
     info.update(
         character=character,
         source_scene=report.get("scene"),
@@ -163,12 +203,14 @@ def install(export_dir):
         info["rigProfile"] = (
             "metahuman-mateo-web-v1" if character == "NEXO" else "metahuman-web-v1"
         )
-    temp = public / "manifest.next.json"
+    temp = public / (
+        "manifest.preview.next.json" if preview_only else "manifest.next.json"
+    )
     temp.write_text(json.dumps(info, indent=2), encoding="utf-8")
     temp.replace(manifest)
-    (export_dir / "installed.json").write_text(
-        json.dumps(info, indent=2), encoding="utf-8"
-    )
+    (
+        export_dir / ("installed-preview.json" if preview_only else "installed.json")
+    ).write_text(json.dumps(info, indent=2), encoding="utf-8")
     print(
         f"Modelo instalado: {info['bytes'] / 1048576:.1f} MiB, {info['triangles']} triangulos."
     )
@@ -177,13 +219,51 @@ def install(export_dir):
     )
 
 
-def export(character="NEXO"):
-    if os.name != "nt":
-        raise RuntimeError("La exportacion de este proyecto requiere Windows.")
-    project = ROOT.parent / "Avatar/Avatar1.uproject"
-    editor = Path(
-        "C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+def editor_path():
+    override = os.environ.get("UNREAL_EDITOR_CMD")
+    if override:
+        return Path(override).expanduser()
+    if sys.platform == "darwin":
+        return Path(
+            "/Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor-Cmd"
+        )
+    if os.name == "nt":
+        return Path(
+            "C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+        )
+    raise RuntimeError("Indica UNREAL_EDITOR_CMD para este sistema.")
+
+
+def process_options():
+    return (
+        {"creationflags": subprocess.CREATE_NO_WINDOW}
+        if os.name == "nt"
+        else {"start_new_session": True}
     )
+
+
+def stop_export(process):
+    """Stop only the child group created by this invocation, including shader workers."""
+    if process.poll() is not None:
+        return
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True
+        )
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=10)
+        except ProcessLookupError:
+            pass
+
+
+def export(character="NEXO", *, install_result=True):
+    project = ROOT.parent / "Avatar/Avatar1.uproject"
+    editor = editor_path()
     if not project.is_file() or not editor.is_file():
         raise FileNotFoundError("No se encuentra el proyecto o Unreal Engine 5.8.")
     from avatar_web_storage import export_environment, prepare, system_root
@@ -195,7 +275,7 @@ def export(character="NEXO"):
         )
     if shutil.disk_usage(system_root()).free < 1024**3:
         raise RuntimeError(
-            f"El disco del sistema ({system_root()}) necesita al menos 1 GiB libre para Windows. No se inicia Unreal."
+            f"El disco del sistema ({system_root()}) necesita al menos 1 GiB libre para el sistema. No se inicia Unreal."
         )
     export_dir = paths["exports"] / (
         datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -240,7 +320,7 @@ def export(character="NEXO"):
             stdout=log,
             stderr=subprocess.STDOUT,
             env=runtime_env,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            **process_options(),
         )
         started = time.monotonic()
         try:
@@ -252,12 +332,10 @@ def export(character="NEXO"):
                 time.sleep(1)
         finally:
             if process.poll() is None:
-                subprocess.run(
-                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                    capture_output=True,
-                )
+                stop_export(process)
     if process.returncode or not (export_dir / "export.json").is_file():
         raise RuntimeError(export_failure(export_dir, process.returncode))
+    validate_export_files(export_dir, character, require_native_face=False)
     if character == "NEXO":
         print(
             "Recuperando el rostro nativo LOD3 sin abrir el editor ni guardar assets.",
@@ -285,25 +363,31 @@ def export(character="NEXO"):
                 env=runtime_env,
                 stdout=log,
                 stderr=subprocess.STDOUT,
-                creationflags=subprocess.CREATE_NO_WINDOW,
+                **process_options(),
             )
             try:
                 code = process.wait(timeout=600)
             finally:
                 if process.poll() is None:
-                    subprocess.run(
-                        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                        capture_output=True,
-                    )
+                    stop_export(process)
         if code or not (export_dir / "native-face.json").is_file():
             raise RuntimeError(
                 f"El rostro nativo no se exporto; se conserva el modelo instalado. Revisa {export_dir / 'native-face-console.log'}"
             )
-    install(export_dir)
+    validate_export_files(export_dir, character)
+    if install_result:
+        install(export_dir)
+    else:
+        print(f"Candidato exportado sin instalar: {export_dir}", flush=True)
+    return export_dir
 
 
 def cancel():
     """Stop only this script's export child, after validating its full command line."""
+    if os.name != "nt":
+        raise RuntimeError(
+            "En Mac interrumpe el comando export con Ctrl+C; solo se detiene su proceso hijo."
+        )
     query = "Get-CimInstance Win32_Process -Filter \"Name='UnrealEditor-Cmd.exe'\" | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
     result = subprocess.run(
         ["powershell", "-NoProfile", "-NonInteractive", "-Command", query],
@@ -355,9 +439,23 @@ def main():
     )
     parser.add_argument("--path", type=Path)
     parser.add_argument(
+        "--preview-only",
+        action="store_true",
+        help="Instalar un candidato local sin cambiar la entrega de llamadas.",
+    )
+    parser.add_argument(
+        "--no-install",
+        action="store_true",
+        help="Exportar sin cambiar manifiestos o modelos publicados.",
+    )
+    parser.add_argument(
         "--character", choices=("NEXO", "LIRA", "ELIAN"), default="NEXO"
     )
     args = parser.parse_args()
+    if args.preview_only and args.action != "install":
+        parser.error("--preview-only solo se aplica a install")
+    if args.no_install and args.action != "export":
+        parser.error("--no-install solo se aplica a export")
     if args.action == "storage":
         from avatar_web_storage import configure
 
@@ -365,11 +463,11 @@ def main():
     elif args.action == "cancel":
         cancel()
     elif args.action == "export":
-        export(args.character)
+        export(args.character, install_result=not args.no_install)
     elif args.path is None:
         parser.error("--path es obligatorio para install/inspect")
     elif args.action == "install":
-        install(args.path)
+        install(args.path, preview_only=args.preview_only)
     else:
         print(json.dumps(inspect_glb(args.path), indent=2))
 

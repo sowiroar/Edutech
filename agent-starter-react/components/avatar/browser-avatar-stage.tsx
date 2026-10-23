@@ -25,6 +25,9 @@ export interface AvatarSample {
   mouthAnimationAvailable: boolean;
   modelBytes: number;
   loadMs: number;
+  fetchMs: number;
+  parseMs: number;
+  firstFrameMs: number;
   width: number;
   height: number;
   animationClips: number;
@@ -109,7 +112,9 @@ export default function BrowserAvatarStage({
       const bytes = await response.arrayBuffer();
       if (cancelled) return;
       if (bytes.byteLength !== asset.bytes) throw new Error('Unexpected model size');
+      const fetched = performance.now();
       const gltf = await new GLTFLoader().parseAsync(bytes, '');
+      const parsed = performance.now();
       if (cancelled) {
         disposeModel(gltf.scene);
         return;
@@ -205,6 +210,7 @@ export default function BrowserAvatarStage({
         renderMs = 0;
       let animatedSeconds = 1;
       let ready = false;
+      let firstFrameMs = 0;
       const renderFrame = (now: number) => {
         if (cancelled || document.hidden || !renderer) return;
         frame = requestAnimationFrame(renderFrame);
@@ -231,6 +237,8 @@ export default function BrowserAvatarStage({
         renders++;
         if (!ready) {
           ready = true;
+          // Includes first-draw shader work; this is submission, not GPU completion.
+          firstFrameMs = performance.now() - started;
           callbacks.current.onReady();
         }
         if (now - reportStart >= 1000) {
@@ -249,6 +257,9 @@ export default function BrowserAvatarStage({
             mouthAnimationAvailable: mouths.length > 0 || !!rig?.mouthAvailable,
             modelBytes: asset.bytes,
             loadMs,
+            fetchMs: fetched - started,
+            parseMs: parsed - fetched,
+            firstFrameMs,
             width: renderer.domElement.width,
             height: renderer.domElement.height,
             animationClips: gltf.animations.length,

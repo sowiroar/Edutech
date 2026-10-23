@@ -4,6 +4,14 @@ Actualizado el 21 de octubre de 2026. Leer README.md y docs/mvp/README.md.
 Este repositorio contiene agentes, frontend y telemetría. La autoría Unreal
 vive en el repositorio hermano ../Avatar; el submódulo Avatar fija un SHA.
 
+Auditoría en curso del 22 de octubre: ver
+docs/validation/2026-10-22-avatar-audit/README.md. Se trabaja desde la integración
+0225f0a en chore/avatar-latency-audit; main y UAM no se actualizan automáticamente.
+El exportador admite Mac y `--no-install`. Los candidatos regenerados necesitan
+su propia revisión: no heredar aprobaciones del paquete privado del 21.
+Los límites explícitos de los clientes RAG evitan models.get al inicializar;
+no modifican el modelo de voz ni añaden un tope corto a las respuestas.
+
 ## Trabajo y conservación
 
 - Base de desarrollo: main. Features/bugfix/chore vuelven por PR a main.

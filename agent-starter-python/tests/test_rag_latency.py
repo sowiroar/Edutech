@@ -8,6 +8,41 @@ from types import SimpleNamespace
 import pytest
 
 
+@pytest.mark.parametrize("module", ["rag_llamaindex.py", "rag_nexus.py"])
+def test_document_client_starts_without_model_metadata_network(monkeypatch, module):
+    """Exercise the real SDK constructor used by both RAGs, without credentials."""
+    from unittest.mock import MagicMock
+
+    from llama_index.llms.google_genai import GoogleGenAI
+
+    from rag_config import document_generation_config
+
+    client = MagicMock()
+    client.models.get.side_effect = AssertionError("blocking metadata request")
+    monkeypatch.setattr("google.genai.Client", lambda **_: client)
+    tree = ast.parse((Path(__file__).parents[1] / "src" / module).read_text())
+    constructor = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "GoogleGenAI"
+    )
+    llm = eval(
+        compile(ast.Expression(constructor), module, "eval"),
+        {
+            "GoogleGenAI": GoogleGenAI,
+            "api_key": "not-a-real-key",
+            "document_generation_config": document_generation_config,
+        },
+    )
+    client.models.get.assert_not_called()
+    assert llm.metadata.context_window == 1_048_576
+    assert llm.metadata.num_output == 65_536
+    assert llm._generation_config["max_output_tokens"] is None
+    assert llm._generation_config["thinking_config"]["thinking_budget"] == 512
+
+
 def test_document_generation_bounds_thinking_without_truncating_the_answer():
     from rag_config import document_generation_config
 

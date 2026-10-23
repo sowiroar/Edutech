@@ -9,6 +9,12 @@ import unreal as u
 output = Path(os.environ["NEXO_WEB_EXPORT_DIR"])
 output.mkdir(parents=True, exist_ok=True)
 (output / "started.json").write_text(json.dumps({"stage": "loading-lira"}))
+# Fail before the expensive material bake when the optional Epic content is absent.
+assert u.load_asset(
+    "/MetaHumanCharacter/Optional/Grooms/GroomAssets/Eyebrows/Eyebrows_M_SlightArch/Eyebrows_M_SlightArch_CardsAtlas_Attribute"
+), (
+    "Falta el atlas SlightArch original: instalar MetaHuman Creator Core Data desde las opciones de Unreal en Epic Games Launcher."
+)
 scene = "/Game/VIVA/Avatars/Lira/Maps/L_Lira"
 # Export retained assets in an unsaved world. Loading the studio also compiles
 # its deferred FaceTraces projector, which is not supported by glTF and can

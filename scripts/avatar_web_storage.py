@@ -10,7 +10,9 @@ from pathlib import Path, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "data/local-avatar/web-storage.json"
-DEFAULT_RUNTIME = Path("D:/EdutechRuntime")
+DEFAULT_RUNTIME = (
+    Path("D:/EdutechRuntime") if os.name == "nt" else ROOT / "data/local-avatar/runtime"
+)
 
 
 def system_root():

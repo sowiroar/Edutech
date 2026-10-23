@@ -14,7 +14,18 @@ export async function browserAvatar({
     if (!WEB_CHARACTERS.includes(character)) return null;
     const slug = character.toLowerCase();
     const directory = path.join(process.cwd(), 'public', 'avatars', slug);
-    const manifest = JSON.parse(await readFile(path.join(directory, 'manifest.json'), 'utf8'));
+    let candidate: string | null = null;
+    if (preview) {
+      candidate = await readFile(path.join(directory, 'manifest.preview.json'), 'utf8').catch(
+        (error: NodeJS.ErrnoException) => {
+          if (error.code === 'ENOENT') return null;
+          throw error;
+        }
+      );
+    }
+    const manifest = JSON.parse(
+      candidate ?? (await readFile(path.join(directory, 'manifest.json'), 'utf8'))
+    );
     if (manifest.character && manifest.character !== character) return null;
     // The requested Lira is Juan's retained model, not the historical Santiago variant.
     if (
@@ -50,12 +61,13 @@ export async function browserAvatar({
     )
       return null;
     if (!Number.isFinite(manifest.frontYaw)) return null;
-    await stat(path.join(directory, 'uam-background.jpg'));
+    const background = candidate === null ? 'uam-background.jpg' : 'uam-background.preview.jpg';
+    await stat(path.join(directory, background));
     return {
       engine: 'webgl',
       character,
       modelUrl: `/avatars/${slug}/${filename}`,
-      backgroundUrl: `/avatars/${slug}/uam-background.jpg`,
+      backgroundUrl: `/avatars/${slug}/${background}`,
       ...(typeof manifest.background_color === 'string' &&
       /^#[a-fA-F0-9]{6}$/.test(manifest.background_color)
         ? { backgroundColor: manifest.background_color }
