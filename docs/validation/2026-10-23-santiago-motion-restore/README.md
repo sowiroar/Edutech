@@ -41,3 +41,36 @@ formas sin micrófono, pero su botón de movimiento es sintético y no valida au
 No afirmar que los 33–67 ms documentados en el informe anterior se conservan:
 esa medición pertenece al algoritmo anterior. Los eventos nuevos permiten
 volver a medir con esta base. No hay una medición nueva de la RTX4050 de Santiago.
+
+## Prueba repetible con voz sintética local
+
+Se añadió «Probar con audio» solo al visor. Acepta un archivo local o, cuando
+está instalado, el ejemplo sintético `public/avatars/articulation-sample.wav`.
+No usa micrófono, red de voz, telemetría remota, clasificador ni modelos nuevos.
+No guarda ni sube el archivo. El JSON de medición incluye el resultado acústico
+con alcance explícito `local-file-preview-not-live-call`, sin nombre ni audio.
+Una única salida Web Audio reproduce el ejemplo. Detener, terminar, cambiar
+archivo o salir libera el contexto y vuelve a reposo. La prueba de posiciones
+fijas y la prueba de audio se excluyen para evitar dos controladores simultáneos.
+
+Frase sintética Paulina (macOS), 48 kHz, 9,27 s: «Mi mamá me mima. Papá prepara
+pan. Fabiola firma flores. Uno, dos, tres. A, e, i, o, u.» La muestra es local e
+ignorada por Git; cada colaborador puede usar una frase propia sin datos personales.
+
+Resultados del navegador Chrome local en modo desarrollo, alrededor de 30 FPS:
+
+| Avatar | Pausas observadas | Máximo silencio detectado → reposo |
+| --- | ---: | ---: |
+| ELIAN | 10 | 134 ms |
+| LIRA | 10 | 101 ms |
+| NEXO | 10 | 134 ms |
+
+Son muestras de una ejecución y están cuantizadas por los frames. No permiten
+comparar la rapidez de los personajes ni prueban precisión fonética, sincronía
+con altavoces, llamadas Gemini o RTX4050. Se verificó también detener y repetir.
+La preferencia perceptual del usuario sigue pendiente. No se cambia el algoritmo
+ni el rig de Santiago para añadir este banco de prueba.
+
+Frontend: 50 tests aprobados, 3 omisiones de candidatos ausentes. Los nuevos tests
+cubren fin de reproducción, cancelación durante inicio asíncrono y errores,
+exigiendo liberación de recursos y pose en reposo. Lint/TypeScript aprobados.

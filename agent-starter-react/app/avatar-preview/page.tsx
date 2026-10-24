@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import AvatarPreview from '@/components/avatar/avatar-preview';
 import { WEB_CHARACTERS } from '@/lib/browser-avatar';
 import { browserAvatar } from '@/lib/browser-avatar-server';
@@ -15,6 +17,9 @@ export default async function Page({
     <AvatarPreview
       key={character}
       character={character}
+      sampleAvailable={existsSync(
+        path.join(process.cwd(), 'public/avatars/articulation-sample.wav')
+      )}
       asset={await browserAvatar({ preview: true, character })}
     />
   );

@@ -1,10 +1,12 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type { BrowserAvatar } from '@/lib/browser-avatar';
 import type { AvatarSample } from './browser-avatar-stage';
+import type { PreviewAudioMeasurement } from './preview-audio';
+import { PreviewAudioControls } from './preview-audio-controls';
 import { type MouthPose, REST_MOUTH } from './speech-motion';
 
 const Stage = dynamic(() => import('./browser-avatar-stage'), { ssr: false });
@@ -12,20 +14,39 @@ const Stage = dynamic(() => import('./browser-avatar-stage'), { ssr: false });
 export default function AvatarPreview({
   asset,
   character,
+  sampleAvailable = false,
 }: {
   asset: BrowserAvatar | null;
   character: BrowserAvatar['character'];
+  sampleAvailable?: boolean;
 }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [sample, setSample] = useState<AvatarSample | null>(null);
   const samples = useRef<AvatarSample[]>([]);
+  const audioMeasurement = useRef<PreviewAudioMeasurement | null>(null);
   const speech = useRef<() => MouthPose>(() => REST_MOUTH);
   const [testingMouth, setTestingMouth] = useState(false);
+  useEffect(() => {
+    const start = performance.now();
+    speech.current = testingMouth
+      ? () => {
+          const phase = Math.floor((performance.now() - start) / 1200) % 4;
+          return [
+            REST_MOUTH,
+            { open: 0.65, round: 0, wide: 0 },
+            { open: 0.35, round: 0.9, wide: 0 },
+            { open: 0.35, round: 0, wide: 0.9 },
+          ][phase];
+        }
+      : () => REST_MOUTH;
+  }, [testingMouth]);
   const download = () => {
     const report = {
       capturedAt: new Date().toISOString(),
-      scope: 'browser-preview-no-voice',
+      scope: 'browser-preview',
+      acousticMeasurement: audioMeasurement.current,
+      acousticScope: 'local-file-preview-not-live-call',
       modelHash: asset?.sha256,
       samples: samples.current,
       note: 'JS heap belongs to the whole page, not total RAM. Submission time is not GPU time. No audio or conversations captured.',
@@ -87,20 +108,7 @@ export default function AvatarPreview({
             <button
               className="ml-2 rounded border px-4 py-2"
               onClick={() => {
-                const active = !testingMouth;
-                setTestingMouth(active);
-                const start = performance.now();
-                speech.current = active
-                  ? () => {
-                      const phase = Math.floor((performance.now() - start) / 1200) % 4;
-                      return [
-                        REST_MOUTH,
-                        { open: 0.65, round: 0, wide: 0 },
-                        { open: 0.35, round: 0.9, wide: 0 },
-                        { open: 0.35, round: 0, wide: 0.9 },
-                      ][phase];
-                    }
-                  : () => REST_MOUTH;
+                setTestingMouth((active) => !active);
               }}
             >
               {testingMouth ? 'Detener prueba de boca' : 'Probar movimientos de labios'}
@@ -108,6 +116,15 @@ export default function AvatarPreview({
           )}
           {testingMouth && <p>Movimiento de prueba, sin audio. No valida sincronización labial.</p>}
         </div>
+      )}
+      {ready && !failed && !testingMouth && (
+        <PreviewAudioControls
+          speech={speech}
+          sampleAvailable={sampleAvailable}
+          onMeasurement={(value) => {
+            audioMeasurement.current = value;
+          }}
+        />
       )}
       <Link href="/" className="underline">
         Volver a la conversación

@@ -69,3 +69,6 @@ agent-starter-python/data/
 # Local design inspection state (selected evidence is under docs/validation)
 .impeccable/*
 !.impeccable/design.json
+
+# Optional synthetic preview fixture, not conversation audio
+agent-starter-react/public/avatars/articulation-sample.wav
