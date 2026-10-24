@@ -32,3 +32,8 @@ Se mantiene la base Santiago y se suavizan únicamente redondeo/extensión a 55 
 mandíbula, rangos y cierre iguales. El visor compara `smooth` con `santiago`.
 Ver docs/validation/2026-10-23-subtle-lip-polish/README.md. No reintroducir el
 clasificador experimental ni sustituir la identidad de los modelos.
+
+23 octubre: catálogo de seis IDs y transición con imagen temporal, un único
+modelo WebGL activo. Entrega web revisada: LIRA/NEXO/ELIAN; NOA/NOVA/ATLAS no
+están en el paquete GLB recibido. No confundir catálogo, exportación y agente.
+Estado, límites y pruebas: docs/validation/2026-10-23-family-transitions/README.md.

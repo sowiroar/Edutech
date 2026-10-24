@@ -995,7 +995,10 @@
           "enum": [
             "LIRA",
             "NEXO",
-            "ELIAN"
+            "ELIAN",
+            "NOA",
+            "NOVA",
+            "ATLAS"
           ],
           "title": "Character",
           "type": "string"

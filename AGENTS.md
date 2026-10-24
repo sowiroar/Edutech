@@ -128,3 +128,13 @@ Se mantiene la base Santiago y se suavizan únicamente redondeo/extensión a 55 
 mandíbula, rangos y cierre iguales. El visor compara `smooth` con `santiago`.
 Ver docs/validation/2026-10-23-subtle-lip-polish/README.md. No reintroducir el
 clasificador experimental ni sustituir la identidad de los modelos.
+
+## Catálogo y relevo visual — 23 octubre
+
+El visor reconoce seis IDs; solo LIRA/NEXO/ELIAN tienen entrega web revisada de
+Santiago. NOA/NOVA/ATLAS existen en Unreal, no afirmar que ya conversan por
+registrar sus nombres. Ver docs/validation/2026-10-23-family-transitions/README.md.
+Mantener AvatarStage sin key por personaje: el relevo usa una imagen 2D y fundido
+240 ms al primer frame, libera el modelo viejo y no reinicia el audio LiveKit.
+Las métricas se reinician por hash. Nuevas exportaciones solo como candidatas,
+sin tocar originales ni heredar aprobación; NOA conserva SK_Noa_AlternateFace.

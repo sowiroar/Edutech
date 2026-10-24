@@ -44,6 +44,13 @@ def packet():
     return row
 
 
+@pytest.mark.parametrize("character", ["LIRA", "NEXO", "ELIAN", "NOA", "NOVA", "ATLAS"])
+def test_family_avatar_quality_preserves_character_identity(character):
+    row = packet()
+    row["payload"]["character"] = character
+    assert Event.model_validate(row).payload["character"] == character
+
+
 def test_avatar_quality_has_bounded_numeric_data_and_no_audio():
     row = packet()
     parsed = Event.model_validate(row)

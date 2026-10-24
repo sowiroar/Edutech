@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import type { BrowserAvatar } from '@/lib/browser-avatar';
+import { type BrowserAvatar, WEB_CHARACTERS } from '@/lib/browser-avatar';
 import type { AvatarSample } from './browser-avatar-stage';
 import type { PreviewAudioMeasurement } from './preview-audio';
 import { PreviewAudioControls } from './preview-audio-controls';
@@ -12,14 +12,16 @@ import { type MouthPose, REST_MOUTH } from './speech-motion';
 const Stage = dynamic(() => import('./browser-avatar-stage'), { ssr: false });
 
 export default function AvatarPreview({
-  asset,
-  character,
+  assets,
+  character: initialCharacter,
   sampleAvailable = false,
 }: {
-  asset: BrowserAvatar | null;
+  assets: BrowserAvatar[];
   character: BrowserAvatar['character'];
   sampleAvailable?: boolean;
 }) {
+  const [character, setCharacter] = useState(initialCharacter);
+  const asset = assets.find((item) => item.character === character) ?? null;
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [sample, setSample] = useState<AvatarSample | null>(null);
@@ -64,6 +66,30 @@ export default function AvatarPreview({
     <main className="mx-auto flex min-h-svh max-w-5xl flex-col items-center justify-center gap-5 p-6">
       <h1 className="text-2xl font-semibold">Vista previa de {character}</h1>
       <p>Esta vista no inicia una llamada ni activa el micrófono.</p>
+      <label className="flex flex-wrap items-center justify-center gap-3 text-sm">
+        Personaje
+        <select
+          className="bg-background rounded border px-3 py-2"
+          value={character}
+          onChange={(event) => {
+            setCharacter(event.target.value as BrowserAvatar['character']);
+            setReady(false);
+            setFailed(false);
+            setSample(null);
+            samples.current = [];
+            audioMeasurement.current = null;
+            speech.current = () => REST_MOUTH;
+            setTestingMouth(false);
+          }}
+        >
+          {WEB_CHARACTERS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+              {assets.some((item) => item.character === name) ? '' : ' — pendiente de GLB'}
+            </option>
+          ))}
+        </select>
+      </label>
       {!asset ? (
         <p role="status">El modelo de {character} aún no se ha exportado para la web.</p>
       ) : failed ? (
@@ -119,6 +145,7 @@ export default function AvatarPreview({
       )}
       {ready && !failed && !testingMouth && (
         <PreviewAudioControls
+          key={character}
           speech={speech}
           sampleAvailable={sampleAvailable}
           onMeasurement={(value) => {

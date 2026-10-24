@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { AVATAR_MAX_BYTES, AVATAR_MAX_TRIANGLES, type BrowserAvatar } from '@/lib/browser-avatar';
 import { cn } from '@/lib/shadcn/utils';
+import { createAvatarTransition } from './avatar-transition';
 import { applyElianMaterials } from './elian-materials';
 import { applyLiraMaterials } from './lira-materials';
 import { createMateoRig } from './mateo-rig';
@@ -86,11 +87,14 @@ export default function BrowserAvatarStage({
   onSample?: (sample: AvatarSample) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const transition = useRef<ReturnType<typeof createAvatarTransition> | null>(null);
   const callbacks = useRef({ onReady, onFailure, onSample, speech });
   callbacks.current = { onReady, onFailure, onSample, speech };
   useEffect(() => {
     const element = host.current;
     if (!element) return;
+    transition.current ??= createAvatarTransition(element);
+    transition.current.waiting();
     let cancelled = false,
       frame = 0;
     let renderer: THREE.WebGLRenderer | undefined;
@@ -98,6 +102,7 @@ export default function BrowserAvatarStage({
     let mixer: THREE.AnimationMixer | undefined;
     let resize: ResizeObserver | undefined;
     let startFrames = () => {};
+    let captureFrame = () => {};
     const controller = new AbortController();
     const contextLost = (event: Event) => {
       event.preventDefault();
@@ -252,6 +257,15 @@ export default function BrowserAvatarStage({
           ready = true;
           // Includes first-draw shader work; this is submission, not GPU completion.
           firstFrameMs = performance.now() - started;
+          transition.current?.reveal(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+          captureFrame = () => {
+            if (!renderer || renderer.getContext().isContextLost()) return;
+            renderer.render(scene, camera);
+            transition.current?.capture(renderer.domElement, {
+              image: asset.backgroundColor ? undefined : `url(${asset.backgroundUrl})`,
+              color: asset.backgroundColor,
+            });
+          };
           callbacks.current.onReady();
         }
         if (now - reportStart >= 1000) {
@@ -311,6 +325,11 @@ export default function BrowserAvatarStage({
       cancelAnimationFrame(frame);
       document.removeEventListener('visibilitychange', visibility);
       resize?.disconnect();
+      try {
+        captureFrame();
+      } catch {
+        // A lost GPU context must not block resource release or voice playback.
+      }
       mixer?.stopAllAction();
       if (model) mixer?.uncacheRoot(model);
       if (model) disposeModel(model);
@@ -322,6 +341,7 @@ export default function BrowserAvatarStage({
       }
     };
   }, [asset]);
+  useEffect(() => () => transition.current?.dispose(), []);
   return (
     <div
       ref={host}
@@ -330,7 +350,7 @@ export default function BrowserAvatarStage({
         backgroundColor: asset.backgroundColor,
       }}
       className={cn(
-        'overflow-hidden rounded-xl bg-slate-950 bg-cover bg-center',
+        'relative overflow-hidden rounded-xl bg-slate-950 bg-cover bg-center',
         compact ? 'h-[120px] w-[213px]' : 'aspect-video w-[min(100vw-2rem,60rem)]'
       )}
     />

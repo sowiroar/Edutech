@@ -5,6 +5,15 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const path = require('node:path');
 
+const metadataContext = { exports: {} };
+vm.runInNewContext(
+  ts.transpileModule(fs.readFileSync('lib/browser-avatar.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText,
+  metadataContext
+);
+const publicMetadata = metadataContext.exports;
+
 function reader(manifest, fileBytes = 1024, previewManifest = null) {
   const readPaths = [];
   const mockedFs = {
@@ -34,8 +43,7 @@ function reader(manifest, fileBytes = 1024, previewManifest = null) {
     require: (name) => {
       if (name === 'node:fs/promises') return mockedFs;
       if (name === 'node:path') return { default: path };
-      if (name === './browser-avatar')
-        return { AVATAR_MAX_BYTES: 20 * 1024 * 1024, WEB_CHARACTERS: ['LIRA', 'NEXO', 'ELIAN'] };
+      if (name === './browser-avatar') return publicMetadata;
       throw new Error(name);
     },
   };
@@ -198,3 +206,22 @@ test('a separate candidate never replaces the model advertised for calls', async
   );
   assert.equal((await fixture.get()).backgroundUrl, '/avatars/nexo/uam-background.jpg');
 });
+
+for (const character of ['NOA', 'NOVA', 'ATLAS']) {
+  test(`${character} requires its own retained identity and a reviewed installed GLB`, async () => {
+    const manifest = {
+      character,
+      source_scene: publicMetadata.AVATAR_SOURCE_SCENES[character],
+      sha256: 'a'.repeat(64),
+      bytes: 1024,
+      frontYaw: 0,
+    };
+    assert.equal((await reader(manifest).get({ character })).character, character);
+    assert.equal(
+      await reader({ ...manifest, source_scene: '/Game/OtherFace' }).get({ character }),
+      null
+    );
+    assert.equal(await reader({ ...manifest, visual_review: 'pending' }).get({ character }), null);
+    assert.equal(await reader(null).get({ character }), null);
+  });
+}

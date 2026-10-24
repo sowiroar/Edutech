@@ -1,6 +1,11 @@
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { AVATAR_MAX_BYTES, type BrowserAvatar, WEB_CHARACTERS } from './browser-avatar';
+import {
+  AVATAR_MAX_BYTES,
+  AVATAR_SOURCE_SCENES,
+  type BrowserAvatar,
+  WEB_CHARACTERS,
+} from './browser-avatar';
 
 // Only locally installed, content-addressed models can be served. No external asset URLs.
 export async function browserAvatar({
@@ -27,18 +32,8 @@ export async function browserAvatar({
       candidate ?? (await readFile(path.join(directory, 'manifest.json'), 'utf8'))
     );
     if (manifest.character && manifest.character !== character) return null;
-    // The requested Lira is Juan's retained model, not the historical Santiago variant.
-    if (
-      character === 'LIRA' &&
-      (manifest.character !== 'LIRA' ||
-        manifest.source_scene !== '/Game/VIVA/Avatars/Lira/Maps/L_Lira')
-    )
-      return null;
-    if (
-      character === 'ELIAN' &&
-      (manifest.character !== 'ELIAN' ||
-        manifest.source_scene !== '/Game/VIVA/Avatars/Elian/Maps/L_Elian')
-    )
+    const sourceScene = AVATAR_SOURCE_SCENES[character];
+    if (sourceScene && (manifest.character !== character || manifest.source_scene !== sourceScene))
       return null;
     if (manifest.web_profile !== 2 || manifest.export_profile !== 3) return null;
     // A candidate may be inspected locally without advertising it for a live call.

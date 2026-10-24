@@ -35,3 +35,11 @@ no requieren distribuir estos assets en CI.
 [Procedencia y condiciones](../../../THIRD_PARTY_AVATARS.md),
 [guía de exportación](../../../docs/mvp/AVATAR_WEB.md) y
 [medición de consumo](../../../docs/validation/2026-10-21-avatar-resources/README.md).
+
+## Catálogo de seis personajes
+
+El visor reconoce LIRA, NEXO, ELIAN, NOA, NOVA y ATLAS. Reconocer un nombre no
+habilita un modelo ausente: `/avatar-preview` muestra qué GLB falta. NOA/NOVA/ATLAS
+necesitan su exportación independiente y revisión antes de anunciarse en llamadas.
+El worker actual sigue teniendo tres agentes; el catálogo no crea sus nuevos roles.
+Ver `docs/validation/2026-10-23-family-transitions/README.md` desde la raíz Edutech.

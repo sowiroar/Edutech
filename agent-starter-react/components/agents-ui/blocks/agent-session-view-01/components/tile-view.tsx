@@ -129,7 +129,6 @@ export function TileLayout({ isChatOpen }: TileLayoutProps) {
               >
                 {selectedAvatar && !avatar.failed ? (
                   <AvatarStage
-                    key={selectedAvatar.character}
                     asset={selectedAvatar}
                     isChatOpen={isChatOpen}
                     onFailure={avatar.fail}

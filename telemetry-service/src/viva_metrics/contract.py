@@ -150,7 +150,7 @@ class MediaPayload(StrictModel):
 
 
 class AvatarQualityPayload(StrictModel):
-    character: Literal["LIRA", "NEXO", "ELIAN"]
+    character: Literal["LIRA", "NEXO", "ELIAN", "NOA", "NOVA", "ATLAS"]
     model_sha256: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{64}$")]
     measurement_scope: Literal["live-call-acoustic"]
     window_ms: Duration

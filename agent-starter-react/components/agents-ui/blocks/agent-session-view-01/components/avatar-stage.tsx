@@ -42,6 +42,11 @@ export function AvatarStage({
   });
   const track = audioTrack?.publication.track;
   useEffect(() => {
+    // The stage survives handoffs for visual continuity; measurements do not.
+    reporting.current = { since: performance.now(), sent: false, samples: [] };
+    monitor.current = createSpeechMonitor();
+  }, [asset.sha256]);
+  useEffect(() => {
     monitor.current = createSpeechMonitor();
     speech.current = () => REST_MOUTH;
     if (!track || (!asset.mouthMorph && !asset.rigProfile)) return;

@@ -20,7 +20,11 @@ export default async function Page({
       sampleAvailable={existsSync(
         path.join(process.cwd(), 'public/avatars/articulation-sample.wav')
       )}
-      asset={await browserAvatar({ preview: true, character })}
+      assets={(
+        await Promise.all(
+          WEB_CHARACTERS.map((name) => browserAvatar({ preview: true, character: name }))
+        )
+      ).filter((asset) => asset !== null)}
     />
   );
 }
