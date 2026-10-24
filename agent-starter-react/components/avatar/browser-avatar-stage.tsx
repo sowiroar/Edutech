@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { AVATAR_MAX_BYTES, AVATAR_MAX_TRIANGLES, type BrowserAvatar } from '@/lib/browser-avatar';
 import { cn } from '@/lib/shadcn/utils';
 import { createAvatarTransition } from './avatar-transition';
+import { callEyes, createCallGaze, faceCallCamera, placeCallCamera } from './call-gaze';
 import { applyElianMaterials } from './elian-materials';
 import { applyFamilyMaterials } from './family-materials';
 import { applyLiraMaterials } from './lira-materials';
@@ -172,6 +173,8 @@ export default function BrowserAvatarStage({
       mixer = new THREE.AnimationMixer(model);
       for (const clip of gltf.animations) mixer.clipAction(clip).play();
       mixer.update(0);
+      const eyes = callEyes(model);
+      faceCallCamera(pivot, eyes);
       const bounds = new THREE.Box3().setFromObject(pivot);
       const size = bounds.getSize(new THREE.Vector3());
       if (!Number.isFinite(size.y) || size.y <= 0) throw new Error('Invalid bounds');
@@ -199,6 +202,8 @@ export default function BrowserAvatarStage({
             : 1.42,
         0
       );
+      placeCallCamera(camera, eyes);
+      const gaze = createCallGaze(eyes, camera);
       scene.add(new THREE.HemisphereLight(0xd7eaff, 0x4b4053, 2.5));
       const key = new THREE.DirectionalLight(0xfff2e7, asset.character === 'NEXO' ? 2.2 : 3);
       key.position.set(-1, 3, 4);
@@ -253,6 +258,7 @@ export default function BrowserAvatarStage({
           mesh.morphTargetInfluences![index] = mouth.open;
         });
         rig?.update(mouth, animatedSeconds);
+        gaze.update();
         const submitted = performance.now();
         try {
           renderer.render(scene, camera);
@@ -270,6 +276,13 @@ export default function BrowserAvatarStage({
           transition.current?.reveal(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
           captureFrame = () => {
             if (!renderer || renderer.getContext().isContextLost()) return;
+            // The outgoing still must not hold an open mouth while the next
+            // model loads. This affects only the last visual frame, never audio.
+            mouths.forEach(({ mesh, index }) => {
+              mesh.morphTargetInfluences![index] = 0;
+            });
+            rig?.update(REST_MOUTH, animatedSeconds);
+            gaze.update();
             renderer.render(scene, camera);
             transition.current?.capture(renderer.domElement, {
               image: asset.backgroundColor ? undefined : `url(${asset.backgroundUrl})`,

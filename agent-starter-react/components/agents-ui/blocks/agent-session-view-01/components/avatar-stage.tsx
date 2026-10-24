@@ -2,16 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { type RemoteAudioTrack, createAudioAnalyser } from 'livekit-client';
+import { type RemoteAudioTrack } from 'livekit-client';
 import { useRoomContext, useVoiceAssistant } from '@livekit/components-react';
 import type { AvatarSample } from '@/components/avatar/browser-avatar-stage';
-import { createSpeechMonitor, isTrackAudible } from '@/components/avatar/speech-monitor';
-import {
-  type MouthPose,
-  REST_MOUTH,
-  createSpeechMotion,
-  speechRms,
-} from '@/components/avatar/speech-motion';
+import { createLiveSpeech } from '@/components/avatar/live-speech';
+import { createSpeechMonitor } from '@/components/avatar/speech-monitor';
+import { type MouthPose, REST_MOUTH } from '@/components/avatar/speech-motion';
 import type { BrowserAvatar } from '@/lib/browser-avatar';
 import { useMediaTelemetry } from '@/lib/telemetry/context';
 
@@ -49,46 +45,25 @@ export function AvatarStage({
   useEffect(() => {
     monitor.current = createSpeechMonitor();
     speech.current = () => REST_MOUTH;
-    if (!track || (!asset.mouthMorph && !asset.rigProfile)) return;
-    // Analyse already received audio; LiveKit remains the only audio output.
-    let analyser: ReturnType<typeof createAudioAnalyser> | undefined;
+    if (!track) return;
+    let reader: ReturnType<typeof createLiveSpeech> | undefined;
     try {
-      analyser = createAudioAnalyser(track as RemoteAudioTrack, {
-        fftSize: 2048,
-        smoothingTimeConstant: 0.05,
-        minDecibels: -85,
-        maxDecibels: -20,
-      });
-      const node = analyser.analyser;
-      const pcm = new Float32Array(node.fftSize);
-      const spectrum = new Float32Array(node.frequencyBinCount);
-      const motion = createSpeechMotion();
-      let previous = performance.now();
-      void (node.context as AudioContext).resume().catch(() => {});
-      speech.current = () => {
-        const now = performance.now();
-        const dt = (now - previous) / 1000;
-        previous = now;
-        // A tab may have decoded PCM while its actual media element is paused/muted.
-        if (!isTrackAudible(track as RemoteAudioTrack, room.canPlaybackAudio, node.context.state)) {
-          const pose = motion.reset();
-          monitor.current.observe(now, 0, pose, false);
-          return pose;
-        }
-        node.getFloatTimeDomainData(pcm);
-        node.getFloatFrequencyData(spectrum);
-        const pose = motion.read(pcm, spectrum, node.context.sampleRate, dt);
-        monitor.current.observe(now, speechRms(pcm, node.context.sampleRate), pose, true);
-        return pose;
-      };
+      reader = createLiveSpeech(
+        track as RemoteAudioTrack,
+        () => room.canPlaybackAudio,
+        (now, rms, pose, audible) => monitor.current.observe(now, rms, pose, audible)
+      );
+      speech.current = reader.read;
     } catch {
       /* Voice continues if the optional analyser cannot start. */
     }
     return () => {
       speech.current = () => REST_MOUTH;
-      if (analyser) void analyser.cleanup();
+      reader?.dispose();
     };
-  }, [track, asset.mouthMorph, asset.rigProfile, room]);
+    // Model identity/rig does not own the audio stream. Keep the analyser alive
+    // during LIRA -> NEXO -> ELIAN while resetting only per-model measurements.
+  }, [track, room]);
   const sample = (value: AvatarSample) => {
     const report = reporting.current;
     report.samples.push(value);

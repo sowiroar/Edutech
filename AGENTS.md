@@ -146,3 +146,15 @@ superficies procedurales, pero NO hay aceptación visual/de voz. No promoverlos
 por pasar tests. Los tres GLB originales de Santiago siguen intactos en llamadas.
 Ver docs/validation/2026-10-23-family-transitions/README.md y candidate-models.json.
 El GLB nuevo depende de family-materials.ts para conservar cejas/trazos/ropa/barba.
+
+
+## 24 octubre — tres agentes, mirada a cámara y audio continuo
+
+El usuario confirmó limitar las llamadas a LIRA/NEXO/ELIAN. NOA/NOVA/ATLAS
+continúan como candidatos, sin especialistas nuevos. Se corrige el perfil
+importado, cámara a altura de ojos y seguimiento acotado de la lente mediante
+call-gaze.ts. No modificar GLB ni rig labial por este ajuste. El lector de audio
+pertenece al track remoto, sobrevive al cambio de rig y vuelve a reposo ante
+reproducción detenida o errores. Conservar el estilo Santiago. Ver
+docs/validation/2026-10-24-call-gaze/README.md para pruebas y límites; no
+afirmar latencia cero, sincronía fonética ni aceptación UAM.
