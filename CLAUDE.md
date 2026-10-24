@@ -61,6 +61,12 @@ afirmar latencia cero, sincronía fonética ni aceptación UAM.
 24 octubre, consumo real: docs/validation/2026-10-24-call-gaze/CONSUMO_ACTUAL.md.
 Una pestaña de llamada: 263–272 MiB RSS medio, pico observado 326 MiB; Docker
 ~1,9 GiB con otra llamada existente. No extrapolar a VRAM ni concurrencia UAM.
-Pendiente de presentación: dos handoffs mostraron metainstrucciones en subtítulos;
-no reproducido en cuatro probes directos del proveedor. Investigar AgentSession
-y fuente del texto antes de afirmar corrección; no recortar subtítulos a ciegas.
+Cierre local: el prefijo interno de subtítulos se reprodujo con RoomIO y se
+corrigió trasladando las mismas indicaciones de entrada al contexto de sistema.
+No pasar esas indicaciones como generate_reply(instructions=...): el adaptador
+Google las envía como rol model. No filtrar texto por palabras ni aplicar
+include_thoughts=false como supuesto arreglo (falló la prueba web). 53 tests
+Python y llamada LIRA → NEXO → ELIAN → NEXO aprobados localmente con preguntas
+escritas y voz real. Worker local reconstruido; main/UAM sin actualizar.
+Ver SUBTITULOS_TRANSFERENCIAS.md y final-call.json en la carpeta de validación.
+Micrófono físico, aceptación artística del equipo y pruebas UAM siguen aparte.

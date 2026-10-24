@@ -1,0 +1,459 @@
+{
+  "contains_audio": false,
+  "contains_transcripts": false,
+  "cases": [
+    {
+      "case": "baseline_roomio",
+      "observations": [
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 45,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 45,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 64,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 536,
+          "meta": true
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 536,
+          "meta": true
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 89,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 447,
+          "meta": true
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 447,
+          "meta": true
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 28,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 91,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 91,
+          "meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 151682,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 45,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 387842,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 536,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": true
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 360000,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 447,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": true
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 260640,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 91,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        }
+      ]
+    },
+    {
+      "case": "include_thoughts_false_inconclusive",
+      "observations": [
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 73,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 73,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 64,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 144,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 144,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 89,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 112,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 112,
+          "meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 230400,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 73,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 408960,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 144,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 338880,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 112,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        }
+      ]
+    },
+    {
+      "case": "entry_instruction_in_system",
+      "observations": [
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 71,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 71,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 64,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 148,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 148,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "user",
+          "chars": 89,
+          "meta": false
+        },
+        {
+          "source": "conversation_item",
+          "role": "assistant",
+          "chars": 183,
+          "meta": false
+        },
+        {
+          "source": "room_transcription",
+          "identity": "diagnostic-agent",
+          "chars": 183,
+          "meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 237120,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 71,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Aoede",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 452640,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 148,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Puck",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 0,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 0,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        },
+        {
+          "source": "provider",
+          "voice": "Kore",
+          "audio_bytes": 510240,
+          "model_text_chars": 0,
+          "thought_text_chars": 0,
+          "output_text_chars": 183,
+          "model_text_meta": false,
+          "thought_text_meta": false,
+          "output_text_meta": false
+        }
+      ]
+    }
+  ],
+  "note": "Metadata from diagnostic RoomIO sessions with typed synthetic prompts and real Gemini Live audio. include_thoughts=false failed a subsequent browser test and is not shipped. Pattern flags are diagnostic indicators, not a general text classifier."
+}

@@ -73,7 +73,7 @@ hash correctos. No usar 3511 como sustituto de una llamada completa.
 Pendiente de aceptación independiente: dispositivo de salida, micrófono/barge-in,
 PC de Santiago/RTX4050, UAM y concurrencia. No extrapolar FPS del Mac a esos equipos.
 
-## Resultado local de esta revisión
+## Primera validación local de esta revisión
 
 69 pruebas frontend aprobadas; 3 omitidas por candidatos privados históricos.
 Lint, TypeScript y compilación de producción aprobados. Se reconstruyó solo
@@ -97,3 +97,29 @@ abierto y cerrado; no promediar estos tamaños como un benchmark homogéneo.
 Las tres últimas muestras estaban en `silent`. No se registró audio ni se
 certificó barge-in con micrófono. Capturas locales en
 `data/local-avatar/gaze-audit/` (ignoradas por Git).
+
+## Cierre local después de revisar subtítulos
+
+Se corrigió también la entrada de los especialistas: sus indicaciones iniciales
+ahora forman parte del contexto de sistema. La prueba completa y el motivo
+están en [SUBTITULOS_TRANSFERENCIAS.md](SUBTITULOS_TRANSFERENCIAS.md). El worker
+local sí se reconstruyó en este cierre, después de la primera validación anterior.
+No se cambiaron modelos, voces, herramientas, fuentes ni GLB.
+
+Llamada final LIRA → NEXO → ELIAN → NEXO: los especialistas respondieron a la
+pregunta pendiente sin pedir repetirla, los subtítulos no mostraron los prefijos
+internos detectados antes y la sesión cerró correctamente, sin eventos de error.
+53 tests Python y Ruff aprobados. [Evidencia final](final-call.json), sin texto
+ni audio; los valores son del Mac local, no del servidor UAM.
+
+| Avatar | FPS medio de informes | Máximo cierre respecto a PCM |
+|---|---:|---:|
+| LIRA | 29,62 | 102,0 ms |
+| NEXO | 30,11 | 142,1 ms |
+| ELIAN | 30,02 | 107,8 ms |
+
+Las tres últimas muestras estaban en silencio. NEXO tuvo dos períodos activos
+por la transferencia de regreso. Chat abierto/cerrado cambió el tamaño del
+canvas: no presentar la tabla como benchmark homogéneo de carga. Consumo real
+medido por separado: [CONSUMO_ACTUAL.md](CONSUMO_ACTUAL.md). Sigue pendiente
+aceptación con micrófono físico, equipos de Santiago/UAM y concurrencia.

@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-24",
+  "environment": "Chrome on Mac, localhost:3500; updated voice worker",
+  "contains_audio": false,
+  "contains_transcripts": false,
+  "input": "typed questions; real Gemini Live spoken responses; microphone muted after connection",
+  "characters": {
+    "LIRA": {
+      "reports": 4,
+      "mean_reported_fps": 29.62,
+      "min_reported_window_fps": 28.5,
+      "speech_frames": 147,
+      "close_observations": 5,
+      "silence_to_rest_max_ms": 102.0,
+      "first_frame_ms": 219.8,
+      "last_playback_status": "silent",
+      "sha256": "87da34733fb1ffce0433daa6a7da9047e28b4e665abb70598f46897ae875a431",
+      "observed_canvas_sizes": [
+        "1280x720"
+      ]
+    },
+    "NEXO": {
+      "reports": 13,
+      "mean_reported_fps": 30.11,
+      "min_reported_window_fps": 29.74,
+      "speech_frames": 825,
+      "close_observations": 9,
+      "silence_to_rest_max_ms": 142.1,
+      "first_frame_ms": 107.9,
+      "last_playback_status": "silent",
+      "sha256": "576ffcf55c1803b6ba4e4291e6cb6124a0855d08ff0e10fe403d5e753500228d",
+      "observed_canvas_sizes": [
+        "1280x720",
+        "319x180"
+      ]
+    },
+    "ELIAN": {
+      "reports": 7,
+      "mean_reported_fps": 30.02,
+      "min_reported_window_fps": 29.75,
+      "speech_frames": 453,
+      "close_observations": 6,
+      "silence_to_rest_max_ms": 107.8,
+      "first_frame_ms": 122.6,
+      "last_playback_status": "silent",
+      "sha256": "d833245bb6380240dc4de22f4c317449e367a48b891a5cfe3f7ff8fa4f20f40d",
+      "observed_canvas_sizes": [
+        "1280x720",
+        "319x180"
+      ]
+    }
+  },
+  "handoffs": [
+    {
+      "agent_id": "LiraAgent",
+      "previous_agent_id": null
+    },
+    {
+      "agent_id": "NexusAgent",
+      "previous_agent_id": "LiraAgent"
+    },
+    {
+      "agent_id": "ElianAgent",
+      "previous_agent_id": "NexusAgent"
+    },
+    {
+      "agent_id": "NexusAgent",
+      "previous_agent_id": "ElianAgent"
+    }
+  ],
+  "conversation_messages": 7,
+  "error_event_types": [],
+  "session_ended": true,
+  "media_disconnected": true,
+  "captions_visually_reviewed_without_internal_prefixes": true
+}

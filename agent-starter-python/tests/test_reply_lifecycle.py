@@ -45,6 +45,9 @@ class Session:
 
     async def generate_reply(self, **kwargs):
         self.calls += 1
+        assert "instructions" not in kwargs, (
+            "Do not seed Gemini model dialogue with a directive"
+        )
         return await self.behavior(self)
 
 
@@ -53,9 +56,7 @@ class ReplyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         session = Session(behavior)
         agent = SimpleNamespace(session=session)
         session.current_agent = agent
-        await namespace["generar_respuesta_confiable"](
-            agent, "test greeting", timeout=timeout
-        )
+        await namespace["generar_respuesta_confiable"](agent, timeout=timeout)
         self.assertTrue(all(not callbacks for callbacks in session.handlers.values()))
         return session
 

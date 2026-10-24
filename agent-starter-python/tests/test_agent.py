@@ -25,6 +25,34 @@ def test_agent_voices_and_initialization():
     assert elian.llm._opts.voice == "Kore"
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("agent_type", "entry_instruction"),
+    [
+        (LiraAgent, "Saluda amablemente en una sola oración"),
+        (NexusAgent, "Preséntate como Nexus en una frase muy breve"),
+        (ElianAgent, "Preséntate como Elian de la Universidad Autónoma de Manizales"),
+    ],
+)
+async def test_entry_directive_is_system_context_not_assistant_speech(
+    agent_type, entry_instruction, monkeypatch
+):
+    """Gemini must not continue an operational directive as model dialogue."""
+    agent = agent_type()
+    announce, reply = AsyncMock(), AsyncMock()
+    monkeypatch.setattr(agent, "anunciar_personaje_avatar", announce)
+    monkeypatch.setattr(agent, "generar_respuesta_confiable", reply)
+    await agent.on_enter()
+    announce.assert_awaited_once_with()
+    reply.assert_awaited_once_with()
+    assert entry_instruction in agent.instructions
+    assert not any(
+        entry_instruction in (getattr(item, "text_content", "") or "")
+        for item in agent.chat_ctx.items
+        if getattr(item, "role", None) == "assistant"
+    )
+
+
 def test_agent_avatar_character_mapping():
     """Conserva la correspondencia entre agentes y personajes visibles:
     Lira->LIRA, Nexus->NEXO y Elian->ELIAN. El nombre del worker nexus

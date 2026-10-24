@@ -234,9 +234,7 @@ class BaseEducationalAgent(Agent):
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
-    async def generar_respuesta_confiable(
-        self, instructions: str, timeout: float = 6.0
-    ) -> None:
+    async def generar_respuesta_confiable(self, timeout: float = 6.0) -> None:
         """generate_reply() con reintento si no se detecta habla.
 
         Encontrado revisando logs reales el 2026-10-08: una llamada entera
@@ -291,7 +289,10 @@ class BaseEducationalAgent(Agent):
                 wake.clear()
                 spoke = False
                 try:
-                    handle = await session.generate_reply(instructions=instructions)
+                    # Gemini's adapter sends per-reply instructions as role=model.
+                    # Keeping the entry directive in system instructions avoids
+                    # continuing it as spoken dialogue/transcription on handoff.
+                    handle = await session.generate_reply()
                 except RuntimeError:
                     if inactive():
                         return
@@ -374,6 +375,9 @@ class LiraAgent(BaseEducationalAgent):
                 - NUNCA expliques cosas de la UAM. Si preguntan por carreras, llama a `transfer_to_elian`.
                 - Si el usuario solo dice "Hola", responde brevemente presentándote y preguntando sobre qué área (IA o UAM) tiene dudas.
                 - Habla siempre en español, texto continuo, sin markdown.
+
+                # Solo al iniciar tu participación en la llamada:
+                Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy.
                 """
             ),
         )
@@ -381,9 +385,7 @@ class LiraAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Saludo inicial breve de bienvenida."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
         description="Transfiere a NEXO (también llamado Nexus). Úsala si pide hablar con Nexo o Nexus, o si hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación o algoritmos. NO intentes responder la pregunta."
@@ -448,6 +450,9 @@ class NexusAgent(BaseEducationalAgent):
                 2. Formato oral estricto: NUNCA uses formato markdown, asteriscos, negritas, viñetas, emojis ni bloques de código formateado. Habla en texto continuo fluido.
                 3. Directo, veloz y pedagógico: Responde directamente a la pregunta en 1 a 3 oraciones cortas y concisas para que el audio empiece de inmediato.
                 4. Vocabulario técnico en inglés: Pronuncia con fluidez términos estándar (Clustering, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation).
+
+                # Solo al iniciar tu participación en la llamada:
+                Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo de inmediato la última pregunta que le hizo a Lira usando el contexto de la conversación.
                 """
             ),
         )
@@ -455,11 +460,7 @@ class NexusAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Se presenta como Nexus y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
-            "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
-            "hizo a Lira usando el contexto de la conversación."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
@@ -575,6 +576,9 @@ class ElianAgent(BaseEducationalAgent):
                 2. Formato oral estricto: NUNCA uses formato markdown, viñetas, emojis ni listas. Habla en texto continuo fluido.
                 3. Concisión: Responde de forma clara y directa en 1 a 3 oraciones cortas.
                 4. Identidad institucional: Resalta siempre los valores de innovación, excelencia y calidez de la Universidad Autónoma de Manizales.
+
+                # Solo al iniciar tu participación en la llamada:
+                Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo de inmediato la última pregunta que hizo usando el contexto de la conversación (recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto).
                 """
             ),
         )
@@ -582,12 +586,7 @@ class ElianAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Se presenta como Elian y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
-            "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "
-            "de inmediato la última pregunta que hizo usando el contexto de la conversación "
-            "(recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto)."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
