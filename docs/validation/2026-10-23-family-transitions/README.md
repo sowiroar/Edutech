@@ -46,7 +46,8 @@ El pulido labial aceptado permanece: algoritmo de Santiago, mandíbula original,
 personaje y accesorios estáticos unidos al cuerpo/rostro; excluye fondos y luces.
 No guarda mapas, materiales ni blueprints. Comprueba la cara alternativa de NOA.
 El empaquetador conserva los ojos y dientes horneados sobre cada cara original,
-y exige sus tres archivos auxiliares antes de instalar. Los candidatos nuevos
+y exige todos sus archivos auxiliares antes de instalar: seis para NOA/NOVA
+(rostro de siete secciones) y tres para ATLAS (cuatro secciones). Los candidatos nuevos
 siempre empiezan con revisiones pendientes.
 
 Desde Edutech, uno por vez:
@@ -82,3 +83,9 @@ candidato adicional; frontend local reconstruido en el puerto 3500.
 Verificación local Chrome: tres personajes, un canvas después del relevo, sin
 errores de consola; muestra puntual ELIAN 30 FPS. No es un benchmark de memoria,
 una validación nueva UAM/RTX4050 ni una prueba de conversación real.
+
+La inspección nativa sin renderizado completó los tres mapas el 24 de octubre:
+[unreal-inventory.json](unreal-inventory.json). Confirma NOA con su cara alternativa,
+NOVA Final y ATLAS MatureFace_v2, sus accesorios y animaciones guardadas. No guarda
+assets. La exportación con materiales necesita renderizado y una compilación
+inicial adicional de shaders tras la actualización local a Unreal 5.8.4.

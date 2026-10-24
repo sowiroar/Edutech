@@ -85,11 +85,11 @@ def optimize(source, target, legacy_materials=False, skin_roles=None, character=
         from lira_brows_glb import append_lira_brows
 
         report["original_eyebrows"] = append_lira_brows(glb, Path(source).parent)
-    if character == "ELIAN":
+    if character in ("ELIAN", "NOA", "NOVA", "ATLAS"):
         from elian_materials_glb import append_face_materials
 
         report["original_face_materials"] = append_face_materials(
-            glb, Path(source).parent
+            glb, Path(source).parent, character
         )
     if character == "NEXO" and any(
         m.get("name", "").startswith("MI_Face_Skin_Baked") for m in d["materials"]
@@ -372,7 +372,7 @@ def optimize(source, target, legacy_materials=False, skin_roles=None, character=
                 material.setdefault("extras", {})["vivaMaterial"] = (
                     "elian-native-face-v1"
                 )
-        if character == "LIRA":
+        if character in ("LIRA", "NOA", "NOVA"):
             if material.get("name") == "MI_Face_EyeShell":
                 # UE's eye-shadow shell bakes as opaque black in glTF. The
                 # actual eyeballs retain Juan's original iris textures below it.
@@ -380,6 +380,7 @@ def optimize(source, target, legacy_materials=False, skin_roles=None, character=
                 material["alphaMode"] = "BLEND"
             if material.get("name") == "MI_Face_LacrimalFluid":
                 material["pbrMetallicRoughness"]["baseColorFactor"] = [1, 1, 1, 0.12]
+        if character == "LIRA":
             if material.get("name") == "M_Lira_Uniform":
                 # Preserve Juan's two-UV procedural fabric in the web shader.
                 # A glTF texture bake cannot represent its overlapping front/back UVs.

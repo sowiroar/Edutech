@@ -5,22 +5,34 @@ import json
 from pathlib import Path
 
 
-def append_face_materials(glb, directory):
+def append_face_materials(glb, directory, character="ELIAN"):
     from optimize_nexo_glb import GLB
 
     directory = Path(directory)
     audit = json.loads((directory / "export.json").read_text(encoding="utf-8"))
     original = audit.get("face_material_sidecars", [])
     faces = [m for m in glb.doc["meshes"] if m.get("name") == "Face"]
-    if len(faces) != 1 or len(faces[0]["primitives"]) != 4 or len(original) != 4:
-        raise ValueError("ELIAN face/material layout changed; review before packing")
-    report = []
-    for section, expected in enumerate(
-        ("MI_Teeth_Baked", "MI_EyeL_Baked", "MI_EyeR_Baked"), 1
+    sections = 7 if character in ("NOA", "NOVA") else 4
+    if (
+        len(faces) != 1
+        or len(faces[0]["primitives"]) != sections
+        or len(original) != sections
     ):
+        raise ValueError(
+            f"{character} face/material layout changed; review before packing"
+        )
+    report = []
+    expected_materials = ["MI_Teeth_Baked", "MI_EyeL_Baked", "MI_EyeR_Baked"]
+    if sections == 7:
+        expected_materials += [
+            "MI_Face_EyeShell",
+            "MI_Face_EyelashesHiLODs",
+            "MI_Face_LacrimalFluid",
+        ]
+    for section, expected in enumerate(expected_materials, 1):
         if not original[section].rsplit(".", 1)[-1].startswith(expected):
             raise ValueError("Unexpected ELIAN source material")
-        side = GLB(directory / f"elian-face-material-{section}.glb")
+        side = GLB(directory / f"{character.lower()}-face-material-{section}.glb")
         if len(side.doc.get("materials", [])) != 1:
             raise ValueError("Expected one original material per face sidecar")
         material = copy.deepcopy(side.doc["materials"][0])
@@ -28,7 +40,7 @@ def append_face_materials(glb, directory):
             raise ValueError("Sidecar does not contain the original ELIAN material")
         target = faces[0]["primitives"][section]
         meshes = side.doc.get("meshes", [])
-        if len(meshes) != 1 or len(meshes[0]["primitives"]) != 4:
+        if len(meshes) != 1 or len(meshes[0]["primitives"]) != sections:
             raise ValueError(
                 "Material must be baked on the original face, not a preview sphere"
             )
@@ -84,7 +96,9 @@ def append_face_materials(glb, directory):
             texture_map[index] = len(glb.doc.setdefault("textures", []))
             glb.doc["textures"].append(imported)
 
-        def remap_textures(value):
+        def remap_textures(
+            value, texture_map=texture_map, attributes=target["attributes"]
+        ):
             if isinstance(value, dict):
                 for key, item in value.items():
                     if (
@@ -98,7 +112,7 @@ def append_face_materials(glb, directory):
                             .get("KHR_texture_transform", {})
                             .get("texCoord", item.get("texCoord", 0))
                         )
-                        if f"TEXCOORD_{uv}" not in target["attributes"]:
+                        if f"TEXCOORD_{uv}" not in attributes:
                             raise ValueError(
                                 "Original material requires missing UV coordinates"
                             )

@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MAX_BYTES = 20 * 1024 * 1024
 MAX_TRIANGLES = 100_000
+CHARACTERS = ("NEXO", "LIRA", "ELIAN", "NOA", "NOVA", "ATLAS")
 
 
 def export_failure(export_dir, returncode):
@@ -41,8 +42,11 @@ def validate_export_files(export_dir, character, *, require_native_face=True):
     names = ["export.json", f"{character.lower()}-source.glb"]
     if character == "LIRA":
         names += ["lira-brows.glb", "lira-brows-attribute.tga"]
-    elif character == "ELIAN":
-        names += [f"elian-face-material-{i}.glb" for i in (1, 2, 3)]
+    elif character in ("ELIAN", "NOA", "NOVA", "ATLAS"):
+        sections = 7 if character in ("NOA", "NOVA") else 4
+        names += [
+            f"{character.lower()}-face-material-{i}.glb" for i in range(1, sections)
+        ]
     elif character == "NEXO":
         names += ["nexo-original-color.glb"]
         if require_native_face:
@@ -125,7 +129,7 @@ def inspect_glb(path):
 def install(export_dir, *, preview_only=False):
     report = json.loads((export_dir / "export.json").read_text(encoding="utf-8"))
     character = report.get("character", "NEXO")
-    if character not in ("NEXO", "LIRA", "ELIAN"):
+    if character not in CHARACTERS:
         raise ValueError("Personaje de exportacion desconocido.")
     validate_export_files(export_dir, character)
     slug = character.lower()
@@ -248,7 +252,9 @@ def stop_export(process):
         return
     if os.name == "nt":
         subprocess.run(
-            ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+            capture_output=True,
+            check=False,
         )
     else:
         try:
@@ -283,12 +289,18 @@ def export(character="NEXO", *, install_result=True):
     )
     export_dir.mkdir(parents=True, exist_ok=False)
     runtime_env, storage_flags = export_environment(paths, export_dir)
+    runtime_env["VIVA_WEB_CHARACTER"] = character
+    exporter = (
+        "export_family_web.py"
+        if character in ("NOA", "NOVA", "ATLAS")
+        else "export_" + character.lower() + "_web.py"
+    )
     args = [
         str(editor),
         str(project),
         "-EnablePlugins=GLTFExporter",
         "-run=pythonscript",
-        f"-script={ROOT / 'scripts' / ('export_' + character.lower() + '_web.py')}",
+        f"-script={ROOT / 'scripts' / exporter}",
         "-AllowCommandletRendering",
         "-unattended",
         "-NoSplash",
@@ -300,7 +312,7 @@ def export(character="NEXO", *, install_result=True):
     ]
     # Hair/face textures can exhaust Windows commit when compiled concurrently.
     # These process-only flags do not alter the authoring project's settings.
-    if character in ("NEXO", "LIRA", "ELIAN"):
+    if character in CHARACTERS:
         args += [
             "-asyncTextureCompilationMaxConcurrency=1",
             "-asyncSkeletalMeshCompilationMaxConcurrency=1",
@@ -407,6 +419,7 @@ def cancel():
             "export_nexo_native_face.py",
             "export_lira_web.py",
             "export_elian_web.py",
+            "export_family_web.py",
         )
     ]
     from avatar_web_storage import runtime_root
@@ -448,9 +461,7 @@ def main():
         action="store_true",
         help="Exportar sin cambiar manifiestos o modelos publicados.",
     )
-    parser.add_argument(
-        "--character", choices=("NEXO", "LIRA", "ELIAN"), default="NEXO"
-    )
+    parser.add_argument("--character", choices=CHARACTERS, default="NEXO")
     args = parser.parse_args()
     if args.preview_only and args.action != "install":
         parser.error("--preview-only solo se aplica a install")

@@ -15,6 +15,24 @@ SPEC.loader.exec_module(web)
 
 
 class BrowserExportTests(unittest.TestCase):
+    def test_family_exports_require_their_own_complete_face_sidecars(self):
+        for character in ("NOA", "NOVA", "ATLAS"):
+            with (
+                self.subTest(character=character),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                slug = character.lower()
+                (root / "export.json").write_text("{}")
+                (root / f"{slug}-source.glb").write_bytes(b"fixture")
+                with self.assertRaisesRegex(ValueError, f"{slug}-face-material"):
+                    web.validate_export_files(root, character)
+                for section in range(1, 7 if character in ("NOA", "NOVA") else 4):
+                    (root / f"{slug}-face-material-{section}.glb").write_bytes(
+                        b"sidecar"
+                    )
+                web.validate_export_files(root, character)
+
     def test_preview_install_preserves_production_manifest_and_background(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
