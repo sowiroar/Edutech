@@ -12,6 +12,12 @@ su propia revisión: no heredar aprobaciones del paquete privado del 21.
 Los límites explícitos de los clientes RAG evitan models.get al inicializar;
 no modifican el modelo de voz ni añaden un tope corto a las respuestas.
 
+23 octubre: LIRA ya tiene atlas original y GLB candidato completo (4,44 MiB),
+instalado solo en manifest.preview.json; ver docs/validation/2026-10-23-lira-export.
+La fuente principal es UE 5.8.2 y las cejas se recuperaron con UE 5.8.4.
+Los tres candidatos requieren aceptación visual y voz real antes de promoverlos.
+Al instalar archivos GLB nuevos, reiniciar el servidor Next de producción.
+
 ## Trabajo y conservación
 
 - Base de desarrollo: main. Features/bugfix/chore vuelven por PR a main.

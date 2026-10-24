@@ -1,5 +1,10 @@
 # Auditoría de avatares y latencia — 22 octubre 2026
 
+**Actualización del 23:** el bloqueo de LIRA descrito abajo quedó resuelto al
+instalar Core Data. Los tres candidatos ya tienen exportación y prueba local;
+ver [recuperación, mediciones y entrega](../2026-10-23-lira-export/README.md).
+Las notas siguientes conservan el estado y evidencia originales del 22.
+
 ## Base y alcance
 
 Se obtuvo `origin/backp-fase1` en `0225f0a` (integración de Santiago) y se incorporó
