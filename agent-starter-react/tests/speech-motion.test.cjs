@@ -86,3 +86,43 @@ test('soft syllables remain visible but open less than loud vowels', () => {
   for (let i = 0; i < 4; i++) quiet = motion.read(...signal(0.025, [[1000, -35]])).open;
   assert.ok(quiet > loud * 0.3 && quiet < loud * 0.75, `quiet=${quiet}, loud=${loud}`);
 });
+
+for (const fps of [15, 30, 60]) {
+  test(`subtle smoothing preserves Santiago's jaw and attenuates shape flicker at ${fps} FPS`, () => {
+    const original = createSpeechMotion('santiago'),
+      smooth = createSpeechMotion('smooth');
+    let originalTravel = 0,
+      smoothTravel = 0;
+    let lastA = { round: 0, wide: 0 },
+      lastB = { round: 0, wide: 0 };
+    for (let i = 0; i < fps * 3; i++) {
+      const input = signal(0.08, i % 2 ? [[400, -20]] : [[2200, -20]]);
+      input[3] = 1 / fps;
+      const a = original.read(...input),
+        b = smooth.read(...input);
+      assert.equal(a.open, b.open, 'jaw response must remain exactly unchanged');
+      if (i > fps)
+        for (const key of ['round', 'wide']) {
+          originalTravel += Math.abs(a[key] - lastA[key]);
+          smoothTravel += Math.abs(b[key] - lastB[key]);
+        }
+      lastA = { ...a };
+      lastB = { ...b };
+    }
+    assert.ok(smoothTravel < originalTravel * 0.85, `travel ${smoothTravel}/${originalTravel}`);
+    for (let i = 0; i < fps; i++) {
+      const input = signal(0.08, [[400, -20]]);
+      input[3] = 1 / fps;
+      const a = original.read(...input),
+        b = smooth.read(...input);
+      if (i === fps - 1) assert.ok(Math.abs(a.round - b.round) < 0.001, 'same held shape');
+    }
+    let pose;
+    for (let i = 0; i < Math.floor(0.134 * fps); i++) {
+      const input = signal(0, []);
+      input[3] = 1 / fps;
+      pose = smooth.read(...input);
+    }
+    assert.ok(Math.max(pose.open, pose.round, pose.wide) < 0.01, 'silence release must stay fast');
+  });
+}

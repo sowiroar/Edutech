@@ -24,3 +24,11 @@ animación anterior. Rig y algoritmo acústico restaurados desde 0225f0a; FFT204
 Se mantienen rendimiento adaptativo y telemetría. El clasificador experimental
 no está activo. Ver docs/validation/2026-10-23-santiago-motion-restore/README.md.
 No reutilizar mediciones previas de cierre como si fueran de esta restauración.
+
+## Pulido solicitado sobre el estilo conservado
+
+23 octubre: el usuario confirmó «Sí, conservar este estilo y pulirlo».
+Se mantiene la base Santiago y se suavizan únicamente redondeo/extensión a 55 ms;
+mandíbula, rangos y cierre iguales. El visor compara `smooth` con `santiago`.
+Ver docs/validation/2026-10-23-subtle-lip-polish/README.md. No reintroducir el
+clasificador experimental ni sustituir la identidad de los modelos.

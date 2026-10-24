@@ -1,8 +1,13 @@
 import { createSpeechMonitor } from './speech-monitor';
-import { REST_MOUTH, createSpeechMotion, speechRms } from './speech-motion';
+import { REST_MOUTH, type SpeechMotionStyle, createSpeechMotion, speechRms } from './speech-motion';
 
 /** One local output, no microphone, upload or persistence. Same motion as calls. */
-export function createPreviewAudio(file: File, onEnded: () => void, onError: () => void) {
+export function createPreviewAudio(
+  file: File,
+  onEnded: () => void,
+  onError: () => void,
+  style: SpeechMotionStyle = 'smooth'
+) {
   const context = new AudioContext();
   const url = URL.createObjectURL(file);
   const audio = new Audio(url);
@@ -16,7 +21,7 @@ export function createPreviewAudio(file: File, onEnded: () => void, onError: () 
   analyser.connect(context.destination);
   const pcm = new Float32Array(analyser.fftSize);
   const spectrum = new Float32Array(analyser.frequencyBinCount);
-  const motion = createSpeechMotion();
+  const motion = createSpeechMotion(style);
   const monitor = createSpeechMonitor();
   let disposed = false;
   let previous = performance.now();
@@ -66,7 +71,7 @@ export function createPreviewAudio(file: File, onEnded: () => void, onError: () 
       monitor.observe(now, speechRms(pcm, context.sampleRate), pose, true);
       return pose;
     },
-    snapshot: () => monitor.snapshot(),
+    snapshot: () => ({ style, ...monitor.snapshot() }),
     dispose,
   };
 }

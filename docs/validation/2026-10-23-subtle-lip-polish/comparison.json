@@ -1,0 +1,41 @@
+{
+  "scope": "offline-synthetic-speech-not-perceptual-acceptance",
+  "audioSha256": "666685b62db1504cf8738e2179010e87b05d82c2ba93a16326980b5aff269415",
+  "sampleRate": 48000,
+  "durationSeconds": 9.2710625,
+  "reports": [
+    {
+      "fps": 15,
+      "jawMaxError": 0,
+      "shapeTravelReductionPercent": 7.94,
+      "shapeRmsDifference": 0.0345,
+      "rest": {
+        "open": 0,
+        "round": 0,
+        "wide": 0
+      }
+    },
+    {
+      "fps": 30,
+      "jawMaxError": 0,
+      "shapeTravelReductionPercent": 8.46,
+      "shapeRmsDifference": 0.0405,
+      "rest": {
+        "open": 0,
+        "round": 0,
+        "wide": 0
+      }
+    },
+    {
+      "fps": 60,
+      "jawMaxError": 0,
+      "shapeTravelReductionPercent": 8.01,
+      "shapeRmsDifference": 0.0411,
+      "rest": {
+        "open": 0,
+        "round": 0,
+        "wide": 0
+      }
+    }
+  ]
+}

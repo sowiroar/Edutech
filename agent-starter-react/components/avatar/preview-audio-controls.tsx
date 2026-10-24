@@ -2,7 +2,7 @@
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { type PreviewAudioMeasurement, createPreviewAudio } from './preview-audio';
-import { type MouthPose, REST_MOUTH } from './speech-motion';
+import { type MouthPose, REST_MOUTH, type SpeechMotionStyle } from './speech-motion';
 
 export function PreviewAudioControls({
   speech,
@@ -16,6 +16,7 @@ export function PreviewAudioControls({
   const file = useRef<File | null>(null);
   const player = useRef<ReturnType<typeof createPreviewAudio> | null>(null);
   const generation = useRef(0);
+  const [style, setStyle] = useState<SpeechMotionStyle>('smooth');
   const [selected, setSelected] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState('Elige un audio para comprobar labios y pausas.');
@@ -55,12 +56,18 @@ export function PreviewAudioControls({
           stop();
           setPlaying(false);
           setStatus('No se pudo reproducir este archivo.');
-        }
+        },
+        style
       );
       player.current = current;
       speech.current = current.read;
       await current.play();
-      if (id === generation.current) setStatus('Reproduciendo con el movimiento de Santiago.');
+      if (id === generation.current)
+        setStatus(
+          style === 'smooth'
+            ? 'Reproduciendo con suavizado sutil de labios.'
+            : 'Reproduciendo la referencia original de Santiago.'
+        );
     } catch {
       if (id !== generation.current) return;
       stop();
@@ -78,6 +85,23 @@ export function PreviewAudioControls({
         Usa una frase de prueba sin datos personales. Se reproduce solo aquí; no se sube, no se
         guarda y no activa el micrófono.
       </p>
+      <label className="grid gap-2 text-sm">
+        Movimiento de labios
+        <select
+          value={style}
+          className="bg-background rounded border p-2"
+          onChange={(event) => {
+            stop();
+            setPlaying(false);
+            report(null);
+            setStyle(event.target.value as SpeechMotionStyle);
+            setStatus('Método cambiado. Reproduce la misma frase para comparar.');
+          }}
+        >
+          <option value="smooth">Suavizado sutil</option>
+          <option value="santiago">Referencia de Santiago</option>
+        </select>
+      </label>
       <label className="grid gap-2 text-sm">
         Audio de prueba
         <input
