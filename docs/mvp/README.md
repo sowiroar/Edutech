@@ -1,46 +1,42 @@
-# Base compartida para la muestra del 20 de octubre de 2026
+# Guías vigentes de Edutech
 
-Decisión del 17 de octubre: una arquitectura LiveKit + Gemini Live, un frontend
-con presentaciones Voz / Avatar y una telemetría común. La voz de Jacobo es el
-recorrido base; la presentación Unreal se integra de forma optativa. No se cambia
-el framework a Pipecat ni se copian los prompts/dominio médico de NeoIPS.
+Estado del **21 de octubre de 2026**. Base de desarrollo: `main`. Una arquitectura
+LiveKit + Gemini Live, con presentación Voz/Avatar y telemetría común.
 
-## Entrega de telemetría
+## Recorrido disponible
 
-Voz local y telemetría integradas; base vigente **main**.
-Cada nueva tarea se crea desde origin/main y vuelve por PR. Ver
-[operación, métricas y límites](TELEMETRY_IMPLEMENTACION.md) y
-[evidencia real](../validation/2026-10-17-telemetry/README.md).
+El frontend dibuja **LIRA de Juan, NEXO y ELIAN en WebGL**, sin mantener Unreal activo.
+LIRA/Aoede recibe; Nexus/NEXO/Puck y ELIAN/Kore aparecen al transferir. Los demás
+personajes todavía no tienen clases de agente implementadas en este worker.
+Las pruebas locales comprobaron audio y cambio de avatar con entrada sintética.
+No equivalen a aceptación estética, lip sync fonético, UAM o concurrencia.
 
-## Estado de partida histórico (antes de la entrega)
+## Documentación
 
-- `origin/backp-fase1`: f1ccd3c; `origin/backup-fase-2`: 5e5abc3, 18 commits encima.
-- Fase 2 ya contiene la historia del MJPEG, pero su tile usa SpeakingAnimation.
-  Fusionar historias no habilita automáticamente la salida Unreal.
-- La infraestructura de voz local nueva es `compose.voice.yml`, aislada de la
-  composición histórica de UAM. Scripts de despliegue antiguos no son el arranque local.
-- Telemetría, autenticación Moodle y selector Voz / Avatar son entregables
-  especificados, todavía no implementados por esta preparación.
-- Avatar tiene seis diseños prioritarios; no equivale a seis agentes de backend.
-- Ver [VALIDACION.md](VALIDACION.md) para pruebas ejecutadas y bloqueos actuales.
+| Necesidad | Guía |
+|---|---|
+| Iniciar servicios y aplicación | [README del repositorio](../../README.md) |
+| Trabajar con el visor y exportar | [AVATAR_WEB.md](AVATAR_WEB.md) |
+| Instalar modelos en otro equipo | [Modelos web](../../agent-starter-react/public/avatars/README.md) |
+| Evitar confundir LIRA o las voces | [AVATAR_AGENT_MAPPING.md](AVATAR_AGENT_MAPPING.md) |
+| Labios, materiales y ELIAN en llamada | [Verificación de los tres agentes](../validation/2026-10-21-avatar-speech-style/README.md) |
+| Acabado de NEXO y fondo común | [Actualización visual](../validation/2026-10-21-nexo-quality/README.md) |
+| Reparación vigente de NEXO | [Voz, transferencias y rostro nativo](../validation/2026-10-21-nexo-repair/README.md) |
+| Respuestas y piel mate de NEXO | [Latencia y alcance de la medición](../validation/2026-10-21-nexo-latency/README.md) |
+| LIRA no entra o la llamada se desconecta | [Arranque y reintento verificados](../validation/2026-10-21-lira-startup/README.md) |
+| RAM, memoria gráfica, CPU y FPS | [Medición del 21 de octubre](../validation/2026-10-21-avatar-resources/README.md) |
+| Preparar la publicación | [Entrega web](ENTREGA_WEB_2026-10-21.md) |
+| Ramas y coordinación | [FLUJO.md](FLUJO.md) |
+| Configuración y operación | [CONFIGURACION.md](CONFIGURACION.md), [RUNBOOK.md](RUNBOOK.md) |
+| Telemetría y panel | [Implementación](TELEMETRY_IMPLEMENTACION.md), [dashboard](TELEMETRY_DASHBOARD_Y_TRAZAS.md) |
+| Interpretar las métricas | [Guía del equipo](GUIA_METRICAS_EQUIPO.md) |
+| Alcance de las pruebas | [VALIDACION.md](VALIDACION.md), [ACEPTACION.md](ACEPTACION.md) |
 
-## Documentos de trabajo
+Las especificaciones [de presentación](SPEC_AVATAR_PRESENTATION.md) y
+[telemetría](SPEC_TELEMETRY.md) conservan requisitos y antecedentes.
+El recorrido Unreal/bridge de [AVATAR_LOCAL_WINDOWS.md](AVATAR_LOCAL_WINDOWS.md)
+es histórico; no es necesario para el frontend web vigente. Los resultados
+fechados de la demo del 20 de octubre no sustituyen la evidencia nueva.
 
-1. [FLUJO.md](FLUJO.md): ramas, propiedad de archivos y entrega a Jacobo.
-2. [RUNBOOK.md](RUNBOOK.md): Mac, Windows, UAM y verificaciones.
-3. [SPEC_TELEMETRY.md](SPEC_TELEMETRY.md): Juan, `feature/telemetry`.
-4. [SPEC_AVATAR_PRESENTATION.md](SPEC_AVATAR_PRESENTATION.md): Santiago.
-5. [ACEPTACION.md](ACEPTACION.md): demostración, pruebas y evidencia.
-6. [CONFIGURACION.md](CONFIGURACION.md): variables, APIs y prueba Google local.
-
-## Prioridad hasta el martes
-
-P0: reproducir la voz real y registrar sesiones/consumo/errores de forma fiable.
-P0: panel mínimo con filtros y cobertura, sin presentar desconocidos como cero.
-P1: activar avatar opcional sin perder voz ni aislamiento de sesiones.
-P1: medir NVIDIA y decidir el recorrido que se demostrará; conservar voz como respaldo.
-P2: capacidades avanzadas de OTel, calidad evaluada y optimización concurrente.
-No prometer SSO Moodle, seis roles nuevos, resolución de casos o escalabilidad ya validada.
-
-El resumen de Mario define identidad Moodle como pendiente. Las referencias de
-memoria de avatares son del proceso completo y no miden VRAM NVIDIA por avatar.
+Moodle/SSO, agentes y modelos web de ATLAS/NOVA/NOA, correlación completa de costos,
+sincronía fonética y validación de varias sesiones siguen siendo trabajos separados.

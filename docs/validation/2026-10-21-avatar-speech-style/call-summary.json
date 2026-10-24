@@ -1,0 +1,142 @@
+{
+  "recorded_at": "2026-10-22T00:18:35.682Z",
+  "scope": "local-three-agent-call; synthetic silent microphone; received PCM reduced to RMS only",
+  "success": true,
+  "offered": [
+    "LIRA",
+    "NEXO",
+    "ELIAN"
+  ],
+  "errors": [],
+  "characters": [
+    {
+      "character": "LIRA",
+      "seconds": 25.104,
+      "received_audio_and_mouth_motion": true,
+      "returned_to_rest": true,
+      "agent_attributes": [
+        {
+          "character": "LIRA",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 226161,
+        "energy": 4.636613760350928,
+        "playing": 1,
+        "canvases": 1
+      },
+      "sample_count": 25,
+      "fps_mean_including_load": 28.76,
+      "fps_min_including_load": 1.43,
+      "fps_median": 30,
+      "dimensions": [
+        [
+          960,
+          540
+        ]
+      ],
+      "max_pose": {
+        "mouthOpen": 0.8175,
+        "mouthRound": 0.9215,
+        "mouthWide": 0.1949
+      },
+      "last_pose": {
+        "mouthOpen": 0,
+        "mouthRound": 0,
+        "mouthWide": 0
+      },
+      "samples_with_received_voice": 16,
+      "quiet_samples_at_rest": 7,
+      "model_bytes": 4666084,
+      "texture_bytes_estimate": 39146852,
+      "geometry_data_bytes": 3610962
+    },
+    {
+      "character": "NEXO",
+      "seconds": 48.125,
+      "received_audio_and_mouth_motion": true,
+      "returned_to_rest": true,
+      "agent_attributes": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 758966,
+        "energy": 14.510998952319998,
+        "playing": 1,
+        "canvases": 1
+      },
+      "sample_count": 46,
+      "fps_mean_including_load": 29.77,
+      "fps_min_including_load": 19.69,
+      "fps_median": 30.0,
+      "dimensions": [
+        [
+          960,
+          540
+        ]
+      ],
+      "max_pose": {
+        "mouthOpen": 0.6871,
+        "mouthRound": 0.9968,
+        "mouthWide": 0.3926
+      },
+      "last_pose": {
+        "mouthOpen": 0,
+        "mouthRound": 0,
+        "mouthWide": 0
+      },
+      "samples_with_received_voice": 31,
+      "quiet_samples_at_rest": 5,
+      "model_bytes": 5721776,
+      "texture_bytes_estimate": 25165834,
+      "geometry_data_bytes": 2537064
+    },
+    {
+      "character": "ELIAN",
+      "seconds": 17.993,
+      "received_audio_and_mouth_motion": true,
+      "returned_to_rest": true,
+      "agent_attributes": [
+        {
+          "character": "ELIAN",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 884720,
+        "energy": 17.763923775800432,
+        "playing": 1,
+        "canvases": 1
+      },
+      "sample_count": 16,
+      "fps_mean_including_load": 28.81,
+      "fps_min_including_load": 10.97,
+      "fps_median": 29.97,
+      "dimensions": [
+        [
+          960,
+          540
+        ]
+      ],
+      "max_pose": {
+        "mouthOpen": 0.6443,
+        "mouthRound": 0.9889,
+        "mouthWide": 0.3691
+      },
+      "last_pose": {
+        "mouthOpen": 0,
+        "mouthRound": 0,
+        "mouthWide": 0
+      },
+      "samples_with_received_voice": 8,
+      "quiet_samples_at_rest": 6,
+      "model_bytes": 4592212,
+      "texture_bytes_estimate": 25165834,
+      "geometry_data_bytes": 2637818
+    }
+  ]
+}

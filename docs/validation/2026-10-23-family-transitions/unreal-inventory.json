@@ -1,0 +1,345 @@
+[
+  {
+    "character": "NOA",
+    "scene": "/Game/VIVA/Avatars/Noa/Maps/L_Noa",
+    "found": true,
+    "actors": [
+      {
+        "label": "WorldSettings",
+        "class": "WorldSettings"
+      },
+      {
+        "label": "Brush0",
+        "class": "Brush"
+      },
+      {
+        "label": "NOA",
+        "class": "BP_Noa_C"
+      },
+      {
+        "label": "VIVA_Presenter_Camera",
+        "class": "CineCameraActor"
+      },
+      {
+        "label": "NOA_Exposure",
+        "class": "PostProcessVolume"
+      },
+      {
+        "label": "NOA_Key",
+        "class": "PointLight"
+      },
+      {
+        "label": "NOA_Fill",
+        "class": "PointLight"
+      },
+      {
+        "label": "NOA_Rim",
+        "class": "PointLight"
+      },
+      {
+        "label": "NOA_Backdrop",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "BuoyancyManager0",
+        "class": "BuoyancyManager"
+      },
+      {
+        "label": "DefaultPhysicsVolume0",
+        "class": "DefaultPhysicsVolume"
+      },
+      {
+        "label": "GameplayDebuggerPlayerManager0",
+        "class": "GameplayDebuggerPlayerManager"
+      },
+      {
+        "label": "NOA_Glasses",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOA_Hair",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOA_Collar",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOA_CollarTrim",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOA_FaceTraces",
+        "class": "BP_NoaFaceTraces_C"
+      },
+      {
+        "label": "AbstractNavData-Default",
+        "class": "AbstractNavData"
+      }
+    ],
+    "meshes": [
+      {
+        "component": "Body",
+        "mesh": "/Game/VIVA/Avatars/Noa/Meshes/SK_NOA_Body.SK_NOA_Body",
+        "visible": true,
+        "lod0_sections": 1,
+        "materials": [
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Sleeves.M_NOA_Sleeves"
+        ],
+        "animation": "/Game/UniversityVirtualAssistant/NEXO_Stylized/Animation/AS_NEXO_PresenterHands.AS_NEXO_PresenterHands"
+      },
+      {
+        "component": "Face",
+        "mesh": "/Game/VIVA/Avatars/Noa/Meshes/SK_Noa_AlternateFace.SK_Noa_AlternateFace",
+        "visible": true,
+        "lod0_sections": 7,
+        "materials": [
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Teeth_Baked.MI_Teeth_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_EyeL_Baked.MI_EyeL_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_EyeR_Baked.MI_EyeR_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_EyeShell.MI_Face_EyeShell",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_LacrimalFluid.MI_Face_LacrimalFluid",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_EyelashesHiLODs.MI_Face_EyelashesHiLODs",
+          "/Game/VIVA/Avatars/Noa/Materials/M_Noa_AlternateSkin.M_Noa_AlternateSkin",
+          "/Game/VIVA/Avatars/Noa/Materials/M_Noa_AlternateSkin.M_Noa_AlternateSkin"
+        ],
+        "animation": null
+      },
+      {
+        "component": "SkeletalMesh",
+        "mesh": "/Game/VIVA/Avatars/Noa/Meshes/SK_NOA_NativeUniform.SK_NOA_NativeUniform",
+        "visible": true,
+        "lod0_sections": 2,
+        "materials": [
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform",
+          "/Game/VIVA/Avatars/Noa/Materials/M_NOA_Uniform.M_NOA_Uniform"
+        ],
+        "animation": null
+      }
+    ]
+  },
+  {
+    "character": "NOVA",
+    "scene": "/Game/VIVA/Avatars/Nova/Final/Maps/L_Nova_Final",
+    "found": true,
+    "actors": [
+      {
+        "label": "WorldSettings",
+        "class": "WorldSettings"
+      },
+      {
+        "label": "Brush0",
+        "class": "Brush"
+      },
+      {
+        "label": "VIVA_Presenter_Camera",
+        "class": "CineCameraActor"
+      },
+      {
+        "label": "Native_Key",
+        "class": "RectLight"
+      },
+      {
+        "label": "Native_Fill",
+        "class": "RectLight"
+      },
+      {
+        "label": "Native_Rim",
+        "class": "RectLight"
+      },
+      {
+        "label": "NOVA_UAM_Background",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOVA_Face_SoftFill",
+        "class": "DirectionalLight"
+      },
+      {
+        "label": "NOVA_Studio_Exposure",
+        "class": "PostProcessVolume"
+      },
+      {
+        "label": "NOVA",
+        "class": "BP_Nova_Final_C"
+      },
+      {
+        "label": "BuoyancyManager0",
+        "class": "BuoyancyManager"
+      },
+      {
+        "label": "DefaultPhysicsVolume0",
+        "class": "DefaultPhysicsVolume"
+      },
+      {
+        "label": "GameplayDebuggerPlayerManager0",
+        "class": "GameplayDebuggerPlayerManager"
+      },
+      {
+        "label": "NOVA_Collar",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOVA_HairCards",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "NOVA_FaceTraces",
+        "class": "BP_NovaFaceTraces_C"
+      },
+      {
+        "label": "AbstractNavData-Default",
+        "class": "AbstractNavData"
+      }
+    ],
+    "meshes": [
+      {
+        "component": "Body",
+        "mesh": "/Game/VIVA/Avatars/Nova/Final/Meshes/SK_Nova_Body.SK_Nova_Body",
+        "visible": true,
+        "lod0_sections": 1,
+        "materials": [
+          "/Game/VIVA/Avatars/Nova/Final/Materials/MI_Nova_Body_Baked_VT.MI_Nova_Body_Baked_VT"
+        ],
+        "animation": "/Game/UniversityVirtualAssistant/NEXO_Stylized/Animation/AS_NEXO_PresenterHands.AS_NEXO_PresenterHands"
+      },
+      {
+        "component": "Face",
+        "mesh": "/Game/VIVA/Avatars/Nova/Final/Meshes/SK_Nova_Face.SK_Nova_Face",
+        "visible": true,
+        "lod0_sections": 7,
+        "materials": [
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Teeth_Baked.MI_Teeth_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_EyeL_Baked.MI_EyeL_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_EyeR_Baked.MI_EyeR_Baked",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_EyeShell.MI_Face_EyeShell",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_LacrimalFluid.MI_Face_LacrimalFluid",
+          "/Game/UniversityVirtualAssistant/Characters/Unpacked/VIVA_Female/Face/Materials/MI_Face_EyelashesHiLODs.MI_Face_EyelashesHiLODs",
+          "/Game/VIVA/Avatars/Nova/Final/Materials/M_Nova_SoftSkin.M_Nova_SoftSkin",
+          "/Game/VIVA/Avatars/Nova/Final/Materials/M_Nova_SoftSkin.M_Nova_SoftSkin"
+        ],
+        "animation": null
+      },
+      {
+        "component": "SkeletalMesh",
+        "mesh": "/Game/VIVA/Avatars/Nova/Final/Meshes/SK_Nova_UniformLongSleeves_v1.SK_Nova_UniformLongSleeves_v1",
+        "visible": true,
+        "lod0_sections": 2,
+        "materials": [
+          "/Game/VIVA/Avatars/Nova/Final/Materials/M_Nova_Uniform.M_Nova_Uniform",
+          "/Game/VIVA/Avatars/Nova/Final/Materials/M_Nova_Accent.M_Nova_Accent"
+        ],
+        "animation": null
+      }
+    ]
+  },
+  {
+    "character": "ATLAS",
+    "scene": "/Game/VIVA/Avatars/Atlas/Final/Maps/L_Atlas_Final",
+    "found": true,
+    "actors": [
+      {
+        "label": "WorldSettings",
+        "class": "WorldSettings"
+      },
+      {
+        "label": "Brush0",
+        "class": "Brush"
+      },
+      {
+        "label": "VIVA_Presenter_Camera",
+        "class": "CineCameraActor"
+      },
+      {
+        "label": "Native_Key",
+        "class": "RectLight"
+      },
+      {
+        "label": "Native_Fill",
+        "class": "RectLight"
+      },
+      {
+        "label": "Native_Rim",
+        "class": "RectLight"
+      },
+      {
+        "label": "ATLAS_UAM_Background",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "ATLAS_Face_SoftFill",
+        "class": "DirectionalLight"
+      },
+      {
+        "label": "ATLAS_Studio_Exposure",
+        "class": "PostProcessVolume"
+      },
+      {
+        "label": "ATLAS",
+        "class": "BP_Atlas_Final_C"
+      },
+      {
+        "label": "BuoyancyManager0",
+        "class": "BuoyancyManager"
+      },
+      {
+        "label": "DefaultPhysicsVolume0",
+        "class": "DefaultPhysicsVolume"
+      },
+      {
+        "label": "GameplayDebuggerPlayerManager0",
+        "class": "GameplayDebuggerPlayerManager"
+      },
+      {
+        "label": "ATLAS_HairCards",
+        "class": "StaticMeshActor"
+      },
+      {
+        "label": "AbstractNavData-Default",
+        "class": "AbstractNavData"
+      }
+    ],
+    "meshes": [
+      {
+        "component": "Body",
+        "mesh": "/Game/VIVA/Avatars/Atlas/Final/Meshes/SK_Atlas_Body.SK_Atlas_Body",
+        "visible": true,
+        "lod0_sections": 1,
+        "materials": [
+          "/Game/VIVA/Avatars/Nexo/NativeFinal/Assembled/NexoMateo/Body/Materials/MI_Body_Baked_VT.MI_Body_Baked_VT"
+        ],
+        "animation": "/Game/VIVA/Avatars/Nexo/NativeFinal/Animation/AS_NexoMateo_NativeIdle.AS_NexoMateo_NativeIdle"
+      },
+      {
+        "component": "Face",
+        "mesh": "/Game/VIVA/Avatars/Atlas/Final/Meshes/SK_Atlas_MatureFace_v2.SK_Atlas_MatureFace_v2",
+        "visible": true,
+        "lod0_sections": 4,
+        "materials": [
+          "/Game/VIVA/Avatars/Nexo/NativeFinal/Assembled/NexoMateo/Face/Materials/MI_Teeth_Baked.MI_Teeth_Baked",
+          "/Game/VIVA/Avatars/Nexo/NativeFinal/Assembled/NexoMateo/Face/Materials/MI_EyeL_Baked.MI_EyeL_Baked",
+          "/Game/VIVA/Avatars/Nexo/NativeFinal/Assembled/NexoMateo/Face/Materials/MI_EyeR_Baked.MI_EyeR_Baked",
+          "/Game/VIVA/Avatars/Atlas/Final/Materials/M_Atlas_MatureSkin.M_Atlas_MatureSkin"
+        ],
+        "animation": null
+      },
+      {
+        "component": "SkeletalMesh",
+        "mesh": "/Game/VIVA/Avatars/Atlas/Final/Meshes/SK_Atlas_Uniform.SK_Atlas_Uniform",
+        "visible": true,
+        "lod0_sections": 1,
+        "materials": [
+          "/Game/VIVA/Avatars/Atlas/Final/Materials/M_Atlas_Uniform.M_Atlas_Uniform",
+          "/Game/VIVA/Avatars/Atlas/Final/Materials/M_Atlas_Accent.M_Atlas_Accent"
+        ],
+        "animation": null
+      }
+    ]
+  }
+]

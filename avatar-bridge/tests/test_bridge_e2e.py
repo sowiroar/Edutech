@@ -29,7 +29,9 @@ async def stack():
     bridge = Bridge(Segmenter(silence_seconds=0.15))
     # No se conecta a LiveKit de verdad (.run() nunca se llama aqui); solo
     # hace falta la instancia para que /hint tenga a quien avisarle.
-    follower = RoomFollower(bridge, url="wss://example.invalid", api_key="k", api_secret="s")
+    follower = RoomFollower(
+        bridge, url="wss://example.invalid", api_key="k", api_secret="s"
+    )
     server = await serve(
         make_handler(bridge),
         "127.0.0.1",
@@ -148,7 +150,9 @@ async def test_unknown_agent_character_is_ignored(stack):
     await bridge.on_agent_character("SKYNET")
     await asyncio.sleep(0.1)
     assert fake.characters == []
-    assert fake.violations == []  # nunca llego a Unreal: no hay como violar el protocolo
+    assert (
+        fake.violations == []
+    )  # nunca llego a Unreal: no hay como violar el protocolo
     await fake.stop()
 
 
@@ -257,7 +261,9 @@ async def test_hint_wakes_the_room_follower_immediately():
     (ver la razon del cambio en livekit_source.py: el poll rapido de antes
     agotaba el limite de tasa de LiveKit Cloud)."""
     bridge = Bridge(Segmenter(silence_seconds=0.15))
-    follower = RoomFollower(bridge, url="wss://example.invalid", api_key="k", api_secret="s")
+    follower = RoomFollower(
+        bridge, url="wss://example.invalid", api_key="k", api_secret="s"
+    )
     server = await serve(
         make_handler(bridge),
         "127.0.0.1",

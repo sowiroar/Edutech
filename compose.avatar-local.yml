@@ -1,0 +1,22 @@
+# Optional local Windows renderer. Start with voice_demo.py --avatar web.
+services:
+  avatar-bridge:
+    build: ./avatar-bridge
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      BRIDGE_REQUIRE_LEASE: "true"
+      AVATAR_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:?Run voice_demo.py up first}
+    ports:
+      - "127.0.0.1:8766:8766"
+    depends_on:
+      - livekit
+  frontend:
+    depends_on:
+      - avatar-bridge
+    environment:
+      AVATAR_BRIDGE_STATUS_URL: http://avatar-bridge:8766/status
+      AVATAR_STREAM_SOURCE_URL: http://avatar-bridge:8766/render/frame
+      AVATAR_INTERNAL_KEY: ${TELEMETRY_INTERNAL_KEY:?Run voice_demo.py up first}
+      AVATAR_MUTE_AGENT_AUDIO: "false"

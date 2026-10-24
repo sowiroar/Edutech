@@ -1,0 +1,64 @@
+[
+  {
+    "character": "NEXO",
+    "background": {
+      "image": "url(\"http://localhost:3000/avatars/nexo/uam-background.jpg\")",
+      "color": "oklch(0.129 0.042 264.695)"
+    },
+    "sample": {
+      "character": "NEXO",
+      "timestamp": "2026-10-22T01:18:57.592Z",
+      "fps": 30,
+      "renderSubmissionMs": 0.4766666665673256,
+      "drawCalls": 7,
+      "triangles": 64150,
+      "geometries": 7,
+      "textures": 20,
+      "pageJsHeapBytes": 22372980,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 5957372,
+      "loadMs": 446.0999999977648,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 27962038,
+      "geometryDataBytes": 2758764,
+      "lipShapesAvailable": true,
+      "mouthOpen": 0,
+      "mouthRound": 0,
+      "mouthWide": 0
+    },
+    "errors": []
+  },
+  {
+    "character": "ELIAN",
+    "background": {
+      "image": "url(\"http://localhost:3000/avatars/elian/uam-background.jpg\")",
+      "color": "oklch(0.129 0.042 264.695)"
+    },
+    "sample": {
+      "character": "ELIAN",
+      "timestamp": "2026-10-22T01:19:07.869Z",
+      "fps": 29.969064191802023,
+      "renderSubmissionMs": 0.6612903225806451,
+      "drawCalls": 10,
+      "triangles": 55458,
+      "geometries": 10,
+      "textures": 19,
+      "pageJsHeapBytes": 46739295,
+      "mouthAnimationAvailable": true,
+      "modelBytes": 4592212,
+      "loadMs": 313.80000000074506,
+      "width": 960,
+      "height": 540,
+      "animationClips": 1,
+      "textureBytesEstimate": 25165834,
+      "geometryDataBytes": 2637818,
+      "lipShapesAvailable": true,
+      "mouthOpen": 0,
+      "mouthRound": 0,
+      "mouthWide": 0
+    },
+    "errors": []
+  }
+]

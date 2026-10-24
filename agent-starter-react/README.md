@@ -1,138 +1,83 @@
-# Agent Starter for React
+# Frontend Edutech
 
-This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) that provides a simple voice interface using [Agents UI](https://livekit.io/ui) components and [LiveKit JavaScript SDK](https://github.com/livekit/client-sdk-js). It supports [voice](https://docs.livekit.io/agents/start/voice-ai), [transcriptions](https://docs.livekit.io/agents/build/text/), and [virtual avatars](https://docs.livekit.io/agents/integrations/avatar).
+Aplicación Next.js 15 / React 19 basada en LiveKit Agents UI. Integra conversación,
+transcripción, presentación de voz, avatares WebGL y panel privado de telemetría.
 
-Also available for:
-[Android](https://github.com/livekit-examples/agent-starter-android) • [Flutter](https://github.com/livekit-examples/agent-starter-flutter) • [Swift](https://github.com/livekit-examples/agent-starter-swift) • [React Native](https://github.com/livekit-examples/agent-starter-react-native)
+## Ejecutar
 
-<picture>
-  <source srcset="./.github/assets/readme-hero-dark.webp" media="(prefers-color-scheme: dark)">
-  <source srcset="./.github/assets/readme-hero-light.webp" media="(prefers-color-scheme: light)">
-  <img src="./.github/assets/readme-hero-light.webp" alt="App screenshot">
-</picture>
+La opción reproducible con todos los servicios está en el [README principal](../README.md).
+Para desarrollar solo la web se necesita Node.js 24 y la configuración local de
+LiveKit/telemetría. Desde esta carpeta:
 
-### Features:
-
-- Real-time voice interaction with LiveKit Agents
-- Camera video streaming support
-- Screen sharing capabilities
-- Multiple audio visualizer styles (`bar`, `grid`, `radial`, `wave`, `aura`)
-- Virtual avatar integration
-- Light/dark theme switching with system preference detection
-- Customizable branding, colors, and UI text
-
-This template is built with Next.js and is free for you to use or modify as you see fit.
-
-### Project structure
-
-This starter uses the [Agents UI](https://livekit.io/ui) components for core UI elements like media controls, audio visualizers, chat transcripts, and providing session data. Shadcn installs components into `components/` folder so you can customize them like any other local component.
-
-```
-agent-starter-react/
-├── app/
-│   ├── api/
-├── components/
-│   ├── agents-ui/     - Agents UI components
-│   ├── app/           - App-specific components
-│   ├── ui/            - Primitive shadcn/ui components
-├── fonts/
-├── hooks/
-├── lib/
-├── public/
-└── package.json
+```sh
+npm ci --legacy-peer-deps
+npm run dev -- --port 3501
 ```
 
-Business logic lives within the `components/app` folder. It's here where the application's state and behavior is managed and the various Shadcn UI components are composed together.
+Usar 3501 cuando Docker ya sirve 3000/3500. Copiar `.env.example` a `.env.local`
+y completar la conexión del entorno autorizado. El worker vigente se despacha
+como `AGENT_NAME=nexus`; eso no sustituye el personaje inicial LIRA.
+El panel y su autenticación necesitan también la configuración descrita en
+[telemetría](../docs/mvp/TELEMETRY_IMPLEMENTACION.md). No copiar secretos al código.
+El lock de npm es el utilizado por Docker y CI; no regenerar otro lock para esta entrega.
 
-| File                  | Description                                                                                                                                           |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `session-view.tsx`    | Initializes the application, and LiveKit session. Renders the view controller and session UI including chat transcript, media tiles, and control bar. |
-| `view-controller.tsx` | Manages the transitions between the welcome and session views based on the LiveKit session state.                                                     |
-| `welcome-view.tsx`    | Renders the welcome UI when the LiveKit session is not connected.                                                                                     |
-| `chat-transcript.tsx` | Manages the chat transcript transitions.                                                                                                              |
-| `tile-layout.tsx`     | Manages the layout and transition of media tiles in various application states.                                                                       |
+## Avatares
 
-### Component usage
+Instalar los [modelos privados del equipo](public/avatars/README.md) antes de
+construir la imagen que deba incluirlos. `/avatar-preview` permite revisarlos
+sin una llamada. La selección en conversación sigue `avatar.character`:
 
-Most Agents UI components require access to a LiveKit session object for access to values like agent state or audio tracks. A Session object can be created from a [TokenSource](/reference/client-sdk-js/variables/TokenSource.html), and provided by wrapping the component in an [AgentSessionProvider](/reference/components/shadcn/component/agent-session-provider).
+| Agente | Modelo | Voz |
+|---|---|---|
+| LiraAgent | LIRA de Juan | Aoede |
+| NexusAgent | NEXO | Puck |
+| ElianAgent | ELIAN original | Kore |
 
-See [`components/app/app.tsx`](./components/app/app.tsx) for an example of how this is done in this app.
+El visor carga solo el personaje activo, libera sus recursos al cambiar y limita
+el dibujo a 30 FPS y 1280 × 720. No necesita Unreal ni streaming de video.
+Una revisión técnica del manifiesto permite ofrecer el modelo; sin modelo válido
+se conserva la voz. El movimiento usa RMS y bandas espectrales para apertura,
+redondeo y extensión de labios; no reconoce fonemas. LIRA comparte el fondo de
+NEXO y ELIAN. NEXO usa el rostro LOD3 del DNA original, con su rig y mapas propios.
+Los shaders web reproducen los detalles
+procedurales guardados, sin modificar los assets de autoría.
 
-### Customizing components
+## Rutas y módulos
 
-Agents UI components, like most Shadcn components, take as many primitive attributes as possible. For example, the [AgentControlBar](/reference/components/shadcn/component/agent-control-bar/page.mdoc) component extends `HTMLAttributes<HTMLDivElement>`, so you can pass any props that a div supports. This makes it easy to extend the component with your own styles or functionality.
+| Ruta | Función |
+|---|---|
+| `app/api/token/` | Emisión de token y metadatos de avatares disponibles |
+| `app/api/avatar/` | Catálogo de modelos web |
+| `app/avatar-preview/` | Inspección de modelo y métricas |
+| `components/avatar/` | Renderer, materiales, rig y presupuesto gráfico |
+| `lib/browser-avatar*.ts` | Contrato y lectura de manifiestos locales |
+| `lib/session-start.ts`, `hooks/useAgentErrors.tsx` | Espera de conexión, cancelación y reintento tras error |
+| `hooks/useAvatarStream.tsx` | Estado de presentación y agente activo |
+| `app/admin/`, `lib/telemetry/` | Panel, autenticación e instrumentación |
 
-You can edit any Agents UI component's source code in the `components/agents-ui` directory. For style changes, we recommend passing in tailwind classes to override the default styles. Take a look at the source code to get a sense of how to override a component's default styles.
+`/api/avatar/frame` conserva el contrato del renderer nativo histórico; no es
+la fuente del avatar WebGL. No activar el bridge para probar este visor.
 
-### Updating components
+## Comprobar antes de entregar
 
-To update the Agents UI components to the latest publication, run the following command:
-
-```bash
-pnpm shadcn:install
+```sh
+npm test
+npx tsc --noEmit
+npm run lint
+npm run build
 ```
 
-> [!NOTE]
-> The CLI will ask before overwriting any modified files so you can avoid losing any customizations you might have made.
+Los tests usan datos sintéticos, sin llamadas a Gemini. Las tres comprobaciones
+adicionales de los rigs instalados se omiten explícitamente cuando faltan los GLB
+privados; las pruebas sintéticas del rig siguen ejecutándose en CI.
+El build comprueba el
+código, no la calidad artística ni una conversación real. [Evidencia local](../docs/validation/2026-10-21-lira-web/README.md)
+y [mediciones de recursos](../docs/validation/2026-10-21-avatar-resources/README.md).
 
-### Installing components
+La conexión admite hasta 90 s para la llegada de un worker que se prepara en frío;
+el intento completo se limita a 95 s. Un fallo libera la espera y permite iniciar
+otra llamada. La [prueba de recuperación](../docs/validation/2026-10-21-lira-startup/README.md)
+incluye desconexión, agente tardío y dos llamadas con LIRA. Una caída del proveedor
+sigue necesitando una conexión disponible para volver a conversar.
 
-```bash
-pnpm dlx shadcn@latest add @agents-ui/{component-name-a} @agents-ui/{component-name-b}
-```
-
-## Getting started
-
-Run the following command to automatically clone this template.
-
-```bash
-lk app create --template agent-starter-react
-```
-
-Then run the app with:
-
-```bash
-pnpm install
-pnpm dev
-```
-
-And open http://localhost:3000 in your browser.
-
-You'll also need an agent to speak with. Try our starter agent for [Python](https://github.com/livekit-examples/agent-starter-python), [Node.js](https://github.com/livekit-examples/agent-starter-node), or [create your own from scratch](https://docs.livekit.io/agents/start/voice-ai/).
-
-## Configuration
-
-This starter is designed to be flexible so you can adapt it to your specific agent use case. Branding, feature toggles, and UI text are set directly in the components that use them — see [`app/layout.tsx`](./app/layout.tsx) for branding (logo, colors, page title/description) and [`components/app/view-controller.tsx`](./components/app/view-controller.tsx) for feature toggles and the audio visualizer.
-
-#### Audio visualizer presets
-
-Set `audioVisualizerType` in [`components/app/view-controller.tsx`](./components/app/view-controller.tsx) to switch visualizer styles:
-
-- `bar` (default): vertical bars with optional `audioVisualizerBarCount`
-- `grid`: dot grid with `audioVisualizerGridRowCount` and `audioVisualizerGridColumnCount`
-- `radial`: circular bars with `audioVisualizerRadialBarCount` and `audioVisualizerRadialRadius`
-- `wave`: oscilloscope-style wave with `audioVisualizerWaveLineWidth`
-- `aura`: shader-based aura with `audioVisualizerAuraColorShift`
-
-Use `audioVisualizerColor` to set a shared accent color across all visualizer modes.
-
-#### Environment Variables
-
-You'll also need to configure your LiveKit credentials in `.env.local` (copy `.env.example` if you don't have one):
-
-```env
-LIVEKIT_API_KEY=your_livekit_api_key
-LIVEKIT_API_SECRET=your_livekit_api_secret
-LIVEKIT_URL=https://your-livekit-server-url
-
-# Agent dispatch (https://docs.livekit.io/agents/server/agent-dispatch)
-# Leave AGENT_NAME blank to enable automatic dispatch
-# Provide an agent name to enable explicit dispatch
-AGENT_NAME=
-```
-
-These are required for the voice agent functionality to work with your LiveKit project.
-
-## Contributing
-
-This template is open source and we welcome contributions! Please open a PR or issue through GitHub, and don't forget to join us in the [LiveKit Community Slack](https://livekit.io/join-slack)!
+Se conserva la atribución del starter LiveKit y sus licencias en el repositorio.

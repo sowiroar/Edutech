@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-21T22:47:56.3440319Z",
+  "unrealProcesses": [],
+  "dockerCpuCount": "12",
+  "disks": [
+    {
+      "Name": "C",
+      "Free": 5404614656,
+      "Used": 505504600064
+    },
+    {
+      "Name": "D",
+      "Free": 205972570112,
+      "Used": 306102665216
+    }
+  ]
+}

@@ -55,6 +55,7 @@ const labels: Record<string, string> = {
   avatar_unavailable: 'Avatar no disponible',
   presentation_changed: 'Presentación cambiada',
   media_quality_sample: 'Calidad del medio',
+  avatar_quality_sample: 'Avatar y respuesta al audio',
 };
 const status: Record<string, string> = {
   ok: 'Correcto',
@@ -66,6 +67,13 @@ const status: Record<string, string> = {
 const time = (value: string) => new Date(value).toLocaleTimeString('es-CO', { hour12: false });
 function summary(e: TraceEvent) {
   const p = e.payload;
+  if (e.type === 'avatar_quality_sample') {
+    const numeric = (key: string, unit: string) =>
+      typeof p[key] === 'number'
+        ? `${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(p[key] as number)} ${unit}`
+        : 'Sin observación';
+    return `${p.character} · ${numeric('fps', 'FPS')} · Cierre tras silencio: ${numeric('silence_to_rest_max_ms', 'ms')}`;
+  }
   if (e.type === 'agent_changed')
     return p.previous_agent_id ? `${p.previous_agent_id} → ${p.agent_id}` : String(p.agent_id);
   if (e.type.startsWith('tool_') || e.type.startsWith('operation_'))
@@ -257,6 +265,15 @@ export default function SessionDetail({ id, onClose }: { id: string; onClose: ()
                 </>
               ) : (
                 <p>{summary(e)}</p>
+              )}
+              {e.type === 'avatar_quality_sample' && (
+                <p className="telemetry-caption">
+                  Respuesta acústica de la animación, medida en el navegador durante la llamada. No
+                  mide sincronía de fonemas ni retardo de los altavoces. El cierre es el máximo
+                  observado en esta ventana; sin transición a silencio no hay valor. Memoria de
+                  texturas estimada y heap JavaScript no equivalen a RAM o VRAM total. Modelo:{' '}
+                  <code>{String(e.payload.model_sha256).slice(0, 12)}</code>.
+                </p>
               )}
               <details>
                 <summary>Detalle técnico</summary>

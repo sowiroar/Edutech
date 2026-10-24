@@ -1,0 +1,53 @@
+{
+  "branch": "feature/avatar-web-delivery",
+  "baseCommit": "90e05a04757f2f439a3978f2cfdd156d7b269288",
+  "changedOrNewPaths": 162,
+  "textFilesScanned": 339,
+  "scope": "Current tracked and non-ignored untracked text files; known configured secrets and token/key patterns; excludes Git history",
+  "secretFindings": [],
+  "localLinksChecked": 93,
+  "brokenLocalLinks": [],
+  "filesOver20MiB": [],
+  "models": [
+    {
+      "character": "lira",
+      "shaMatches": true,
+      "bytesMatch": true,
+      "glbCount": 1,
+      "manifestVersionable": true,
+      "modelIgnored": true,
+      "backgroundIgnored": true
+    },
+    {
+      "character": "nexo",
+      "shaMatches": true,
+      "bytesMatch": true,
+      "glbCount": 1,
+      "manifestVersionable": true,
+      "modelIgnored": true,
+      "backgroundIgnored": true
+    },
+    {
+      "character": "elian",
+      "shaMatches": true,
+      "bytesMatch": true,
+      "glbCount": 1,
+      "manifestVersionable": true,
+      "modelIgnored": true,
+      "backgroundIgnored": true
+    }
+  ],
+  "bundleRuntimeMatchesInstalled": true,
+  "bundleBytes": 11998689,
+  "bundleSha256": "77fe7e50216c111f7cf01e00450fd5bf7ff62325ca1daa0ed749e6e4a6aaa5e0",
+  "generatedDatabasePresentLocally": true,
+  "generatedDatabaseRemovedFromIndex": true,
+  "checkedAtUtc": "2026-10-22T04:21:15.010820+00:00",
+  "retiredModelsArchived": 7,
+  "retiredModelBytes": 36695536,
+  "codeOnlyFrontend": {
+    "passed": 32,
+    "skipped": 3,
+    "failed": 0
+  }
+}

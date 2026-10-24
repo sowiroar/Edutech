@@ -1,0 +1,142 @@
+# Familia web y transición — 23 octubre 2026
+
+## Inventario verificado
+
+Seis diseños existen en `../Avatar/avatars.json`, origin/main a204705. El paquete
+privado `../avatars_santiago_glb` y su copia Downloads/avatars contienen solo
+LIRA, NEXO y ELIAN. El repositorio remoto de assets no agregó commits después de
+esa revisión. Tener un mapa Unreal no equivale a tener un GLB ni un agente.
+
+| Personaje | Diseño Unreal | Entrega GLB de Santiago | Worker conversacional actual |
+|---|---|---|---|
+| LIRA | retenido de Juan | instalado | LiraAgent / Aoede |
+| NEXO | nativo Mateo | instalado | NexusAgent / Puck |
+| ELIAN | diseño turquesa | instalado | ElianAgent / Kore |
+| NOA | SK_Noa_AlternateFace | no entregado | no implementado |
+| NOVA | Final | no entregado | no implementado |
+| ATLAS | Final | no entregado | no implementado |
+
+El catálogo del frontend admite los seis. La vista `/avatar-preview` permite
+cambiarlos sin recargar y señala los GLB pendientes. La API de llamadas sigue
+anunciando únicamente modelos instalados/revisados. No se inventaron prompts,
+voces ni handoffs para los tres especialistas que aún no existen en el worker.
+
+## Cambio visual
+
+Antes, la clave React del personaje desmontaba todo el visor en cada relevo.
+Ahora permanece el contenedor y captura una imagen temporal del último fotograma.
+Se libera la escena anterior (geometría, texturas, esqueletos y contexto WebGL),
+y se carga la siguiente. Su primer fotograma inicia un fundido de 240 ms y la
+imagen temporal se retira. No se habilita preserveDrawingBuffer ni se mantienen
+dos escenas 3D. La imagen 2D usa como máximo el presupuesto del render, 1280×720
+(~3,52 MiB de píxeles RGBA; no representa el consumo total del navegador).
+
+La preferencia de movimiento reducido elimina el fundido y espera igualmente
+al primer fotograma. Los cambios rápidos cancelan animaciones anteriores. Un
+fallo conserva la vía de voz. El reproductor LiveKit y los prompts no cambian.
+Las ventanas de métricas y el monitor acústico se reinician por hash del modelo,
+para no atribuir muestras del personaje anterior al siguiente.
+
+El pulido labial aceptado permanece: algoritmo de Santiago, mandíbula original,
+55 ms para redondeo/extensión. Es reacción acústica; no reconocimiento de fonemas.
+
+## Exportación de los diseños faltantes
+
+`inspect_family_web.py` lee los mapas retenidos con NullRHI y guarda una
+descripción de mallas, materiales, pose y accesorios. `export_family_web.py`
+reconstruye esa disposición en un mundo transitorio y exporta sus piezas visibles.
+Así evita compilar fondos y proyectores de trazos de la escena que glTF no exporta.
+Los trazos/materiales procedurales todavía requieren comparación y adaptación
+visual; no se certifica fidelidad por producir un archivo.
+No guarda mapas, materiales ni blueprints. Comprueba la cara alternativa de NOA.
+El empaquetador conserva los ojos y dientes horneados sobre cada cara original,
+y exige todos sus archivos auxiliares antes de instalar: seis para NOA/NOVA
+(rostro de siete secciones) y tres para ATLAS (cuatro secciones). Los candidatos nuevos
+siempre empiezan con revisiones pendientes.
+
+Desde Edutech, uno por vez:
+
+```sh
+python3 scripts/avatar_web.py export --character NOA --no-install
+python3 scripts/avatar_web.py export --character NOVA --no-install
+python3 scripts/avatar_web.py export --character ATLAS --no-install
+# Con la ruta de resultado que imprime cada exportación:
+uv run --no-project --python 3.12 --with Pillow==12.0.0 python scripts/avatar_web.py install --path RUTA_EXPORTADA --preview-only
+```
+
+No promover un candidato a llamadas por pasar tests estructurales. Revisar cara,
+ropa, accesorios, reposo, habla y memoria contra el diseño guardado. Una exportación
+nueva tampoco hereda la aceptación del paquete de Santiago.
+
+## Comprobación repetible
+
+1. Reconstruir frontend: `python3 scripts/voice_demo.py web`.
+2. Abrir `http://localhost:3500/avatar-preview?character=LIRA`.
+3. Cambiar LIRA → NEXO → ELIAN y repetir rápidamente. Esperar el modelo nuevo;
+   no debe quedar una imagen vieja superpuesta ni aumentar el número de lienzos.
+4. Probar un nombre pendiente: informar que falta GLB, sin sustituir otro avatar.
+5. Con movimiento reducido del sistema, el relevo espera la carga y no anima.
+6. En llamada, pedir el cambio real de especialista. La voz debe continuar sin
+   reiniciarse por el fundido. Revisar avatar_quality_sample por personaje/hash.
+
+Pruebas automatizadas: 59 frontend aprobadas, 3 omitidas por assets privados
+históricos; 36 scripts Python aprobadas; 21 pruebas de contrato/colector aprobadas;
+TypeScript, lint y build aprobados. El contrato v2 y su JSON generado admiten
+los seis nombres. Colector local reconstruido antes de habilitar cualquier
+candidato adicional; frontend local reconstruido en el puerto 3500.
+Verificación local Chrome: tres personajes, un canvas después del relevo, sin
+errores de consola; muestra puntual ELIAN 30 FPS. No es un benchmark de memoria,
+una validación nueva UAM/RTX4050 ni una prueba de conversación real.
+
+La inspección nativa sin renderizado completó los tres mapas el 24 de octubre:
+[unreal-inventory.json](unreal-inventory.json). Confirma NOA con su cara alternativa,
+NOVA Final y ATLAS MatureFace_v2, sus accesorios y animaciones guardadas. No guarda
+assets. La exportación con materiales necesita renderizado y una compilación
+inicial adicional de shaders tras la actualización local a Unreal 5.8.4.
+
+
+## Exportaciones generadas el 24 de octubre: revisión visual abierta
+
+El usuario confirmó que no había otro paquete GLB y autorizó generar NOA/NOVA/ATLAS.
+Los tres archivos ya existen localmente; **el usuario rechazó la apariencia de la
+primera exportación**. No están promovidos a llamadas ni aprobados visualmente.
+Los hashes de los tres GLB de Santiago no cambiaron. `/api/avatar` conserva esos
+modelos y el worker conserva sus tres especialistas.
+
+| Candidato | Archivo | Triángulos de archivo | Estado |
+|---|---:|---:|---|
+| NOA | 4,3 MiB | 61.651 | revisión pendiente tras reparar materiales |
+| NOVA | 5,4 MiB | 74.459 | revisión pendiente tras reparar materiales |
+| ATLAS | 4,7 MiB | 54.206 | revisión pendiente tras reparar materiales |
+
+Hashes, mapa original y rig: [candidate-models.json](candidate-models.json).
+La vista previa ahora indica explícitamente que son exportaciones en revisión.
+
+La exportación inicial de NOA mostraba piel negra, cuello recortado y mangas sin
+su tinte. Unreal produce materiales glTF distintos por sección y no traduce
+correctamente todos los nodos de textura virtual/posición previa al skinning.
+Se corrigió la selección del material por sección verificando topología y UVs;
+se recuperaron las texturas originales desde Unreal en modo NullRHI y se
+incluyeron en el GLB a un máximo de 1024 px. La textura pertenece a cada material
+retenido: no se sustituyó la cara por otro personaje. Sin mapas ni assets guardados.
+
+El visor aplica las expresiones originales de cejas, trazos, uniformes, mangas y
+barba de estos diseños, además de atenuar el brillo plástico del pelo. Estos
+acabados requieren `family-materials.ts` y `family-surface-shaders.ts`: abrir solo
+el GLB en otro visor no reproduce automáticamente los materiales procedurales.
+Hay que seguir comparando encuadre, cuello, ojos, iluminación y movimiento contra
+Unreal. La primera exportación rechazada no debe describirse como entrega final.
+
+Validación de esta reparación: 40 pruebas Python; 59 frontend aprobadas y 3
+omitidas por recursos privados históricos; lint y TypeScript. Vistas locales de
+los tres candidatos sin errores de compilación de shaders y muestras puntuales
+próximas a 30 FPS en este Mac. No representan benchmark UAM, memoria total,
+aceptación artística ni validación de una conversación real con los tres nuevos.
+
+Rutas de fuente local (ignoradas por Git):
+- `data/local-avatar/runtime/web-export/20261024-051137-noa`
+- `data/local-avatar/runtime/web-export/20261024-051826-nova`
+- `data/local-avatar/runtime/web-export/20261024-052445-atlas`
+
+El instalador usa Pillow 12.0.0; CI instala esa versión para verificar restauración
+de textura, identidad y preservación de geometría/UV. No se incorporan GLB a Git.

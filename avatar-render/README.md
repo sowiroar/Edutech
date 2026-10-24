@@ -1,5 +1,9 @@
 # avatar-render
 
+> Recorrido nativo histórico, separado de la entrega web del 21 de octubre.
+> LIRA y NEXO se dibujan ahora en el navegador; no necesitan este contenedor ni
+> un ejecutable Unreal. Ver [avatar web](../docs/mvp/AVATAR_WEB.md).
+
 Pone el avatar de Unreal (video) en el frontend web, sin Pixel Streaming
 (nunca llegó a verse bien en el navegador, ver historial del proyecto).
 En su lugar: el juego empaquetado de Unreal corre en este contenedor contra

@@ -1,5 +1,10 @@
 # avatar-bridge · voz del agente → avatar (Unreal, Familia VIVA)
 
+> Recorrido nativo histórico. El frontend vigente usa LIRA/NEXO/ELIAN en WebGL y no
+> inicia este servicio. Para el arranque actual, ver el [README principal](../README.md)
+> y [AVATAR_WEB.md](../docs/mvp/AVATAR_WEB.md). Las pruebas descritas debajo
+> corresponden a la integración nativa; no certifican el visor web ni concurrencia.
+
 Le entrega a Unreal el audio del agente que esté hablando (Lira, Nexus o Elian) para que
 el avatar correspondiente (LIRA, NEXO o ELIAN, ver Fase 2 más abajo) mueva los labios, y
 le dice a la web cuándo el avatar está disponible.

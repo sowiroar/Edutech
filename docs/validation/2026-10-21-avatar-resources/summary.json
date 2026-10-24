@@ -1,0 +1,1456 @@
+{
+  "startedAt": "2026-10-21T22:42:42.442Z",
+  "endedAt": "2026-10-21T22:47:44.515Z",
+  "scope": "isolated Chrome headless on local Windows; synthetic silent microphone and typed public prompts; one call at a time",
+  "logicalCpus": 12,
+  "cpuName": "AMD Ryzen 7 7445HS w/ Radeon 740M Graphics     ",
+  "physicalMemoryBytes": 16357158912,
+  "adapters": [
+    {
+      "name": "AMD Radeon 740M Graphics",
+      "vendorId": 4098,
+      "deviceId": 6401,
+      "luid": "luid_0x00000000_0x000145AE",
+      "dedicatedVideoBytes": 536870912,
+      "dedicatedSystemBytes": 0,
+      "sharedSystemLimitBytes": 8178579456
+    },
+    {
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "vendorId": 4318,
+      "deviceId": 10401,
+      "luid": "luid_0x00000000_0x00016661",
+      "dedicatedVideoBytes": 6207569920,
+      "dedicatedSystemBytes": 0,
+      "sharedSystemLimitBytes": 8178579456
+    },
+    {
+      "name": "Microsoft Basic Render Driver",
+      "vendorId": 5140,
+      "deviceId": 140,
+      "luid": "luid_0x00000000_0x000165F7",
+      "dedicatedVideoBytes": 0,
+      "dedicatedSystemBytes": 0,
+      "sharedSystemLimitBytes": 8178579456
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "home",
+      "success": true,
+      "errors": [],
+      "sampleCount": 6,
+      "durationSeconds": 30.062,
+      "browser": "155.0.8059.86",
+      "gpuRenderer": "ANGLE (AMD, AMD Radeon 740M Graphics (0x00001901) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.22042.8003)",
+      "metrics": {
+        "browserResidentPrivateMiB": {
+          "mean": 245.67513020833334,
+          "min": 228.890625,
+          "max": 249.12890625,
+          "samples": 6
+        },
+        "browserCommittedPrivateMiB": {
+          "mean": 350.1953125,
+          "min": 331.390625,
+          "max": 357.578125,
+          "samples": 6
+        },
+        "browserIoReadMiBps": {
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "samples": 6
+        },
+        "browserIoWriteMiBps": {
+          "mean": 2.6702880859375e-05,
+          "min": 0.0,
+          "max": 0.00016021728515625,
+          "samples": 6
+        },
+        "wslResidentMiB": {
+          "mean": 1695.037109375,
+          "min": 1683.12109375,
+          "max": 1698.8046875,
+          "samples": 6
+        },
+        "systemAvailableGiB": {
+          "mean": 1.1467711130777996,
+          "min": 1.0442314147949219,
+          "max": 1.2490806579589844,
+          "samples": 6
+        },
+        "systemCommittedGiB": {
+          "mean": 43.37932332356771,
+          "min": 43.362693786621094,
+          "max": 43.411399841308594,
+          "samples": 6
+        },
+        "systemPagesInputPerSec": {
+          "mean": 971.0,
+          "min": 3.0,
+          "max": 4824.0,
+          "samples": 6
+        },
+        "dockerReportedMiB": {
+          "mean": 1350.7983333333334,
+          "min": 1346.25,
+          "max": 1353.3,
+          "samples": 6
+        },
+        "dockerCpuCorePercent": {
+          "mean": 3.5966666666666667,
+          "min": 3.25,
+          "max": 3.8200000000000003,
+          "samples": 6
+        },
+        "dockerCpuMachinePercent": {
+          "mean": 0.2997222222222222,
+          "min": 0.2708333333333333,
+          "max": 0.31833333333333336,
+          "samples": 6
+        },
+        "browserGpuDedicatedMiB": {
+          "mean": 18.65234375,
+          "min": 18.6328125,
+          "max": 18.65625,
+          "samples": 6
+        },
+        "browserGpuSharedMiB": {
+          "mean": 42.748046875,
+          "min": 39.0859375,
+          "max": 43.48046875,
+          "samples": 6
+        },
+        "browserGpuBusiestEnginePercent": {
+          "mean": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "samples": 6
+        },
+        "nvidiaGlobalUsedMiB": {
+          "mean": 509.0,
+          "min": 509.0,
+          "max": 509.0,
+          "samples": 6
+        },
+        "nvidiaGlobalUtilPercent": {
+          "mean": 7.333333333333333,
+          "min": 6.0,
+          "max": 11.0,
+          "samples": 6
+        },
+        "nvidiaGlobalPowerWatts": {
+          "mean": 7.993333333333333,
+          "min": 7.97,
+          "max": 8.03,
+          "samples": 6
+        },
+        "nvidiaGlobalTemperatureC": {
+          "mean": 55.0,
+          "min": 55.0,
+          "max": 55.0,
+          "samples": 6
+        },
+        "browserCpuMachinePercent": {
+          "mean": 0.02626068816265206,
+          "min": 0.0,
+          "max": 0.10525383437473375,
+          "samples": 5
+        }
+      },
+      "gpuByAdapter": {
+        "AMD Radeon 740M Graphics": {
+          "dedicatedMiB": {
+            "mean": 18.65234375,
+            "min": 18.6328125,
+            "max": 18.65625,
+            "samples": 6
+          },
+          "sharedMiB": {
+            "mean": 42.748046875,
+            "min": 39.0859375,
+            "max": 43.48046875,
+            "samples": 6
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          }
+        },
+        "NVIDIA GeForce RTX 4050 Laptop GPU": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          }
+        },
+        "Microsoft Basic Render Driver": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          }
+        }
+      },
+      "containers": {
+        "edutech-voice-local-voice-agent-1": {
+          "reportedMiB": {
+            "mean": 882.6,
+            "min": 880.9,
+            "max": 883.6,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 2.955,
+            "min": 2.66,
+            "max": 3.21,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-frontend-1": {
+          "reportedMiB": {
+            "mean": 104.48333333333333,
+            "min": 104.1,
+            "max": 105.3,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.02,
+            "min": 0.0,
+            "max": 0.08,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-telemetry-1": {
+          "reportedMiB": {
+            "mean": 46.175,
+            "min": 45.97,
+            "max": 46.7,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.20166666666666666,
+            "min": 0.19,
+            "max": 0.23,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "reportedMiB": {
+            "mean": 78.17,
+            "min": 78.17,
+            "max": 78.17,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "reportedMiB": {
+            "mean": 42.879999999999995,
+            "min": 41.73,
+            "max": 43.37,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.0016666666666666668,
+            "min": 0.0,
+            "max": 0.01,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-qdrant-1": {
+          "reportedMiB": {
+            "mean": 112.35,
+            "min": 111.6,
+            "max": 112.7,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.24833333333333335,
+            "min": 0.22,
+            "max": 0.27,
+            "samples": 6
+          }
+        },
+        "edutech-voice-local-livekit-1": {
+          "reportedMiB": {
+            "mean": 84.14,
+            "min": 82.68,
+            "max": 84.65,
+            "samples": 6
+          },
+          "cpuCorePercent": {
+            "mean": 0.17,
+            "min": 0.07,
+            "max": 0.28,
+            "samples": 6
+          }
+        }
+      },
+      "renderer": {
+        "fps": null,
+        "renderSubmissionMs": null,
+        "drawCalls": null,
+        "triangles": null,
+        "pageJsHeapBytes": null,
+        "loadMs": null,
+        "textureBytesEstimate": null,
+        "geometryDataBytes": null
+      },
+      "renderResolutions": [],
+      "rendererFullSizeSamples": 0,
+      "rendererOtherSizeSamples": 0,
+      "audioNetwork": {
+        "seconds": 25.049000024795532,
+        "audioReceivedBytes": 0,
+        "rtpSentBytes": 0,
+        "audioReceiveMeanKbps": 0.0,
+        "rtpSendMeanKbps": 0.0
+      },
+      "sampledAgentStates": [],
+      "finalState": {
+        "audioBytes": 0,
+        "audioEnergy": 0,
+        "outboundBytes": 0,
+        "connections": [],
+        "playingAudio": 0,
+        "canvasLabels": [],
+        "lastFrame": null
+      },
+      "browserCpuTimeWeightedMachinePercent": 0.028151182143636436
+    },
+    {
+      "name": "voice-lira",
+      "success": true,
+      "errors": [],
+      "sampleCount": 12,
+      "durationSeconds": 60.092,
+      "browser": "155.0.8059.86",
+      "gpuRenderer": "ANGLE (AMD, AMD Radeon 740M Graphics (0x00001901) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.22042.8003)",
+      "metrics": {
+        "browserResidentPrivateMiB": {
+          "mean": 450.6012369791667,
+          "min": 405.234375,
+          "max": 484.65625,
+          "samples": 12
+        },
+        "browserCommittedPrivateMiB": {
+          "mean": 578.2942708333334,
+          "min": 534.94921875,
+          "max": 611.99609375,
+          "samples": 12
+        },
+        "browserIoReadMiBps": {
+          "mean": 0.05521686871846517,
+          "min": 0.03526020050048828,
+          "max": 0.06875896453857422,
+          "samples": 12
+        },
+        "browserIoWriteMiBps": {
+          "mean": 0.055420239766438804,
+          "min": 0.03526020050048828,
+          "max": 0.06943225860595703,
+          "samples": 12
+        },
+        "wslResidentMiB": {
+          "mean": 2197.0364583333335,
+          "min": 2093.7578125,
+          "max": 2230.54296875,
+          "samples": 12
+        },
+        "systemAvailableGiB": {
+          "mean": 0.6048755645751953,
+          "min": 0.3459434509277344,
+          "max": 0.8717536926269531,
+          "samples": 12
+        },
+        "systemCommittedGiB": {
+          "mean": 43.88463560740153,
+          "min": 43.804412841796875,
+          "max": 43.99876403808594,
+          "samples": 12
+        },
+        "systemPagesInputPerSec": {
+          "mean": 7258.916666666667,
+          "min": 0.0,
+          "max": 63979.0,
+          "samples": 12
+        },
+        "dockerReportedMiB": {
+          "mean": 1697.8243333333332,
+          "min": 1639.954,
+          "max": 1713.2640000000001,
+          "samples": 12
+        },
+        "dockerCpuCorePercent": {
+          "mean": 43.905,
+          "min": 15.18,
+          "max": 120.34,
+          "samples": 12
+        },
+        "dockerCpuMachinePercent": {
+          "mean": 3.65875,
+          "min": 1.265,
+          "max": 10.028333333333334,
+          "samples": 12
+        },
+        "browserGpuDedicatedMiB": {
+          "mean": 30.7890625,
+          "min": 23.62109375,
+          "max": 32.53515625,
+          "samples": 12
+        },
+        "browserGpuSharedMiB": {
+          "mean": 163.455078125,
+          "min": 124.37109375,
+          "max": 184.48828125,
+          "samples": 12
+        },
+        "browserGpuBusiestEnginePercent": {
+          "mean": 1.5,
+          "min": 0.0,
+          "max": 5.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUsedMiB": {
+          "mean": 509.0,
+          "min": 509.0,
+          "max": 509.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUtilPercent": {
+          "mean": 6.666666666666667,
+          "min": 6.0,
+          "max": 9.0,
+          "samples": 12
+        },
+        "nvidiaGlobalPowerWatts": {
+          "mean": 8.186666666666666,
+          "min": 8.1,
+          "max": 8.27,
+          "samples": 12
+        },
+        "nvidiaGlobalTemperatureC": {
+          "mean": 57.416666666666664,
+          "min": 56.0,
+          "max": 58.0,
+          "samples": 12
+        },
+        "browserCpuMachinePercent": {
+          "mean": 3.0812406015976572,
+          "min": 1.0352251252061901,
+          "max": 4.845971249156072,
+          "samples": 11
+        }
+      },
+      "gpuByAdapter": {
+        "AMD Radeon 740M Graphics": {
+          "dedicatedMiB": {
+            "mean": 30.7890625,
+            "min": 23.62109375,
+            "max": 32.53515625,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 163.455078125,
+            "min": 124.37109375,
+            "max": 184.48828125,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 1.5,
+            "min": 0.0,
+            "max": 5.0,
+            "samples": 12
+          }
+        },
+        "NVIDIA GeForce RTX 4050 Laptop GPU": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "Microsoft Basic Render Driver": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        }
+      },
+      "containers": {
+        "edutech-voice-local-voice-agent-1": {
+          "reportedMiB": {
+            "mean": 1214.5493333333334,
+            "min": 1158.144,
+            "max": 1229.824,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 39.25333333333333,
+            "min": 13.58,
+            "max": 116.15,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-frontend-1": {
+          "reportedMiB": {
+            "mean": 106.70833333333333,
+            "min": 106.2,
+            "max": 107.7,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-1": {
+          "reportedMiB": {
+            "mean": 46.93333333333334,
+            "min": 46.14,
+            "max": 47.38,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 1.2983333333333333,
+            "min": 0.13,
+            "max": 12.74,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "reportedMiB": {
+            "mean": 78.11,
+            "min": 78.08,
+            "max": 78.17,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "reportedMiB": {
+            "mean": 43.3175,
+            "min": 42.12,
+            "max": 43.94,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.14666666666666667,
+            "min": 0.0,
+            "max": 0.76,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-qdrant-1": {
+          "reportedMiB": {
+            "mean": 112.7,
+            "min": 112.3,
+            "max": 113.9,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.41333333333333333,
+            "min": 0.18,
+            "max": 2.28,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-livekit-1": {
+          "reportedMiB": {
+            "mean": 95.50583333333333,
+            "min": 92.7,
+            "max": 96.44,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 2.7933333333333334,
+            "min": 1.17,
+            "max": 4.59,
+            "samples": 12
+          }
+        }
+      },
+      "renderer": {
+        "fps": null,
+        "renderSubmissionMs": null,
+        "drawCalls": null,
+        "triangles": null,
+        "pageJsHeapBytes": null,
+        "loadMs": null,
+        "textureBytesEstimate": null,
+        "geometryDataBytes": null
+      },
+      "renderResolutions": [],
+      "rendererFullSizeSamples": 0,
+      "rendererOtherSizeSamples": 0,
+      "audioNetwork": {
+        "seconds": 55.07699990272522,
+        "audioReceivedBytes": 377636,
+        "rtpSentBytes": 7598,
+        "audioReceiveMeanKbps": 54.85207991240852,
+        "rtpSendMeanKbps": 1.103618572314292
+      },
+      "sampledAgentStates": [
+        "listening",
+        "speaking"
+      ],
+      "finalState": {
+        "audioBytes": 535354,
+        "audioEnergy": 9.926117467124113,
+        "outboundBytes": 11180,
+        "connections": [
+          "connected"
+        ],
+        "playingAudio": 1,
+        "canvasLabels": [],
+        "lastFrame": null
+      },
+      "browserCpuTimeWeightedMachinePercent": 3.0792577666683107
+    },
+    {
+      "name": "avatar-lira",
+      "success": true,
+      "errors": [],
+      "sampleCount": 12,
+      "durationSeconds": 60.105,
+      "browser": "155.0.8059.86",
+      "gpuRenderer": "ANGLE (AMD, AMD Radeon 740M Graphics (0x00001901) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.22042.8003)",
+      "metrics": {
+        "browserResidentPrivateMiB": {
+          "mean": 596.6119791666666,
+          "min": 559.7578125,
+          "max": 642.71484375,
+          "samples": 12
+        },
+        "browserCommittedPrivateMiB": {
+          "mean": 709.5869140625,
+          "min": 669.72265625,
+          "max": 759.18359375,
+          "samples": 12
+        },
+        "browserIoReadMiBps": {
+          "mean": 0.21618334452311197,
+          "min": 0.20355701446533203,
+          "max": 0.2315998077392578,
+          "samples": 12
+        },
+        "browserIoWriteMiBps": {
+          "mean": 0.21623826026916504,
+          "min": 0.20355796813964844,
+          "max": 0.23160076141357422,
+          "samples": 12
+        },
+        "wslResidentMiB": {
+          "mean": 2366.4671223958335,
+          "min": 2331.421875,
+          "max": 2411.53125,
+          "samples": 12
+        },
+        "systemAvailableGiB": {
+          "mean": 0.6577571233113607,
+          "min": 0.4490699768066406,
+          "max": 0.9098739624023438,
+          "samples": 12
+        },
+        "systemCommittedGiB": {
+          "mean": 43.953415870666504,
+          "min": 43.866695404052734,
+          "max": 44.081302642822266,
+          "samples": 12
+        },
+        "systemPagesInputPerSec": {
+          "mean": 638.4166666666666,
+          "min": 0.0,
+          "max": 3233.0,
+          "samples": 12
+        },
+        "dockerReportedMiB": {
+          "mean": 1708.2298333333333,
+          "min": 1651.634,
+          "max": 1724.1499999999999,
+          "samples": 12
+        },
+        "dockerCpuCorePercent": {
+          "mean": 42.43416666666667,
+          "min": 14.81,
+          "max": 127.08,
+          "samples": 12
+        },
+        "dockerCpuMachinePercent": {
+          "mean": 3.5361805555555557,
+          "min": 1.2341666666666666,
+          "max": 10.59,
+          "samples": 12
+        },
+        "browserGpuDedicatedMiB": {
+          "mean": 19.821614583333332,
+          "min": 16.46875,
+          "max": 30.8125,
+          "samples": 12
+        },
+        "browserGpuSharedMiB": {
+          "mean": 234.61197916666666,
+          "min": 230.5703125,
+          "max": 254.0703125,
+          "samples": 12
+        },
+        "browserGpuBusiestEnginePercent": {
+          "mean": 5.916666666666667,
+          "min": 5.0,
+          "max": 6.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUsedMiB": {
+          "mean": 509.0,
+          "min": 509.0,
+          "max": 509.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUtilPercent": {
+          "mean": 6.0,
+          "min": 5.0,
+          "max": 8.0,
+          "samples": 12
+        },
+        "nvidiaGlobalPowerWatts": {
+          "mean": 8.316666666666666,
+          "min": 8.28,
+          "max": 8.35,
+          "samples": 12
+        },
+        "nvidiaGlobalTemperatureC": {
+          "mean": 59.416666666666664,
+          "min": 59.0,
+          "max": 60.0,
+          "samples": 12
+        },
+        "browserCpuMachinePercent": {
+          "mean": 3.8280718329297394,
+          "min": 2.192987203656158,
+          "max": 7.70366888913647,
+          "samples": 11
+        }
+      },
+      "gpuByAdapter": {
+        "AMD Radeon 740M Graphics": {
+          "dedicatedMiB": {
+            "mean": 19.821614583333332,
+            "min": 16.46875,
+            "max": 30.8125,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 234.61197916666666,
+            "min": 230.5703125,
+            "max": 254.0703125,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 5.916666666666667,
+            "min": 5.0,
+            "max": 6.0,
+            "samples": 12
+          }
+        },
+        "NVIDIA GeForce RTX 4050 Laptop GPU": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "Microsoft Basic Render Driver": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        }
+      },
+      "containers": {
+        "edutech-voice-local-voice-agent-1": {
+          "reportedMiB": {
+            "mean": 1214.0373333333332,
+            "min": 1158.144,
+            "max": 1228.8,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 38.71083333333333,
+            "min": 13.07,
+            "max": 116.38,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-frontend-1": {
+          "reportedMiB": {
+            "mean": 107.3,
+            "min": 107.3,
+            "max": 107.3,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0025,
+            "min": 0.0,
+            "max": 0.03,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-1": {
+          "reportedMiB": {
+            "mean": 47.163333333333334,
+            "min": 45.89,
+            "max": 47.62,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.20666666666666667,
+            "min": 0.16,
+            "max": 0.32,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "reportedMiB": {
+            "mean": 78.08,
+            "min": 78.08,
+            "max": 78.08,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "reportedMiB": {
+            "mean": 43.54083333333333,
+            "min": 42.89,
+            "max": 45.82,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.5116666666666666,
+            "min": 0.0,
+            "max": 5.56,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-qdrant-1": {
+          "reportedMiB": {
+            "mean": 113.65833333333333,
+            "min": 112.6,
+            "max": 114.8,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.6066666666666667,
+            "min": 0.31,
+            "max": 3.16,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-livekit-1": {
+          "reportedMiB": {
+            "mean": 104.45,
+            "min": 103.8,
+            "max": 104.9,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 2.3958333333333335,
+            "min": 0.93,
+            "max": 4.51,
+            "samples": 12
+          }
+        }
+      },
+      "renderer": {
+        "fps": {
+          "mean": 29.998967129919404,
+          "min": 29.791459781529294,
+          "max": 30.173252871325634,
+          "samples": 57
+        },
+        "renderSubmissionMs": {
+          "mean": 0.8410752688107108,
+          "min": 0.7129032257944345,
+          "max": 1.093333333544433,
+          "samples": 57
+        },
+        "drawCalls": {
+          "mean": 15.0,
+          "min": 15.0,
+          "max": 15.0,
+          "samples": 57
+        },
+        "triangles": {
+          "mean": 76031.0,
+          "min": 76031.0,
+          "max": 76031.0,
+          "samples": 57
+        },
+        "pageJsHeapBytes": {
+          "mean": 33922497.2631579,
+          "min": 31538062.0,
+          "max": 38297021.0,
+          "samples": 57
+        },
+        "loadMs": {
+          "mean": 564.3000000007451,
+          "min": 564.3000000007451,
+          "max": 564.3000000007451,
+          "samples": 57
+        },
+        "textureBytesEstimate": {
+          "mean": 39146852.0,
+          "min": 39146852.0,
+          "max": 39146852.0,
+          "samples": 57
+        },
+        "geometryDataBytes": {
+          "mean": 3610962.0,
+          "min": 3610962.0,
+          "max": 3610962.0,
+          "samples": 57
+        }
+      },
+      "renderResolutions": [
+        [
+          960,
+          540
+        ]
+      ],
+      "rendererFullSizeSamples": 57,
+      "rendererOtherSizeSamples": 2,
+      "audioNetwork": {
+        "seconds": 55.09500002861023,
+        "audioReceivedBytes": 301791,
+        "rtpSentBytes": 7598,
+        "audioReceiveMeanKbps": 43.82118157267023,
+        "rtpSendMeanKbps": 1.1032580083208192
+      },
+      "sampledAgentStates": [
+        "listening",
+        "speaking"
+      ],
+      "finalState": {
+        "audioBytes": 500815,
+        "audioEnergy": 8.539795277680641,
+        "outboundBytes": 11760,
+        "connections": [
+          "connected"
+        ],
+        "playingAudio": 1,
+        "canvasLabels": [
+          "LIRA, avatar 3D"
+        ],
+        "lastFrame": {
+          "character": "LIRA",
+          "timestamp": "2026-10-21T22:46:08.646Z",
+          "fps": 30,
+          "renderSubmissionMs": 0.7233333332464099,
+          "drawCalls": 15,
+          "triangles": 76031,
+          "geometries": 14,
+          "textures": 24,
+          "pageJsHeapBytes": 35888292,
+          "mouthAnimationAvailable": true,
+          "modelBytes": 4666084,
+          "loadMs": 564.3000000007451,
+          "width": 960,
+          "height": 540,
+          "animationClips": 1,
+          "textureBytesEstimate": 39146852,
+          "geometryDataBytes": 3610962
+        }
+      },
+      "browserCpuTimeWeightedMachinePercent": 3.8396792692720347
+    },
+    {
+      "name": "avatar-nexo",
+      "success": true,
+      "errors": [],
+      "sampleCount": 12,
+      "durationSeconds": 60.096,
+      "browser": "155.0.8059.86",
+      "gpuRenderer": "ANGLE (AMD, AMD Radeon 740M Graphics (0x00001901) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.22042.8003)",
+      "metrics": {
+        "browserResidentPrivateMiB": {
+          "mean": 555.9176432291666,
+          "min": 527.95703125,
+          "max": 616.90625,
+          "samples": 12
+        },
+        "browserCommittedPrivateMiB": {
+          "mean": 659.0553385416666,
+          "min": 626.890625,
+          "max": 727.51953125,
+          "samples": 12
+        },
+        "browserIoReadMiBps": {
+          "mean": 0.23908623059590658,
+          "min": 0.20374107360839844,
+          "max": 0.3793935775756836,
+          "samples": 12
+        },
+        "browserIoWriteMiBps": {
+          "mean": 0.24056132634480795,
+          "min": 0.20963382720947266,
+          "max": 0.3842782974243164,
+          "samples": 12
+        },
+        "wslResidentMiB": {
+          "mean": 2500.646484375,
+          "min": 2487.4765625,
+          "max": 2520.51953125,
+          "samples": 12
+        },
+        "systemAvailableGiB": {
+          "mean": 0.6630105972290039,
+          "min": 0.2928009033203125,
+          "max": 0.9632034301757812,
+          "samples": 12
+        },
+        "systemCommittedGiB": {
+          "mean": 43.836514155069985,
+          "min": 43.719993591308594,
+          "max": 44.002620697021484,
+          "samples": 12
+        },
+        "systemPagesInputPerSec": {
+          "mean": 572.5833333333334,
+          "min": 0.0,
+          "max": 3228.0,
+          "samples": 12
+        },
+        "dockerReportedMiB": {
+          "mean": 1729.7883333333334,
+          "min": 1692.358,
+          "max": 1734.362,
+          "samples": 12
+        },
+        "dockerCpuCorePercent": {
+          "mean": 31.694166666666664,
+          "min": 15.260000000000002,
+          "max": 93.16,
+          "samples": 12
+        },
+        "dockerCpuMachinePercent": {
+          "mean": 2.6411805555555556,
+          "min": 1.2716666666666667,
+          "max": 7.763333333333333,
+          "samples": 12
+        },
+        "browserGpuDedicatedMiB": {
+          "mean": 24.422526041666668,
+          "min": 19.4140625,
+          "max": 40.5703125,
+          "samples": 12
+        },
+        "browserGpuSharedMiB": {
+          "mean": 176.37239583333334,
+          "min": 168.1640625,
+          "max": 204.6640625,
+          "samples": 12
+        },
+        "browserGpuBusiestEnginePercent": {
+          "mean": 4.75,
+          "min": 4.0,
+          "max": 5.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUsedMiB": {
+          "mean": 509.0,
+          "min": 509.0,
+          "max": 509.0,
+          "samples": 12
+        },
+        "nvidiaGlobalUtilPercent": {
+          "mean": 6.083333333333333,
+          "min": 6.0,
+          "max": 7.0,
+          "samples": 12
+        },
+        "nvidiaGlobalPowerWatts": {
+          "mean": 8.405833333333334,
+          "min": 8.37,
+          "max": 8.43,
+          "samples": 12
+        },
+        "nvidiaGlobalTemperatureC": {
+          "mean": 60.416666666666664,
+          "min": 60.0,
+          "max": 61.0,
+          "samples": 12
+        },
+        "browserCpuMachinePercent": {
+          "mean": 3.4928993964770294,
+          "min": 2.0817465121372827,
+          "max": 5.88507225902132,
+          "samples": 11
+        }
+      },
+      "gpuByAdapter": {
+        "AMD Radeon 740M Graphics": {
+          "dedicatedMiB": {
+            "mean": 24.422526041666668,
+            "min": 19.4140625,
+            "max": 40.5703125,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 176.37239583333334,
+            "min": 168.1640625,
+            "max": 204.6640625,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 4.75,
+            "min": 4.0,
+            "max": 5.0,
+            "samples": 12
+          }
+        },
+        "NVIDIA GeForce RTX 4050 Laptop GPU": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "Microsoft Basic Render Driver": {
+          "dedicatedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "sharedMiB": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          },
+          "busiestEnginePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        }
+      },
+      "containers": {
+        "edutech-voice-local-voice-agent-1": {
+          "reportedMiB": {
+            "mean": 1227.52,
+            "min": 1189.888,
+            "max": 1231.872,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 25.16,
+            "min": 12.97,
+            "max": 88.13,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-frontend-1": {
+          "reportedMiB": {
+            "mean": 107.71666666666667,
+            "min": 107.4,
+            "max": 108.4,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-1": {
+          "reportedMiB": {
+            "mean": 46.64666666666667,
+            "min": 45.96,
+            "max": 47.21,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.31,
+            "min": 0.15,
+            "max": 1.46,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "reportedMiB": {
+            "mean": 77.95,
+            "min": 77.95,
+            "max": 77.95,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "reportedMiB": {
+            "mean": 43.68833333333333,
+            "min": 43.07,
+            "max": 44.09,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 2.0116666666666667,
+            "min": 0.0,
+            "max": 6.22,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-qdrant-1": {
+          "reportedMiB": {
+            "mean": 112.78333333333333,
+            "min": 112.0,
+            "max": 114.4,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 0.8625,
+            "min": 0.4,
+            "max": 4.21,
+            "samples": 12
+          }
+        },
+        "edutech-voice-local-livekit-1": {
+          "reportedMiB": {
+            "mean": 113.48333333333333,
+            "min": 113.0,
+            "max": 114.4,
+            "samples": 12
+          },
+          "cpuCorePercent": {
+            "mean": 3.35,
+            "min": 0.96,
+            "max": 4.33,
+            "samples": 12
+          }
+        }
+      },
+      "renderer": {
+        "fps": {
+          "mean": 30.003313255952897,
+          "min": 29.957479706223342,
+          "max": 30.167380303619915,
+          "samples": 57
+        },
+        "renderSubmissionMs": {
+          "mean": 0.48785889456696896,
+          "min": 0.3838709675136112,
+          "max": 0.6387096773232183,
+          "samples": 57
+        },
+        "drawCalls": {
+          "mean": 7.0,
+          "min": 7.0,
+          "max": 7.0,
+          "samples": 57
+        },
+        "triangles": {
+          "mean": 59578.0,
+          "min": 59578.0,
+          "max": 59578.0,
+          "samples": 57
+        },
+        "pageJsHeapBytes": {
+          "mean": 36498965.78947368,
+          "min": 32610288.0,
+          "max": 46975467.0,
+          "samples": 57
+        },
+        "loadMs": {
+          "mean": 373.69999999925494,
+          "min": 373.69999999925494,
+          "max": 373.69999999925494,
+          "samples": 57
+        },
+        "textureBytesEstimate": {
+          "mean": 25165834.0,
+          "min": 25165834.0,
+          "max": 25165834.0,
+          "samples": 57
+        },
+        "geometryDataBytes": {
+          "mean": 2358468.0,
+          "min": 2358468.0,
+          "max": 2358468.0,
+          "samples": 57
+        }
+      },
+      "renderResolutions": [
+        [
+          960,
+          540
+        ]
+      ],
+      "rendererFullSizeSamples": 57,
+      "rendererOtherSizeSamples": 2,
+      "audioNetwork": {
+        "seconds": 55.092000007629395,
+        "audioReceivedBytes": 557891,
+        "rtpSentBytes": 7598,
+        "audioReceiveMeanKbps": 81.01227037286586,
+        "rtpSendMeanKbps": 1.1033180859577134
+      },
+      "sampledAgentStates": [
+        "listening",
+        "speaking"
+      ],
+      "finalState": {
+        "audioBytes": 781911,
+        "audioEnergy": 13.783792968636382,
+        "outboundBytes": 12340,
+        "connections": [
+          "connected"
+        ],
+        "playingAudio": 1,
+        "canvasLabels": [
+          "NEXO, avatar 3D"
+        ],
+        "lastFrame": {
+          "character": "NEXO",
+          "timestamp": "2026-10-21T22:47:38.941Z",
+          "fps": 30.16444487690969,
+          "renderSubmissionMs": 0.41290322595065637,
+          "drawCalls": 7,
+          "triangles": 59578,
+          "geometries": 7,
+          "textures": 18,
+          "pageJsHeapBytes": 38863074,
+          "mouthAnimationAvailable": true,
+          "modelBytes": 5721776,
+          "loadMs": 373.69999999925494,
+          "width": 960,
+          "height": 540,
+          "animationClips": 1,
+          "textureBytesEstimate": 25165834,
+          "geometryDataBytes": 2358468
+        }
+      },
+      "browserCpuTimeWeightedMachinePercent": 3.4924996036892906
+    }
+  ]
+}

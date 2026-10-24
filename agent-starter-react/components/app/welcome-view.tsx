@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useAvatarStream } from '@/hooks/useAvatarStream';
 
 function WelcomeImage() {
   // Antes: ícono genérico de barras de audio (SVG inline). Reemplazado por el logo de
@@ -11,13 +12,18 @@ function WelcomeImage() {
 interface WelcomeViewProps {
   startButtonText: string;
   onStartCall: () => void;
+  pending?: boolean;
+  error?: string;
 }
 
 export const WelcomeView = ({
   startButtonText,
   onStartCall,
+  pending,
+  error,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
+  const avatar = useAvatarStream();
   return (
     <div ref={ref}>
       <section className="bg-background flex flex-col items-center justify-center text-center">
@@ -27,12 +33,56 @@ export const WelcomeView = ({
           Bienvenido a la Liga Sapience
         </p>
 
+        <div role="group" aria-label="Presentación" className="mt-5 flex gap-2">
+          <Button
+            variant={avatar.mode === 'voice' ? 'default' : 'outline'}
+            disabled={pending}
+            aria-pressed={avatar.mode === 'voice'}
+            onClick={() => avatar.setMode('voice')}
+          >
+            Voz
+          </Button>
+          <Button
+            variant={avatar.mode === 'avatar' ? 'default' : 'outline'}
+            disabled={pending}
+            aria-pressed={avatar.mode === 'avatar'}
+            onClick={() => avatar.setMode('avatar')}
+          >
+            Avatar
+          </Button>
+        </div>
+        {avatar.mode === 'avatar' && (
+          <p role="status" className="mt-3 max-w-sm text-sm">
+            {avatar.availability === 'available'
+              ? 'LIRA te recibe. El avatar cambia automáticamente con el agente.'
+              : 'Estamos preparando los modelos. Puedes elegir Voz.'}
+          </p>
+        )}
+        {avatar.mode === 'avatar' && avatar.availability === 'available' && (
+          <div className="mt-2 flex gap-4 text-sm">
+            {avatar.availableCharacters.map((character) => (
+              <a
+                key={character}
+                href={`/avatar-preview?character=${character}`}
+                className="underline"
+              >
+                Ver {character}
+              </a>
+            ))}
+          </div>
+        )}
+        {error && (
+          <p role="alert" className="mt-3 max-w-sm text-sm">
+            {error}
+          </p>
+        )}
         <Button
           size="lg"
           onClick={onStartCall}
+          disabled={pending || (avatar.mode === 'avatar' && avatar.availability !== 'available')}
           className="mt-6 w-64 rounded-full font-mono text-xs font-bold tracking-wider uppercase"
         >
-          {startButtonText}
+          {pending ? 'Conectando…' : startButtonText}
         </Button>
       </section>
 

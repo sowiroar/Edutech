@@ -140,6 +140,29 @@ async def test_private_api_signature_and_media_access(store, monkeypatch):
         response = await client.post("/ingest", headers=headers, json=dict(packet, events=[forged]))
         assert response.status_code == 422
         assert token not in response.text
+        from test_avatar_quality import sample
+
+        quality = dict(
+            first.model_dump(mode="json"),
+            schema_version=2,
+            event_id=str(uuid4()),
+            source="browser",
+            type="avatar_quality_sample",
+            payload=sample(),
+            media_session_id=str(uuid4()),
+            connection_attempt_id=str(uuid4()),
+        )
+        response = await client.post(
+            "/ingest",
+            headers=headers,
+            json=dict(packet, events=[quality], media_only=True),
+        )
+        assert response.status_code == 200
+        stored = await store.events(str(first.app_session_id))
+        observed = next(e for e in stored["items"] if e["type"] == "avatar_quality_sample")
+        assert observed["payload"]["character"] == "LIRA"
+        assert observed["payload"]["silence_to_rest_max_ms"] == 67
+        assert observed["connection_attempt_id"] == quality["connection_attempt_id"]
         app.state.ready = False
         assert (await client.post("/ingest", headers=headers, json=packet)).status_code == 503
         assert (await client.get("/health", headers=headers)).json()["ready"] is False

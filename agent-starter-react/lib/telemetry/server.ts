@@ -21,7 +21,13 @@ export function rateLimit(key: string, maximum: number, windowMs = 60_000) {
 }
 export function sameOrigin(req: Request) {
   const origin = req.headers.get('origin');
-  return origin === new URL(req.url).origin || origin === process.env.TELEMETRY_PUBLIC_ORIGIN;
+  if (!origin || origin === 'null') return false;
+  const allowedOrigins = [
+    new URL(req.url).origin,
+    process.env.TELEMETRY_PUBLIC_ORIGIN,
+    ...(process.env.TELEMETRY_ADDITIONAL_ORIGINS || '').split(',').map((value) => value.trim()),
+  ];
+  return allowedOrigins.includes(origin);
 }
 function key() {
   const value = process.env.TELEMETRY_SIGNING_SECRET;
@@ -58,7 +64,11 @@ export function passwordMatches(value: unknown) {
     b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-export async function createContext(roomName: string, participantIdentity: string) {
+export async function createContext(
+  roomName: string,
+  participantIdentity: string,
+  presentationMode: 'voice' | 'avatar' = 'voice'
+) {
   const jar = await cookies();
   let anonymousId: string;
   try {
@@ -82,7 +92,7 @@ export async function createContext(roomName: string, participantIdentity: strin
     environment: process.env.TELEMETRY_ENVIRONMENT || 'local',
     release: process.env.APP_RELEASE || 'unknown',
     avatar_release: process.env.AVATAR_RELEASE || null,
-    presentation_mode: 'voice',
+    presentation_mode: presentationMode,
     channel: 'voice',
     room_name: roomName,
     participant_identity: participantIdentity,

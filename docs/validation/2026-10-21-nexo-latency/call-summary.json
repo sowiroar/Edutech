@@ -1,0 +1,122 @@
+{
+  "method": "Synthetic text questions within a LiveKit audio call; silent fake microphone; RMS threshold 0.02; no audio recorded",
+  "success": true,
+  "errors": [],
+  "turns": [
+    {
+      "character": "NEXO",
+      "kind": "handoff",
+      "firstAudioSeconds": 2.338,
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "canvases": 1,
+      "maxMouthOpen": 0.548885685926489,
+      "lastMouthOpen": 0
+    },
+    {
+      "character": "NEXO",
+      "kind": "first-document-question",
+      "firstAudioSeconds": 5.146,
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "canvases": 1,
+      "maxMouthOpen": 0.6425871139410386,
+      "lastMouthOpen": 0
+    },
+    {
+      "character": "NEXO",
+      "kind": "followup-document-question",
+      "firstAudioSeconds": 5.486,
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "canvases": 1,
+      "maxMouthOpen": 0.6842735926839321,
+      "lastMouthOpen": 0
+    },
+    {
+      "character": "ELIAN",
+      "kind": "handoff-document-question",
+      "firstAudioSeconds": 9.269,
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "ELIAN",
+          "state": "listening"
+        }
+      ],
+      "canvases": 1,
+      "maxMouthOpen": 0.6566481409749703,
+      "lastMouthOpen": 0
+    },
+    {
+      "character": "ELIAN",
+      "kind": "followup-document-question",
+      "firstAudioSeconds": 4.188,
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "ELIAN",
+          "state": "listening"
+        }
+      ],
+      "canvases": 1,
+      "maxMouthOpen": 0.5410746600281957,
+      "lastMouthOpen": 0
+    }
+  ],
+  "rag": [
+    {
+      "agent": "NexusAgent",
+      "name": "consultar_especializacion_ia",
+      "status": "ok",
+      "purpose": "rag",
+      "elapsed_ms": 3745.4828089976218,
+      "usage_observed": false
+    },
+    {
+      "agent": "NexusAgent",
+      "name": "consultar_especializacion_ia",
+      "status": "ok",
+      "purpose": "rag",
+      "elapsed_ms": 3765.0208309969457,
+      "usage_observed": false
+    },
+    {
+      "agent": "ElianAgent",
+      "name": "consultar_uam",
+      "status": "ok",
+      "purpose": "rag",
+      "elapsed_ms": 6243.347118001111,
+      "usage_observed": false
+    },
+    {
+      "agent": "ElianAgent",
+      "name": "consultar_uam",
+      "status": "ok",
+      "purpose": "rag",
+      "elapsed_ms": 2776.0147400003916,
+      "usage_observed": false
+    }
+  ],
+  "telemetry_errors": []
+}

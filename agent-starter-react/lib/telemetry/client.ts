@@ -3,6 +3,9 @@ import { ConnectionState, Room, RoomEvent } from 'livekit-client';
 /** Best-effort media events. No audio buffers, transcripts or credentials persisted. */
 export class MediaTelemetry {
   private token = '';
+  private nextToken = '';
+  private active = false;
+  private connected = false;
   private attempt = '';
   private media = '';
   private started = 0;
@@ -15,7 +18,10 @@ export class MediaTelemetry {
   private generation = 0;
   beginSession() {
     this.generation++;
-    this.token = '';
+    this.active = true;
+    this.connected = false;
+    this.token = this.nextToken;
+    this.nextToken = '';
     this.pending = [];
     this.failures = 0;
     this.startAttempt();
@@ -28,9 +34,25 @@ export class MediaTelemetry {
     this.emit('media_connect_started', { reason: 'connecting' });
   }
   setToken(token: string) {
-    this.token = token;
-    if (this.pending.length) this.schedule();
+    // The SDK prefetches the NEXT call token while the current call is ending.
+    // Never move current events into that future session, or start its clock early.
+    if (this.active && !this.connected) {
+      this.token = token;
+      if (this.pending.length) this.schedule();
+    } else {
+      this.nextToken = token;
+    }
   }
+  avatarUnavailable() {
+    this.emit('avatar_unavailable', { reason: 'unavailable' });
+  }
+
+  /** Called only by a rendered call avatar, never by the synthetic preview. */
+  avatarSample(payload: Record<string, unknown>) {
+    if (!this.active || !this.token) return;
+    this.emit('avatar_quality_sample', payload);
+  }
+
   private emit(type: string, payload: Record<string, unknown> = {}) {
     if (!this.attempt || this.closed || this.pending.length >= 50) return;
     this.pending.push({
@@ -86,15 +108,20 @@ export class MediaTelemetry {
     this.closed = false;
     const state = (value: ConnectionState) => {
       if (value === ConnectionState.Connecting && !this.attempt) this.startAttempt();
-      if (value === ConnectionState.Connected)
+      if (value === ConnectionState.Connected) {
+        this.connected = true;
         this.emit('media_connected', {
           elapsed_ms: performance.now() - this.started,
           reason: 'connected',
         });
+      }
       if (value === ConnectionState.Reconnecting)
         this.emit('media_stalled', { reason: 'reconnecting' });
-      if (value === ConnectionState.Disconnected)
+      if (value === ConnectionState.Disconnected) {
         this.emit('media_disconnected', { reason: 'disconnected' });
+        this.active = false;
+        this.connected = false;
+      }
     };
     const recovered = () => this.emit('media_recovered', { reason: 'connected' });
     const playing = (event: Event) => {

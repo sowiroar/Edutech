@@ -1,0 +1,22 @@
+{
+  "bytes": 5974092,
+  "sha256": "576ffcf55c1803b6ba4e4291e6cb6124a0855d08ff0e10fe403d5e753500228d",
+  "triangles": 64330,
+  "skins": 3,
+  "joints": 420,
+  "animations": 1,
+  "mouthMorphCandidates": [],
+  "character": "NEXO",
+  "source_scene": "/Game/VIVA/Avatars/Nexo/NativeFinal/L_Nexo_Mateo_Work",
+  "source_author": null,
+  "frontYaw": 1.5707963267948966,
+  "visual_review": "passed",
+  "motion_review": "passed",
+  "mouth_mapping": "amplitude-verified",
+  "web_profile": 2,
+  "export_profile": 3,
+  "rigProfile": "metahuman-mateo-web-v1",
+  "review_scope": "Technical browser review of original native LOD3 face, own assembled bind matrices, idle and lip poses; body/clothing/hair unchanged. Artistic approval pending.",
+  "artistic_review": "pending",
+  "face_geometry": "original CH_Nexo_MateoNative DNA LOD3; 5048 skin triangles"
+}

@@ -27,7 +27,9 @@ class FakeParticipant:
 @pytest.fixture
 def follower():
     bridge = Bridge(Segmenter())
-    return RoomFollower(bridge, url="wss://example.invalid", api_key="k", api_secret="s")
+    return RoomFollower(
+        bridge, url="wss://example.invalid", api_key="k", api_secret="s"
+    )
 
 
 async def test_forward_character_reads_the_avatar_character_attribute(follower):

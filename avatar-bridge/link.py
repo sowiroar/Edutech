@@ -186,7 +186,7 @@ class UnrealLink:
             return
         await self.ws.send(vva1.audio_end(self.session, utterance, self._sent))
 
-    async def cancel(self) -> None:
+    async def cancel(self, *, strict: bool = False) -> None:
         utterance = self._utterance
         if utterance is None:
             return
@@ -195,3 +195,5 @@ class UnrealLink:
             await asyncio.wait_for(self._idle.wait(), CANCEL_TIMEOUT)
         except TimeoutError:
             self._finish()  # Unreal no contesto: se olvida el enunciado
+            if strict:
+                raise

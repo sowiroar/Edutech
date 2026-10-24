@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY vva1.py segmenter.py link.py bridge.py livekit_source.py main.py ./
+COPY vva1.py segmenter.py link.py bridge.py lease.py frames.py livekit_source.py main.py ./
 
 RUN useradd --uid 10001 --home-dir /app --shell /usr/sbin/nologin appuser
 USER appuser

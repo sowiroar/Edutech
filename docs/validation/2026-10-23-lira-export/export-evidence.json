@@ -1,0 +1,55 @@
+{
+  "date_local": "2026-10-23",
+  "character": "LIRA",
+  "avatar_revision": "a204705fca64f012b5c66c605ea34dc11ee3de43",
+  "source_export_engine": "5.8.2",
+  "brows_export_engine": "5.8.4",
+  "brows_export_exit_code": 0,
+  "installation": "preview-only",
+  "production_manifest_changed": false,
+  "saved_authoring_assets": false,
+  "manifest": {
+    "bytes": 4654876,
+    "sha256": "08da9aead30163e46709fc417fb8e35275f7a73df6e037956e0cc28bac2f96b8",
+    "triangles": 75781,
+    "skins": 3,
+    "joints": 486,
+    "animations": 1,
+    "mouthMorphCandidates": [],
+    "character": "LIRA",
+    "source_scene": "/Game/VIVA/Avatars/Lira/Maps/L_Lira",
+    "source_author": "JuanGonzalezx",
+    "frontYaw": 1.7850026767815772,
+    "visual_review": "pending",
+    "motion_review": "pending",
+    "mouth_mapping": "pending",
+    "web_profile": 2,
+    "export_profile": 3,
+    "rigProfile": "metahuman-web-v1"
+  },
+  "inputs": {
+    "lira-source.glb": {
+      "bytes": 23836392,
+      "sha256": "aa24f719f59ec7741892b5c8524b912c9748cd754d5a8c8f36019005a435f87d"
+    },
+    "lira-brows.glb": {
+      "bytes": 114204,
+      "sha256": "2f53235f6f2a5af31189d47b127a5f44981c340876d0c2a2902aee1a683de700"
+    },
+    "lira-brows-attribute.tga": {
+      "bytes": 12582930,
+      "sha256": "71014064a1c4aeaaa7723f620baa568ba7ea83bff47b9cae35595a70bed91752"
+    },
+    "Eyebrows_M_SlightArch_CardsAtlas_Attribute.uasset": {
+      "bytes": 3199047,
+      "sha256": "2e176906f62545a1649555332927c07427c590b42b36bc73bcfeb70dbfefbbf5"
+    }
+  },
+  "tests": {
+    "command": "node --test tests/mateo-rig.test.cjs tests/speech-motion.test.cjs tests/browser-avatar.test.cjs",
+    "passed": 19,
+    "skipped": 3,
+    "failed": 0,
+    "skip_reason": "Original private package models are absent; all three generated candidates were tested."
+  }
+}

@@ -149,6 +149,48 @@ class MediaPayload(StrictModel):
     fps: Annotated[float, Field(ge=0, le=1000, allow_inf_nan=False)] | None = None
 
 
+class AvatarQualityPayload(StrictModel):
+    character: Literal["LIRA", "NEXO", "ELIAN", "NOA", "NOVA", "ATLAS"]
+    model_sha256: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{64}$")]
+    measurement_scope: Literal["live-call-acoustic"]
+    window_ms: Duration
+    sample_count: Annotated[int, Field(ge=1, le=1000, strict=True)]
+    fps: Annotated[float, Field(ge=0, le=1000, allow_inf_nan=False)]
+    fps_min: Annotated[float, Field(ge=0, le=1000, allow_inf_nan=False)]
+    render_submission_ms: Duration
+    first_frame_ms: Duration
+    model_bytes: Count
+    texture_bytes_estimate: Count
+    geometry_bytes: Count
+    page_js_heap_bytes: Count | None
+    triangles: Count
+    draw_calls: Count
+    width: Count
+    height: Count
+    resolution_scale: Annotated[float, Field(ge=0.5, le=1, allow_inf_nan=False)] = 1
+    mouth_available: bool
+    lip_shapes_available: bool
+    playback_status: Literal["active", "silent", "blocked", "unavailable"]
+    analysed_frames: Count
+    speech_frames: Count
+    onset_observations: Count
+    close_observations: Count
+    acoustic_onset_to_pose_max_ms: Duration | None
+    silence_to_rest_max_ms: Duration | None
+
+    @model_validator(mode="after")
+    def consistent_observations(self):
+        if self.speech_frames > self.analysed_frames or self.fps_min > self.fps:
+            raise ValueError("Inconsistent observation coverage")
+        for count, duration in (
+            (self.onset_observations, self.acoustic_onset_to_pose_max_ms),
+            (self.close_observations, self.silence_to_rest_max_ms),
+        ):
+            if (count == 0) != (duration is None) or count > self.analysed_frames:
+                raise ValueError("Transition duration requires observed transitions")
+        return self
+
+
 MEDIA_TYPES = {
     "media_connect_started",
     "media_connected",
@@ -159,6 +201,7 @@ MEDIA_TYPES = {
     "presentation_changed",
     "avatar_unavailable",
     "media_quality_sample",
+    "avatar_quality_sample",
     "media_disconnected",
 }
 PAYLOADS = {
@@ -178,6 +221,7 @@ PAYLOADS = {
     "conversation_message": ConversationPayload,
     "retrieval_completed": RetrievalPayload,
     **dict.fromkeys(sorted(MEDIA_TYPES), MediaPayload),
+    "avatar_quality_sample": AvatarQualityPayload,
 }
 
 
@@ -208,7 +252,7 @@ class Event(SessionContext):
         if self.type not in PAYLOADS:
             raise ValueError("Unknown event type")
         if self.schema_version == 1 and (
-            self.type in ("conversation_message", "retrieval_completed")
+            self.type in ("conversation_message", "retrieval_completed", "avatar_quality_sample")
             or self.parent_span_id is not None
             or "transcript_capture" in self.payload
         ):
@@ -251,7 +295,15 @@ def event_schema() -> dict:
             "if": {"properties": {"schema_version": {"const": 1}}},
             "then": {
                 "properties": {
-                    "type": {"not": {"enum": ["conversation_message", "retrieval_completed"]}},
+                    "type": {
+                        "not": {
+                            "enum": [
+                                "conversation_message",
+                                "retrieval_completed",
+                                "avatar_quality_sample",
+                            ]
+                        }
+                    },
                     "parent_span_id": {"type": "null"},
                     "payload": {"not": {"required": ["transcript_capture"]}},
                 }

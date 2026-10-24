@@ -126,6 +126,15 @@ class BaseEducationalAgent(Agent):
     # entrega visual"). Nexus se mapea a NEXO (no a ATLAS) por eso mismo.
     AVATAR_CHARACTER: str | None = None
 
+    def _prepare_handoff(self, target: Agent) -> Agent:
+        # A handoff may finish the greeting without speaking. Do not let its
+        # silence retry target the realtime session that is being drained.
+        self._handoff_requested = True
+        wake = getattr(self, "_reply_wake", None)
+        if wake is not None:
+            wake.set()
+        return target
+
     async def anunciar_personaje_avatar(self) -> None:
         """Avisa al avatar-bridge (vía atributo de participante de LiveKit)
         qué personaje debe mostrarse/hablar ahora. Si no hay sesión real
@@ -225,9 +234,7 @@ class BaseEducationalAgent(Agent):
         except Exception:
             logger.exception("Error al recuperar o inyectar memorias de Mem0")
 
-    async def generar_respuesta_confiable(
-        self, instructions: str, timeout: float = 6.0
-    ) -> None:
+    async def generar_respuesta_confiable(self, timeout: float = 6.0) -> None:
         """generate_reply() con reintento si no se detecta habla.
 
         Encontrado revisando logs reales el 2026-10-08: una llamada entera
@@ -246,24 +253,58 @@ class BaseEducationalAgent(Agent):
         generate_reply() no deriva en agent_state == "speaking" dentro de
         `timeout` segundos, se reintenta una vez más (para entonces la
         condición de carrera ya pasó)."""
-        if not self.session:
+        session = self.session
+        if not session:
             return
 
-        empezo_a_hablar = asyncio.Event()
+        wake = asyncio.Event()
+        self._reply_wake = wake
+        closed = False
+        spoke = False
+
+        def inactive() -> bool:
+            return (
+                closed
+                or getattr(self, "_handoff_requested", False)
+                or session.current_agent is not self
+            )
 
         def _on_state(ev) -> None:
+            nonlocal spoke
             if ev.new_state == "speaking":
-                empezo_a_hablar.set()
+                spoke = True
+                wake.set()
 
-        self.session.on("agent_state_changed", _on_state)
+        def _on_close(ev) -> None:
+            nonlocal closed
+            closed = True
+            wake.set()
+
+        session.on("agent_state_changed", _on_state)
+        session.on("close", _on_close)
         try:
             for intento in (1, 2):
-                empezo_a_hablar.clear()
-                await self.session.generate_reply(instructions=instructions)
+                if inactive():
+                    return
+                wake.clear()
+                spoke = False
                 try:
-                    await asyncio.wait_for(empezo_a_hablar.wait(), timeout=timeout)
-                    return  # habló — listo
+                    # Gemini's adapter sends per-reply instructions as role=model.
+                    # Keeping the entry directive in system instructions avoids
+                    # continuing it as spoken dialogue/transcription on handoff.
+                    handle = await session.generate_reply()
+                except RuntimeError:
+                    if inactive():
+                        return
+                    raise
+                if inactive() or getattr(handle, "interrupted", False) or spoke:
+                    return
+                try:
+                    await asyncio.wait_for(wake.wait(), timeout=timeout)
+                    return
                 except TimeoutError:
+                    if inactive():
+                        return
                     if intento == 1:
                         logger.warning(
                             "No se detectó habla %ss después de generate_reply "
@@ -277,7 +318,10 @@ class BaseEducationalAgent(Agent):
                             "habla; la sesión puede haber quedado muda"
                         )
         finally:
-            self.session.off("agent_state_changed", _on_state)
+            session.off("agent_state_changed", _on_state)
+            session.off("close", _on_close)
+            if getattr(self, "_reply_wake", None) is wake:
+                self._reply_wake = None
 
     async def emitir_datos_frontend(self, topic: str, data: dict[str, Any]) -> None:
         """Emite datos estructurados (como fuentes de RAG) al frontend vía LiveKit DataPacket."""
@@ -323,7 +367,7 @@ class LiraAgent(BaseEducationalAgent):
                 ¡ESTÁ ESTRICTAMENTE PROHIBIDO que respondas preguntas técnicas o institucionales por ti misma! No tienes el conocimiento para hacerlo. Ante cualquier pregunta, debes usar la herramienta correspondiente.
 
                 # Especialistas disponibles y Cuándo usar cada herramienta:
-                1. Herramienta `transfer_to_nexus`: Úsala INMEDIATAMENTE si el usuario menciona inteligencia artificial, programación, machine learning, sobreajuste, underfitting, deep learning, modelos, algoritmos o tecnología.
+                1. Herramienta `transfer_to_nexus`: Úsala INMEDIATAMENTE si el usuario menciona inteligencia artificial, programación, machine learning, sobreajuste, underfitting, deep learning, modelos, algoritmos o tecnología. NEXO y Nexus son dos nombres del mismo especialista: si pide hablar con Nexo o Nexus, transfiérelo aunque no formule todavía una pregunta técnica.
                 2. Herramienta `transfer_to_elian`: Úsala INMEDIATAMENTE si el usuario menciona la Universidad Autónoma de Manizales (UAM), carreras, admisiones, campus o temas administrativos.
 
                 # Reglas estrictas:
@@ -331,6 +375,9 @@ class LiraAgent(BaseEducationalAgent):
                 - NUNCA expliques cosas de la UAM. Si preguntan por carreras, llama a `transfer_to_elian`.
                 - Si el usuario solo dice "Hola", responde brevemente presentándote y preguntando sobre qué área (IA o UAM) tiene dudas.
                 - Habla siempre en español, texto continuo, sin markdown.
+
+                # Solo al iniciar tu participación en la llamada:
+                Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy.
                 """
             ),
         )
@@ -338,18 +385,18 @@ class LiraAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Saludo inicial breve de bienvenida."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Saluda amablemente en una sola oración presentándote como Lira y preguntando cómo puedes orientarle hoy."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
-        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación, o algoritmos. NO intentes responder la pregunta."
+        description="Transfiere a NEXO (también llamado Nexus). Úsala si pide hablar con Nexo o Nexus, o si hace preguntas sobre Inteligencia Artificial, Machine Learning, Programación o algoritmos. NO intentes responder la pregunta."
     )
     @viva_telemetry.observed()
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere la llamada a Nexus, especialista en Inteligencia Artificial, Machine Learning y Visión por Computadora."""
         logger.info("Lira transfiriendo llamada a Nexus (Especialista IA)")
-        return NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        return self._prepare_handoff(
+            NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        )
 
     @function_tool(
         description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales, carreras, admisiones o campus. NO intentes responder la pregunta."
@@ -358,15 +405,17 @@ class LiraAgent(BaseEducationalAgent):
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere la llamada a Elian, especialista en la Universidad Autónoma de Manizales (UAM) y trámites administrativos."""
         logger.info("Lira transfiriendo llamada a Elian (Especialista UAM)")
-        return ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        return self._prepare_handoff(
+            ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        )
 
 
 # ---------------------------------------------------------------------------
-# AGENTE 2: Nexus - Especialista en IA y Deep Learning (Voz masculina em_alex)
+# AGENTE 2: Nexus - Especialista en IA y Deep Learning (Gemini Live, voz Puck)
 # ---------------------------------------------------------------------------
 class NexusAgent(BaseEducationalAgent):
     """Nexus: Asistente conversacional experto en Inteligencia Artificial y Deep Learning.
-    Voz: em_alex (Español masculina).
+    Voz: Puck (Gemini Live).
     """
 
     # NEXO (no ATLAS): es el personaje original de la Familia VIVA, el
@@ -394,12 +443,16 @@ class NexusAgent(BaseEducationalAgent):
 
                 # Transferencia a Elian (ESTRICTAMENTE OBLIGATORIA):
                 ¡Bajo ninguna circunstancia respondas preguntas sobre la administración general de la Universidad Autónoma de Manizales! No tienes esa información. Si el usuario pregunta sobre admisiones generales, campus, pregrados de salud, fechas de matrícula o costos institucionales de la UAM, utiliza INMEDIATAMENTE la herramienta `transfer_to_elian` para transferir la llamada.
+                La transferencia requiere una intención institucional clara o una petición explícita de hablar con Elian. Si la pregunta es ambigua, conserva el turno y formula una pregunta breve para aclararla. Por ejemplo, ante "háblame de la adquisición", pregunta "¿Te refieres a adquisición de datos, de conocimientos o a otro tipo de adquisición?". No supongas que adquisición significa admisiones, afiliación o trámites de la UAM.
 
                 # Reglas estrictas de interacción por voz:
                 1. Idioma: Comunícate SIEMPRE en español técnico, claro y profesional.
                 2. Formato oral estricto: NUNCA uses formato markdown, asteriscos, negritas, viñetas, emojis ni bloques de código formateado. Habla en texto continuo fluido.
                 3. Directo, veloz y pedagógico: Responde directamente a la pregunta en 1 a 3 oraciones cortas y concisas para que el audio empiece de inmediato.
                 4. Vocabulario técnico en inglés: Pronuncia con fluidez términos estándar (Clustering, Lasso, Ridge, ElasticNet, Scikit-learn, PyTorch, YOLO, Bounding Box, IoU, RAG, Chunking, Transformer, Self-Attention, Backpropagation).
+
+                # Solo al iniciar tu participación en la llamada:
+                Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo de inmediato la última pregunta que le hizo a Lira usando el contexto de la conversación.
                 """
             ),
         )
@@ -407,11 +460,7 @@ class NexusAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Se presenta como Nexus y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Preséntate como Nexus en una frase muy breve y, sin pausas ni esperar a que el "
-            "usuario repita nada, continúa respondiendo de inmediato la última pregunta que le "
-            "hizo a Lira usando el contexto de la conversación."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
         description="Consulta información oficial, contenidos, materias, créditos y guías de la Especialización en Inteligencia Artificial de la UAM. Úsala siempre que el usuario pregunte por detalles curriculares o materias del posgrado."
@@ -474,13 +523,15 @@ class NexusAgent(BaseEducationalAgent):
         return f"Tenemos {len(nombres)} documentos disponibles de la Especialización en IA, incluyendo: {', '.join(nombres[:5])} y otros."
 
     @function_tool(
-        description="Llama a esta herramienta OBLIGATORIAMENTE si el usuario hace preguntas sobre la Universidad Autónoma de Manizales general, carreras de pregrado, admisiones o campus. NO intentes responder la pregunta tú mismo."
+        description="Transfiere a Elian cuando el usuario pide hablar con Elian o expresa claramente una consulta institucional de la UAM, como carreras de pregrado, admisiones o campus. Si la pregunta es ambigua, pide aclaración primero y NO uses esta herramienta."
     )
     @viva_telemetry.observed()
     async def transfer_to_elian(self, context: RunContext):
         """Transfiere al usuario con Elian para resolver dudas sobre la Universidad Autónoma de Manizales o trámites administrativos."""
         logger.info("Nexus transfiriendo llamada a Elian (Especialista UAM)")
-        return ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        return self._prepare_handoff(
+            ElianAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -525,6 +576,9 @@ class ElianAgent(BaseEducationalAgent):
                 2. Formato oral estricto: NUNCA uses formato markdown, viñetas, emojis ni listas. Habla en texto continuo fluido.
                 3. Concisión: Responde de forma clara y directa en 1 a 3 oraciones cortas.
                 4. Identidad institucional: Resalta siempre los valores de innovación, excelencia y calidez de la Universidad Autónoma de Manizales.
+
+                # Solo al iniciar tu participación en la llamada:
+                Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo de inmediato la última pregunta que hizo usando el contexto de la conversación (recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto).
                 """
             ),
         )
@@ -532,12 +586,7 @@ class ElianAgent(BaseEducationalAgent):
     async def on_enter(self) -> None:
         """Se presenta como Elian y responde de inmediato la pregunta pendiente, sin gastar un turno completo solo en saludar."""
         await self.anunciar_personaje_avatar()
-        await self.generar_respuesta_confiable(
-            "Preséntate como Elian de la Universidad Autónoma de Manizales en una frase muy "
-            "breve y, sin pausas ni esperar a que el usuario repita nada, continúa respondiendo "
-            "de inmediato la última pregunta que hizo usando el contexto de la conversación "
-            "(recuerda usar la herramienta buscar_informacion_uam si es sobre un dato concreto)."
-        )
+        await self.generar_respuesta_confiable()
 
     @function_tool(
         description="Busca información oficial de la UAM en sus documentos (reglamentos, acuerdos, políticas, estatutos) y en las guías de trámites y vida universitaria. Úsala SIEMPRE antes de responder una pregunta concreta sobre la universidad."
@@ -632,16 +681,17 @@ class ElianAgent(BaseEducationalAgent):
     async def transfer_to_nexus(self, context: RunContext):
         """Transfiere al usuario con Nexus para resolver consultas técnicas sobre Inteligencia Artificial o programación."""
         logger.info("Elian transfiriendo llamada a Nexus (Especialista IA)")
-        return NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        return self._prepare_handoff(
+            NexusAgent(chat_ctx=self.chat_ctx.copy(exclude_instructions=True))
+        )
 
 
 # ---------------------------------------------------------------------------
 # SERVIDOR Y SESIÓN RTC MULTIAGENTE
 # ---------------------------------------------------------------------------
-# initialize_process_timeout (default 10s) no alcanzaba para el prewarm de
-# RAG agregado abajo (~22s medido para el índice de la UAM): el framework
-# mataba el proceso worker por timeout y lo reintentaba en bucle, sin que el
-# prewarm llegara nunca a terminar. 45s da margen real (Claude, 2026-09-30).
+# La preparación inicial de los índices puede superar 45 s. Este límite de
+# 600 s permite completar el prewarm sin reiniciar el proceso en bucle;
+# no es el tiempo de espera de cada respuesta ni el del cliente web.
 server = AgentServer(num_idle_processes=1, initialize_process_timeout=600.0)
 
 
@@ -751,13 +801,13 @@ async def multiagent_session(ctx: JobContext):
     logger.info(
         "Iniciando sesión con audio WebRTC nativo (detección de turno del lado de Gemini)."
     )
+    # on_enter publica avatar.character. Conectar primero evita que ese primer
+    # anuncio se pierda mientras AgentSession conecta la sala en paralelo.
+    await ctx.connect()
     await session.start(
         agent=initial_agent,
         room=ctx.room,
     )
-
-    # Conecta al participante a la sala WebRTC
-    await ctx.connect()
 
 
 if __name__ == "__main__":

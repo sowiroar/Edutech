@@ -1,7 +1,6 @@
 # Desarrollo local de voz. No combinar con docker-compose.yml mediante -f.
 # Mantiene el código de Jacobo; no inicia CUDA, Unreal ni el puente de avatar.
 x-agent-runtime: &agent-runtime
-  build: ./agent-starter-python
   image: edutech-voice-local-voice-agent
   environment:
     LIVEKIT_URL: ws://livekit:7880
@@ -89,6 +88,8 @@ services:
   # Build once outside the worker, then load the persisted indexes there.
   rag-init:
     <<: *agent-runtime
+    # Reuse the image built by voice-agent; never export the same tag twice.
+    pull_policy: never
     restart: "no"
     depends_on:
       storage-init:
@@ -110,6 +111,7 @@ services:
         print("RAG preparation complete", flush=True)
   voice-agent:
     <<: *agent-runtime
+    build: ./agent-starter-python
     depends_on:
       livekit:
         condition: service_started
@@ -127,6 +129,9 @@ services:
       - livekit
     ports:
       - "127.0.0.1:3500:3000"
+      # Compatibility with the URL used before the local voice profile.
+      # Both ports serve this same frontend; stop the historical frontend first.
+      - "127.0.0.1:3000:3000"
     environment:
       # URL pública para el navegador y URL interna para verificar el token.
       LIVEKIT_URL: ws://localhost:7880
@@ -142,6 +147,7 @@ services:
       TELEMETRY_ADMIN_PASSWORD: ${TELEMETRY_ADMIN_PASSWORD:-}
       TELEMETRY_ENVIRONMENT: ${TELEMETRY_ENVIRONMENT:-local}
       TELEMETRY_PUBLIC_ORIGIN: ${TELEMETRY_PUBLIC_ORIGIN:-http://localhost:3500}
+      TELEMETRY_ADDITIONAL_ORIGINS: http://localhost:3000
       TELEMETRY_COOKIE_SECURE: ${TELEMETRY_COOKIE_SECURE:-false}
       APP_RELEASE: ${APP_RELEASE:-unknown}
 volumes:

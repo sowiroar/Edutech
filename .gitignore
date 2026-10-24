@@ -50,6 +50,14 @@ __pycache__/
 # Generated vector storages
 data/*_storage/
 data/knowledge.db
+data/local-avatar/
+# Private runtime assets; reviewed manifests and installation docs are versioned.
+agent-starter-react/public/avatars/**/*.glb
+agent-starter-react/public/avatars/**/*.jpg
+agent-starter-react/public/avatars/**/*.png
+agent-starter-react/public/avatars/**/manifest.next.json
+agent-starter-react/public/avatars/**/manifest.preview.json
+agent-starter-react/public/avatars/**/manifest.preview.next.json
 .vscode/
 .idea/
 
@@ -61,3 +69,6 @@ agent-starter-python/data/
 # Local design inspection state (selected evidence is under docs/validation)
 .impeccable/*
 !.impeccable/design.json
+
+# Optional synthetic preview fixture, not conversation audio
+agent-starter-react/public/avatars/articulation-sample.wav

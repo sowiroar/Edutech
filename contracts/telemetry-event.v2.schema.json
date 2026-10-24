@@ -274,6 +274,7 @@
         "conversation_message",
         "retrieval_completed",
         "audio_playback_started",
+        "avatar_quality_sample",
         "avatar_unavailable",
         "media_connect_started",
         "media_connected",
@@ -986,6 +987,229 @@
       },
       "title": "MediaPayload",
       "type": "object"
+    },
+    "AvatarQualityPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "character": {
+          "enum": [
+            "LIRA",
+            "NEXO",
+            "ELIAN",
+            "NOA",
+            "NOVA",
+            "ATLAS"
+          ],
+          "title": "Character",
+          "type": "string"
+        },
+        "model_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Model Sha256",
+          "type": "string"
+        },
+        "measurement_scope": {
+          "const": "live-call-acoustic",
+          "title": "Measurement Scope",
+          "type": "string"
+        },
+        "window_ms": {
+          "maximum": 86400000,
+          "minimum": 0,
+          "title": "Window Ms",
+          "type": "number"
+        },
+        "sample_count": {
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "fps": {
+          "maximum": 1000,
+          "minimum": 0,
+          "title": "Fps",
+          "type": "number"
+        },
+        "fps_min": {
+          "maximum": 1000,
+          "minimum": 0,
+          "title": "Fps Min",
+          "type": "number"
+        },
+        "render_submission_ms": {
+          "maximum": 86400000,
+          "minimum": 0,
+          "title": "Render Submission Ms",
+          "type": "number"
+        },
+        "first_frame_ms": {
+          "maximum": 86400000,
+          "minimum": 0,
+          "title": "First Frame Ms",
+          "type": "number"
+        },
+        "model_bytes": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Model Bytes",
+          "type": "integer"
+        },
+        "texture_bytes_estimate": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Texture Bytes Estimate",
+          "type": "integer"
+        },
+        "geometry_bytes": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Geometry Bytes",
+          "type": "integer"
+        },
+        "page_js_heap_bytes": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Page Js Heap Bytes"
+        },
+        "triangles": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Triangles",
+          "type": "integer"
+        },
+        "draw_calls": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Draw Calls",
+          "type": "integer"
+        },
+        "width": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "resolution_scale": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0.5,
+          "title": "Resolution Scale",
+          "type": "number"
+        },
+        "mouth_available": {
+          "title": "Mouth Available",
+          "type": "boolean"
+        },
+        "lip_shapes_available": {
+          "title": "Lip Shapes Available",
+          "type": "boolean"
+        },
+        "playback_status": {
+          "enum": [
+            "active",
+            "silent",
+            "blocked",
+            "unavailable"
+          ],
+          "title": "Playback Status",
+          "type": "string"
+        },
+        "analysed_frames": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Analysed Frames",
+          "type": "integer"
+        },
+        "speech_frames": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Speech Frames",
+          "type": "integer"
+        },
+        "onset_observations": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Onset Observations",
+          "type": "integer"
+        },
+        "close_observations": {
+          "maximum": 1000000000000,
+          "minimum": 0,
+          "title": "Close Observations",
+          "type": "integer"
+        },
+        "acoustic_onset_to_pose_max_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Acoustic Onset To Pose Max Ms"
+        },
+        "silence_to_rest_max_ms": {
+          "anyOf": [
+            {
+              "maximum": 86400000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Silence To Rest Max Ms"
+        }
+      },
+      "required": [
+        "character",
+        "model_sha256",
+        "measurement_scope",
+        "window_ms",
+        "sample_count",
+        "fps",
+        "fps_min",
+        "render_submission_ms",
+        "first_frame_ms",
+        "model_bytes",
+        "texture_bytes_estimate",
+        "geometry_bytes",
+        "page_js_heap_bytes",
+        "triangles",
+        "draw_calls",
+        "width",
+        "height",
+        "mouth_available",
+        "lip_shapes_available",
+        "playback_status",
+        "analysed_frames",
+        "speech_frames",
+        "onset_observations",
+        "close_observations",
+        "acoustic_onset_to_pose_max_ms",
+        "silence_to_rest_max_ms"
+      ],
+      "title": "AvatarQualityPayload",
+      "type": "object"
     }
   },
   "allOf": [
@@ -1006,6 +1230,7 @@
           "type": {
             "enum": [
               "audio_playback_started",
+              "avatar_quality_sample",
               "avatar_unavailable",
               "media_connect_started",
               "media_connected",
@@ -1057,7 +1282,8 @@
             "not": {
               "enum": [
                 "conversation_message",
-                "retrieval_completed"
+                "retrieval_completed",
+                "avatar_quality_sample"
               ]
             }
           },
@@ -1374,6 +1600,25 @@
         "properties": {
           "payload": {
             "$ref": "#/$defs/MediaPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "avatar_quality_sample"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/AvatarQualityPayload"
           }
         }
       }

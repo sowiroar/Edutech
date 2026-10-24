@@ -1,0 +1,54 @@
+{
+  "modelHash": "08da9aead30163e46709fc417fb8e35275f7a73df6e037956e0cc28bac2f96b8",
+  "scope": "browser-preview-no-voice",
+  "samples": 120,
+  "capturedAt": "2026-10-24T00:56:40.112Z",
+  "note": "One model load; repeated timings are not independent loads. JS heap is not total RAM or VRAM. Synthetic mouth movements, no audio.",
+  "metrics": {
+    "fps": {
+      "min": 29.143190207888257,
+      "median": 30.0,
+      "max": 30.25275690445993
+    },
+    "renderSubmissionMs": {
+      "min": 0.9064516128311234,
+      "median": 1.4366666667163372,
+      "max": 1.9133333327869575
+    },
+    "fetchMs": {
+      "min": 96.39999999850988,
+      "median": 96.39999999850988,
+      "max": 96.39999999850988
+    },
+    "parseMs": {
+      "min": 82.40000000223517,
+      "median": 82.40000000223517,
+      "max": 82.40000000223517
+    },
+    "loadMs": {
+      "min": 260.80000000074506,
+      "median": 260.80000000074506,
+      "max": 260.80000000074506
+    },
+    "firstFrameMs": {
+      "min": 1300.5999999977648,
+      "median": 1300.5999999977648,
+      "max": 1300.5999999977648
+    },
+    "textureBytesEstimate": {
+      "min": 39146852,
+      "median": 39146852.0,
+      "max": 39146852
+    },
+    "geometryDataBytes": {
+      "min": 3610962,
+      "median": 3610962.0,
+      "max": 3610962
+    },
+    "pageJsHeapBytes": {
+      "min": 34408336,
+      "median": 38969442.0,
+      "max": 40797320
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Track } from 'livekit-client';
 import { AnimatePresence, type MotionProps, motion } from 'motion/react';
 import {
@@ -8,7 +8,10 @@ import {
   useTracks,
   useVoiceAssistant,
 } from '@livekit/components-react';
+import { useAvatarStream } from '@/hooks/useAvatarStream';
+import { avatarForAgent } from '@/lib/browser-avatar';
 import { cn } from '@/lib/shadcn/utils';
+import { AvatarStage } from './avatar-stage';
 import { SpeakingAnimation } from './speaking-animation';
 
 const ANIMATION_TRANSITION: MotionProps['transition'] = {
@@ -81,24 +84,14 @@ interface TileLayoutProps {
   audioVisualizerBarCount?: number;
 }
 
-export function TileLayout({
-  themeMode,
-  isChatOpen,
-  audioVisualizerType,
-  audioVisualizerColor,
-  audioVisualizerColorShift,
-  audioVisualizerBarCount,
-  audioVisualizerRadialBarCount,
-  audioVisualizerRadialRadius,
-  audioVisualizerGridRowCount,
-  audioVisualizerGridColumnCount,
-  audioVisualizerWaveLineWidth,
-}: TileLayoutProps) {
+export function TileLayout({ isChatOpen }: TileLayoutProps) {
+  const avatar = useAvatarStream();
   const { state: agentState, agentAttributes } = useVoiceAssistant();
-  // Personaje activo (NEXO/LIRA/ELIAN), el mismo atributo que agent.py pone en
-  // anunciar_personaje_avatar() (Fase 2) para el avatar de Unreal — se reutiliza aquí
-  // para elegir el color de animaciones_viva, sin inventar una señal nueva.
+  // El mismo anuncio del agente selecciona el modelo WebGL y la animación de voz.
   const character = agentAttributes?.['avatar.character'];
+  const selectedAvatar = avatar.mode === 'avatar' ? avatarForAgent(character, avatar.assets) : null;
+  const resetPlayback = avatar.resetPlayback;
+  useEffect(() => resetPlayback(), [selectedAvatar?.sha256, resetPlayback]);
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -106,8 +99,6 @@ export function TileLayout({
   const isScreenShareEnabled = screenShareTrack && !screenShareTrack.publication.isMuted;
   const hasSecondTile = isCameraEnabled || isScreenShareEnabled;
 
-  // Obligatoria siempre (hablando o en espera): reemplaza por completo al avatar de
-  // Unreal y al visualizador de audio que había antes en este tile (animaciones_viva).
   const isSpeaking = agentState === 'speaking';
 
   const animationDelay = isChatOpen ? 0 : 0.15;
@@ -126,10 +117,6 @@ export function TileLayout({
             ])}
           >
             <AnimatePresence mode="popLayout">
-              {/* animaciones_viva: único visual del agente, siempre montado (nunca se
-                  desmonta entre hablando/en espera, para no recargar el video ni saltar
-                  entre tiles) — reemplaza por completo al avatar de Unreal, al
-                  visualizador de audio y al video de agente que había antes aquí. */}
               <motion.div
                 key="speaking-animation"
                 layoutId="speaking-animation"
@@ -140,11 +127,39 @@ export function TileLayout({
                   delay: animationDelay,
                 }}
               >
-                <SpeakingAnimation
-                  isSpeaking={isSpeaking}
-                  isChatOpen={isChatOpen}
-                  character={character}
-                />
+                {selectedAvatar && !avatar.failed ? (
+                  <AvatarStage
+                    asset={selectedAvatar}
+                    isChatOpen={isChatOpen}
+                    onFailure={avatar.fail}
+                    onReady={avatar.markReady}
+                  />
+                ) : (
+                  <SpeakingAnimation
+                    isSpeaking={isSpeaking}
+                    isChatOpen={isChatOpen}
+                    character={character}
+                  />
+                )}
+                {avatar.mode === 'avatar' && selectedAvatar && !avatar.ready && (
+                  <p role="status" className="text-center text-sm">
+                    {avatar.failed
+                      ? 'La imagen no está disponible. La conversación continúa por voz.'
+                      : `Cargando ${selectedAvatar.character}…`}
+                  </p>
+                )}
+                {avatar.mode === 'avatar' && !selectedAvatar && (
+                  <p role="status" className="text-center text-sm">
+                    {character
+                      ? `${character}: la conversación continúa por voz; su modelo aún no está disponible.`
+                      : 'Conectando con LIRA…'}
+                  </p>
+                )}
+                {character && (
+                  <p data-active-agent={character} className="mt-2 text-center text-sm font-medium">
+                    {character}
+                  </p>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>

@@ -1,0 +1,83 @@
+{
+  "started_utc": "2026-10-22T02:21:07.255Z",
+  "success": true,
+  "errors": [],
+  "input": "text in call; synthetic silent microphone; physical microphone not used",
+  "acquisition_response": "¿Te refieres a adquisición de datos, de conocimientos o a otro tipo de adquisición?",
+  "lifecycle_error_counts": {
+    "rt_session is not available": 0,
+    "AgentSession is closing, cannot use generate_reply()": 0,
+    "Segundo intento de generate_reply tampoco produjo": 0,
+    "reintentando una vez": 0
+  },
+  "turns": [
+    {
+      "character": "LIRA",
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "LIRA",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 259692,
+        "energy": 5.378786691739879,
+        "playing": 1,
+        "canvases": 1
+      }
+    },
+    {
+      "character": "NEXO",
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 623654,
+        "energy": 10.392571847062158,
+        "playing": 1,
+        "canvases": 1
+      }
+    },
+    {
+      "character": "NEXO",
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "NEXO",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 692112,
+        "energy": 11.270184862291844,
+        "playing": 1,
+        "canvases": 1
+      }
+    },
+    {
+      "character": "ELIAN",
+      "heard": true,
+      "returnedToRest": true,
+      "attrs": [
+        {
+          "character": "ELIAN",
+          "state": "listening"
+        }
+      ],
+      "audio": {
+        "bytes": 824748,
+        "energy": 14.041926025274634,
+        "playing": 1,
+        "canvases": 1
+      }
+    }
+  ]
+}

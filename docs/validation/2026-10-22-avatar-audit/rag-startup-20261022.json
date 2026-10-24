@@ -1,0 +1,41 @@
+{
+  "scope": "RAG client construction only, no retrieval, generation or audio; sequential 3 pairs",
+  "samples": [
+    {
+      "sample": 1,
+      "metadata": "network",
+      "constructor_ms": 660.34,
+      "status": "ok"
+    },
+    {
+      "sample": 1,
+      "metadata": "explicit",
+      "constructor_ms": 10.12,
+      "status": "ok"
+    },
+    {
+      "sample": 2,
+      "metadata": "network",
+      "constructor_ms": 783.42,
+      "status": "ok"
+    },
+    {
+      "sample": 2,
+      "metadata": "explicit",
+      "constructor_ms": 9.14,
+      "status": "ok"
+    },
+    {
+      "sample": 3,
+      "metadata": "network",
+      "constructor_ms": 267.72,
+      "status": "ok"
+    },
+    {
+      "sample": 3,
+      "metadata": "explicit",
+      "constructor_ms": 9.01,
+      "status": "ok"
+    }
+  ]
+}

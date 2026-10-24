@@ -23,6 +23,9 @@ import os
 import subprocess
 import sys
 import threading
+import time
+import json
+import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 SOI = b"\xff\xd8"
@@ -37,12 +40,28 @@ class FrameBroadcaster:
         self._frame: bytes | None = None
         self._condition = threading.Condition()
         self._generation = 0
+        self._last_frame_at = 0.0
+        self._started = time.monotonic()
 
     def publish(self, frame: bytes) -> None:
         with self._condition:
             self._frame = frame
             self._generation += 1
+            self._last_frame_at = time.monotonic()
             self._condition.notify_all()
+
+    def snapshot(self):
+        with self._condition:
+            age = time.monotonic() - self._last_frame_at
+            return self._frame if age < 0.75 else None
+
+    def metrics(self):
+        with self._condition:
+            age = time.monotonic() - self._last_frame_at
+            return {"ready": bool(self._frame and age < 0.75),
+                    "frames_produced": self._generation,
+                    "elapsed_seconds": time.monotonic() - self._started,
+                    "frame_age_ms": round(age * 1000, 1) if self._frame else None}
 
     def wait_for_next(self, last_generation: int, timeout: float = 10.0) -> tuple[bytes, int] | None:
         """Bloquea hasta que haya un frame mas nuevo que `last_generation`, o hasta
@@ -80,13 +99,27 @@ def read_frames(stdout, broadcaster: FrameBroadcaster) -> None:
             del buffer[:end]
 
 
-def make_handler(broadcaster: FrameBroadcaster):
+def make_handler(broadcaster: FrameBroadcaster, secret=""):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):  # silencia el access log por defecto
             pass
 
         def do_GET(self) -> None:
-            if self.path.split("?", 1)[0] != "/stream":
+            if secret and not secrets.compare_digest(self.headers.get("Authorization", ""), "Bearer " + secret):
+                self.send_response(403)
+                self.end_headers()
+                return
+            path = self.path.split("?", 1)[0]
+            if path in ("/health", "/frame"):
+                data = json.dumps(broadcaster.metrics()).encode() if path == "/health" else broadcaster.snapshot()
+                self.send_response(200 if data else 503)
+                self.send_header("Content-Type", "application/json" if path == "/health" else "image/jpeg")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(data or b"")))
+                self.end_headers()
+                self.wfile.write(data or b"")
+                return
+            if path != "/stream" or secret:
                 self.send_response(404)
                 self.end_headers()
                 return
