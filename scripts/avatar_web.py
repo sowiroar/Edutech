@@ -325,6 +325,39 @@ def export(character="NEXO", *, install_result=True):
         flush=True,
     )
     print(f"Registros: {export_dir}", flush=True)
+    if character in ("NOA", "NOVA", "ATLAS"):
+        preflight = [
+            arg
+            for arg in args
+            if not arg.startswith(("-script=", "-abslog="))
+            and arg != "-AllowCommandletRendering"
+        ] + [
+            "-nullrhi",
+            f"-script={ROOT / 'scripts/inspect_family_web.py'}",
+            f"-abslog={export_dir / 'preflight-unreal.log'}",
+        ]
+        with (export_dir / "preflight-console.log").open("w", encoding="utf-8") as log:
+            child = subprocess.Popen(
+                preflight,
+                cwd=editor.parent,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                env=runtime_env,
+                **process_options(),
+            )
+            try:
+                code = child.wait(timeout=300)
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError(
+                    f"La lectura de la escena excedio 5 minutos. Revisa {export_dir}"
+                ) from exc
+            finally:
+                if child.poll() is None:
+                    stop_export(child)
+        if code or not (export_dir / "scene-snapshot.json").is_file():
+            raise RuntimeError(
+                f"No se pudo leer la escena guardada; no se exporta. Revisa {export_dir / 'preflight-console.log'}"
+            )
     with (export_dir / "console.log").open("w", encoding="utf-8") as log:
         process = subprocess.Popen(
             args,
@@ -420,6 +453,7 @@ def cancel():
             "export_lira_web.py",
             "export_elian_web.py",
             "export_family_web.py",
+            "inspect_family_web.py",
         )
     ]
     from avatar_web_storage import runtime_root

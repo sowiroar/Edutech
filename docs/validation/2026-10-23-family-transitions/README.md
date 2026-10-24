@@ -42,8 +42,12 @@ El pulido labial aceptado permanece: algoritmo de Santiago, mandíbula original,
 
 ## Exportación de los diseños faltantes
 
-`export_family_web.py` lee los mapas retenidos de NOA/NOVA/ATLAS y exporta su
-personaje y accesorios estáticos unidos al cuerpo/rostro; excluye fondos y luces.
+`inspect_family_web.py` lee los mapas retenidos con NullRHI y guarda una
+descripción de mallas, materiales, pose y accesorios. `export_family_web.py`
+reconstruye esa disposición en un mundo transitorio y exporta sus piezas visibles.
+Así evita compilar fondos y proyectores de trazos de la escena que glTF no exporta.
+Los trazos/materiales procedurales todavía requieren comparación y adaptación
+visual; no se certifica fidelidad por producir un archivo.
 No guarda mapas, materiales ni blueprints. Comprueba la cara alternativa de NOA.
 El empaquetador conserva los ojos y dientes horneados sobre cada cara original,
 y exige todos sus archivos auxiliares antes de instalar: seis para NOA/NOVA
@@ -76,7 +80,7 @@ nueva tampoco hereda la aceptación del paquete de Santiago.
    reiniciarse por el fundido. Revisar avatar_quality_sample por personaje/hash.
 
 Pruebas automatizadas: 59 frontend aprobadas, 3 omitidas por assets privados
-históricos; 35 scripts Python aprobadas; 21 pruebas de contrato/colector aprobadas;
+históricos; 36 scripts Python aprobadas; 21 pruebas de contrato/colector aprobadas;
 TypeScript, lint y build aprobados. El contrato v2 y su JSON generado admiten
 los seis nombres. Colector local reconstruido antes de habilitar cualquier
 candidato adicional; frontend local reconstruido en el puerto 3500.

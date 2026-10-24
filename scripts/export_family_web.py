@@ -1,37 +1,69 @@
 """Export retained NOA/NOVA/ATLAS scenes read-only to unreviewed web candidates."""
 
 import json
-import math
 import os
 from pathlib import Path
 
 import unreal as u
 
 character = os.environ["VIVA_WEB_CHARACTER"]
-profiles = {
-    "NOA": ("/Game/VIVA/Avatars/Noa/Maps/L_Noa", "BP_Noa_C"),
-    "NOVA": ("/Game/VIVA/Avatars/Nova/Final/Maps/L_Nova_Final", "BP_Nova_Final_C"),
-    "ATLAS": ("/Game/VIVA/Avatars/Atlas/Final/Maps/L_Atlas_Final", "BP_Atlas_Final_C"),
-}
-scene, blueprint = profiles[character]
 slug = character.lower()
 output = Path(os.environ["NEXO_WEB_EXPORT_DIR"])
 output.mkdir(parents=True, exist_ok=True)
+snapshot = json.loads((output / "scene-snapshot.json").read_text())
+assert (
+    snapshot["character"] == character and snapshot["saved_authoring_assets"] is False
+)
+scene = snapshot["scene"]
 (output / "started.json").write_text(json.dumps({"stage": "loading-" + slug}))
-world = u.EditorLoadingAndSavingUtils.load_map(scene)
-assert world, "Saved map could not be loaded"
-actors = u.GameplayStatics.get_all_actors_of_class(world, u.Actor)
-main = next(a for a in actors if a.get_class().get_name() == blueprint)
+# The saved placement was read in a separate NullRHI process. Export only its
+# visible parts in a transient world, without compiling unused studio decals.
+world = u.EditorLoadingAndSavingUtils.load_map("/Engine/Maps/Entry")
+aa = u.get_editor_subsystem(u.EditorActorSubsystem)
+
+
+def to_transform(t):
+    pitch, yaw, roll = t["rotation"]
+    return u.Transform(
+        location=u.Vector(*t["location"]),
+        rotation=u.Rotator(pitch=pitch, yaw=yaw, roll=roll),
+        scale=u.Vector(*t["scale"]),
+    )
+
+
+bp = u.load_asset(snapshot["blueprint"])
+main = aa.spawn_actor_from_class(bp.generated_class(), u.Vector())
+main.set_actor_label(character)
+main.set_actor_transform(to_transform(snapshot["transform"]), False, True)
+components = {
+    c.get_name(): c for c in main.get_components_by_class(u.SkeletalMeshComponent)
+}
+for item in snapshot["components"]:
+    c = components[item["name"]]
+    c.set_skeletal_mesh_asset(u.load_asset(item["mesh"]) if item["mesh"] else None)
+    c.set_visibility(item["visible"])
+    c.set_relative_transform(to_transform(item["relative"]), False, True)
+    for index, material in enumerate(item["materials"]):
+        c.set_material(index, u.load_asset(material) if material else None)
 selected = [main]
-for actor in actors:
-    if actor == main or not actor.get_actor_label().upper().startswith(character + "_"):
-        continue
-    # Export attached accessories, never the studio backdrop, lamps or decal volumes.
-    if any(
-        c.get_attach_parent() and c.get_attach_parent().get_owner() == main
-        for c in actor.get_components_by_class(u.StaticMeshComponent)
-    ):
-        selected.append(actor)
+for item in snapshot["accessories"]:
+    actor = aa.spawn_actor_from_class(u.StaticMeshActor, u.Vector())
+    actor.set_actor_label(item["label"])
+    c = actor.static_mesh_component
+    c.set_mobility(u.ComponentMobility.MOVABLE)
+    c.set_static_mesh(u.load_asset(item["mesh"]))
+    for index, material in enumerate(item["materials"]):
+        c.set_material(index, u.load_asset(material) if material else None)
+    actor.attach_to_component(
+        components[item["parent"]],
+        item["socket"],
+        u.AttachmentRule.SNAP_TO_TARGET,
+        u.AttachmentRule.SNAP_TO_TARGET,
+        u.AttachmentRule.SNAP_TO_TARGET,
+        False,
+    )
+    c.set_relative_transform(to_transform(item["relative"]), False, True)
+    selected.append(actor)
 report = {
     "character": character,
     "scene": scene,
@@ -43,9 +75,7 @@ report = {
     "background_source": "Uam-virtual.jpg (shared web background requested by user)",
     "animation_status": "saved idle exported; browser review pending",
 }
-camera = next(a for a in actors if a.get_actor_label() == "VIVA_Presenter_Camera")
-delta = camera.get_actor_location() - main.get_actor_location()
-report["frontYaw"] = -math.atan2(delta.x, delta.y)
+report["frontYaw"] = snapshot["frontYaw"]
 editor = u.get_editor_subsystem(u.SkeletalMeshEditorSubsystem)
 face_materials = []
 face_mesh = None
@@ -54,7 +84,8 @@ body = next(
     for c in main.get_components_by_class(u.SkeletalMeshComponent)
     if c.get_name() == "Body"
 )
-idle = body.get_editor_property("animation_data").get_editor_property("anim_to_play")
+idle_path = next(c["animation"] for c in snapshot["components"] if c["name"] == "Body")
+idle = u.load_asset(idle_path) if idle_path else None
 assert idle, (
     "Saved body animation missing; do not substitute another character animation"
 )

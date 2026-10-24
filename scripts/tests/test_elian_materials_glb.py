@@ -11,7 +11,8 @@ from optimize_nexo_glb import GLB
 
 
 class ElianMaterialTests(unittest.TestCase):
-    def fixture(self, directory):
+    def fixture(self, directory, character="ELIAN"):
+        sections = 7 if character in ("NOA", "NOVA") else 4
         g = object.__new__(GLB)
         g.binary = bytearray()
         g.doc = {
@@ -37,15 +38,21 @@ class ElianMaterialTests(unittest.TestCase):
                         "indices": indices,
                         "material": 0,
                     }
-                    for _ in range(4)
+                    for _ in range(sections)
                 ],
             }
         ]
         names = ["skin", "MI_Teeth_Baked", "MI_EyeL_Baked", "MI_EyeR_Baked"]
+        if sections == 7:
+            names += [
+                "MI_Face_EyeShell",
+                "MI_Face_EyelashesHiLODs",
+                "MI_Face_LacrimalFluid",
+            ]
         (directory / "export.json").write_text(
             json.dumps({"face_material_sidecars": names})
         )
-        for section in range(1, 4):
+        for section in range(1, sections):
             side = copy.deepcopy(g)
             uv = side.append([(0.2, 0.3), (0.8, 0.3), (0.2, 0.9)], "VEC2", 5126)
             for p in side.doc["meshes"][0]["primitives"]:
@@ -70,7 +77,7 @@ class ElianMaterialTests(unittest.TestCase):
             ]
             side.doc["textures"] = [{"source": 0, "sampler": 0}]
             side.doc["images"] = [{"bufferView": view, "mimeType": "image/png"}]
-            side.write(directory / f"elian-face-material-{section}.glb")
+            side.write(directory / f"{character.lower()}-face-material-{section}.glb")
         return g
 
     def test_restores_each_original_material_and_bake_uv_without_changing_geometry(
@@ -114,3 +121,26 @@ class ElianMaterialTests(unittest.TestCase):
             p["attributes"]["POSITION"] = g.append([(2.0, 0.0, 0.0)] * 3, "VEC3", 5126)
             with self.assertRaisesRegex(ValueError, "vertices differ"):
                 append_face_materials(g, directory)
+
+    def test_family_face_layouts_keep_all_original_sections_and_uvs(self):
+        for character, sections in [("NOA", 7), ("NOVA", 7), ("ATLAS", 4)]:
+            with (
+                self.subTest(character=character),
+                tempfile.TemporaryDirectory() as temp,
+            ):
+                directory = Path(temp)
+                glb = self.fixture(directory, character)
+                original_positions = [
+                    p["attributes"]["POSITION"]
+                    for p in glb.doc["meshes"][0]["primitives"]
+                ]
+                report = append_face_materials(glb, directory, character)
+                self.assertEqual(len(report), sections - 1)
+                self.assertEqual(len(glb.doc["materials"]), sections)
+                for index, primitive in enumerate(glb.doc["meshes"][0]["primitives"]):
+                    self.assertEqual(
+                        primitive["attributes"]["POSITION"], original_positions[index]
+                    )
+                    self.assertEqual(primitive["material"], index)
+                    if index:
+                        self.assertIn("TEXCOORD_1", primitive["attributes"])
