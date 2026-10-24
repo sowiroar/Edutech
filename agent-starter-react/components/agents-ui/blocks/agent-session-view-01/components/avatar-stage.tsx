@@ -49,7 +49,7 @@ export function AvatarStage({
     let analyser: ReturnType<typeof createAudioAnalyser> | undefined;
     try {
       analyser = createAudioAnalyser(track as RemoteAudioTrack, {
-        fftSize: 1024,
+        fftSize: 2048,
         smoothingTimeConstant: 0.05,
         minDecibels: -85,
         maxDecibels: -20,

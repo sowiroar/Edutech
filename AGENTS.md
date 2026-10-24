@@ -112,3 +112,11 @@ despliegue UAM, aceptación artística y concurrencia siguen sin certificación 
 Entrega y verificaciones: docs/mvp/ENTREGA_WEB_2026-10-21.md.
 Las notas anteriores se conservan en docs/history/AGENTS-through-20261021.md;
 son antecedentes, no instrucciones vigentes de arranque o ramas.
+
+## Preferencia visual vigente: movimiento de Santiago
+
+23 octubre, después de las pruebas de articulación: el usuario prefirió la
+animación anterior. Rig y algoritmo acústico restaurados desde 0225f0a; FFT2048.
+Se mantienen rendimiento adaptativo y telemetría. El clasificador experimental
+no está activo. Ver docs/validation/2026-10-23-santiago-motion-restore/README.md.
+No reutilizar mediciones previas de cierre como si fueran de esta restauración.

@@ -1,0 +1,17 @@
+{
+  "baseline": "0225f0a",
+  "baselineAuthor": "Santiago",
+  "comparison": "synthetic deterministic motion, not perceptual lip-sync acceptance",
+  "frames": 1260,
+  "sampleRates": [
+    24000,
+    48000
+  ],
+  "fps": [
+    15,
+    30,
+    60
+  ],
+  "maximumPoseDifference": 0,
+  "rigMatchesBaseline": true
+}

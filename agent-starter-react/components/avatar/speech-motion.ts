@@ -29,13 +29,13 @@ export function createSpeechMotion() {
     },
     read(pcm: Float32Array, spectrumDb: Float32Array, sampleRate: number, dt: number): MouthPose {
       dt = Math.max(0, Math.min(0.1, dt));
-      const rms = speechRms(pcm, sampleRate);
+      let power = 0;
+      for (const v of pcm) power += v * v;
+      const rms = Math.sqrt(power / Math.max(1, pcm.length));
       // Below -46 dBFS is silence; soft syllables have a smooth gate above it.
       const gate = ramp(rms, 0.005, 0.016);
       peak = Math.max(0.045, rms, peak * Math.exp(-dt / 1.5));
-      // Linear dynamics preserve syllabic valleys. A square root amplified soft
-      // segments toward a nearly constant wide-open mouth at ordinary speech levels.
-      const level = gate * clamp(rms / Math.max(0.045, peak * 0.95));
+      const level = gate * Math.sqrt(clamp(rms / Math.max(0.045, peak * 0.85)));
       let low = 0,
         middle = 0,
         high = 0,
@@ -44,11 +44,7 @@ export function createSpeechMotion() {
       for (let i = 1; i < spectrumDb.length; i++) {
         const hz = i * hzPerBin;
         if (hz < 180 || hz > 8000) continue;
-        // Mild spectral tilt reduces pitch/fundamental dominance: a low voice
-        // should not keep a permanently rounded "o" shape.
-        const value = Number.isFinite(spectrumDb[i])
-          ? 10 ** (spectrumDb[i] / 10) * Math.sqrt(hz / 700)
-          : 0;
+        const value = Number.isFinite(spectrumDb[i]) ? 10 ** (spectrumDb[i] / 10) : 0;
         if (hz < 700) low += value;
         else if (hz < 1600) middle += value;
         else if (hz < 3000) high += value;
@@ -68,8 +64,7 @@ export function createSpeechMotion() {
         wide: level * wide * (1 - 0.65 * frication),
       };
       for (const key of ['open', 'round', 'wide'] as const) {
-        const time =
-          gate === 0 ? 0.02 : key !== 'open' ? 0.055 : targets[key] > pose[key] ? 0.02 : 0.035;
+        const time = gate === 0 ? 0.025 : targets[key] > pose[key] ? 0.035 : 0.045;
         pose[key] += (targets[key] - pose[key]) * (1 - Math.exp(-dt / time));
         if (pose[key] < 0.001) pose[key] = 0;
       }

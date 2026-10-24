@@ -16,3 +16,11 @@ revisiones de cualquier GLB recién generado.
 La vista previa está disponible; la promoción a llamadas sigue pendiente.
 
 Entrega vigente: [GLB de Santiago, audio y métricas de llamadas](docs/validation/2026-10-23-santiago-integration/README.md). Los candidatos Mac se conservan como históricos; el visor y las llamadas usan ahora los GLB originales recibidos.
+
+## Preferencia visual vigente: movimiento de Santiago
+
+23 octubre, después de las pruebas de articulación: el usuario prefirió la
+animación anterior. Rig y algoritmo acústico restaurados desde 0225f0a; FFT2048.
+Se mantienen rendimiento adaptativo y telemetría. El clasificador experimental
+no está activo. Ver docs/validation/2026-10-23-santiago-motion-restore/README.md.
+No reutilizar mediciones previas de cierre como si fueran de esta restauración.

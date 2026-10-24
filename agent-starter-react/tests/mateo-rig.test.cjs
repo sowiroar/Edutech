@@ -35,6 +35,13 @@ test('mouth opens downwards using bind-pose axes and returns to rest', () => {
   root.updateMatrixWorld(true);
   assert.ok(lip.getWorldPosition(new THREE.Vector3()).y < closed.y);
   assert.ok(jaw.quaternion.angleTo(new THREE.Quaternion()) > 0.1);
+  assert.ok(
+    Math.abs(
+      jaw.quaternion.angleTo(new THREE.Quaternion()) -
+        lipRoot.quaternion.angleTo(new THREE.Quaternion())
+    ) < 1e-8,
+    'independent jaw and lower-lip roots must open together'
+  );
   rig.update({ open: 0, round: 0, wide: 0 }, 1);
   root.updateMatrixWorld(true);
   assert.ok(lip.getWorldPosition(new THREE.Vector3()).distanceTo(closed) < 1e-8);
@@ -100,6 +107,7 @@ for (const character of ['nexo', 'lira', 'elian']) {
         rig.update({ open: 0, round: 0, wide: 0 }, 1);
         root.updateMatrixWorld(true);
         assert.ok(pos(l).distanceTo(base) < 1e-8);
+
       }
     );
   }

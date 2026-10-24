@@ -78,11 +78,11 @@ test('high-frequency frication does not force a vowel-wide jaw', () => {
   assert.ok(p.open < 0.2 && p.round < 0.01 && p.wide < 0.01);
 });
 
-test('soft syllables preserve jaw dynamics instead of saturating toward the loud vowel', () => {
+test('soft syllables remain visible but open less than loud vowels', () => {
   const motion = createSpeechMotion();
   for (let i = 0; i < 15; i++) motion.read(...signal(0.1, [[1000, -20]]));
   const loud = motion.read(...signal(0.1, [[1000, -20]])).open;
   let quiet;
   for (let i = 0; i < 4; i++) quiet = motion.read(...signal(0.025, [[1000, -35]])).open;
-  assert.ok(quiet < loud * 0.4, `quiet=${quiet}, loud=${loud}`);
+  assert.ok(quiet > loud * 0.3 && quiet < loud * 0.75, `quiet=${quiet}, loud=${loud}`);
 });
