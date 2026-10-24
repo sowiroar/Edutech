@@ -1,0 +1,289 @@
+{
+  "date": "2026-10-24",
+  "commit": "1e53491",
+  "machine": "Apple M5, 24 GiB unified memory, macOS, Chrome",
+  "metric": "RSS from ps; Docker CLI working-memory usage",
+  "renderer_pid": 27599,
+  "samples": 90,
+  "start": "2026-10-24T06:18:36.683745+00:00",
+  "end": "2026-10-24T06:26:16.432900+00:00",
+  "background": "Existing separate VIVA call, other browser tabs and Docker services left running. Not isolated per-session server cost. Startup is mixed welcome/connection.",
+  "phases": {
+    "welcome": {
+      "samples": 11,
+      "renderer_rss": {
+        "mean_mib": 252.24,
+        "peak_mib": 292.77,
+        "min_mib": 192.98
+      },
+      "shared_chrome_gpu_process_rss": {
+        "mean_mib": 142.43,
+        "peak_mib": 175.06,
+        "min_mib": 121.69
+      },
+      "docker_containers_total": {
+        "mean_mib": 1846.71,
+        "peak_mib": 2012.04,
+        "min_mib": 1603.85
+      },
+      "services": {
+        "edutech-voice-local-frontend-1": {
+          "mean_mib": 110.94,
+          "peak_mib": 119.7,
+          "min_mib": 98.72
+        },
+        "edutech-voice-local-telemetry-1": {
+          "mean_mib": 48.61,
+          "peak_mib": 51.73,
+          "min_mib": 41.94
+        },
+        "edutech-voice-local-voice-agent-1": {
+          "mean_mib": 1387.61,
+          "peak_mib": 1521.66,
+          "min_mib": 1173.5
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "mean_mib": 31.28,
+          "peak_mib": 33.85,
+          "min_mib": 27.79
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "mean_mib": 74.6,
+          "peak_mib": 74.6,
+          "min_mib": 74.6
+        },
+        "edutech-voice-local-qdrant-1": {
+          "mean_mib": 106.04,
+          "peak_mib": 134.6,
+          "min_mib": 72.52
+        },
+        "edutech-voice-local-livekit-1": {
+          "mean_mib": 87.62,
+          "peak_mib": 91.52,
+          "min_mib": 82.52
+        }
+      }
+    },
+    "LIRA": {
+      "samples": 22,
+      "renderer_rss": {
+        "mean_mib": 272.38,
+        "peak_mib": 314.31,
+        "min_mib": 231.36
+      },
+      "shared_chrome_gpu_process_rss": {
+        "mean_mib": 135.97,
+        "peak_mib": 174.44,
+        "min_mib": 121.19
+      },
+      "docker_containers_total": {
+        "mean_mib": 1968.59,
+        "peak_mib": 2012.29,
+        "min_mib": 1928.92
+      },
+      "services": {
+        "edutech-voice-local-frontend-1": {
+          "mean_mib": 116.93,
+          "peak_mib": 123.4,
+          "min_mib": 104.4
+        },
+        "edutech-voice-local-telemetry-1": {
+          "mean_mib": 50.82,
+          "peak_mib": 55.91,
+          "min_mib": 42.47
+        },
+        "edutech-voice-local-voice-agent-1": {
+          "mean_mib": 1523.01,
+          "peak_mib": 1526.78,
+          "min_mib": 1514.5
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "mean_mib": 31.96,
+          "peak_mib": 34.75,
+          "min_mib": 30.4
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "mean_mib": 74.6,
+          "peak_mib": 74.6,
+          "min_mib": 74.6
+        },
+        "edutech-voice-local-qdrant-1": {
+          "mean_mib": 79.22,
+          "peak_mib": 132.5,
+          "min_mib": 73.18
+        },
+        "edutech-voice-local-livekit-1": {
+          "mean_mib": 92.04,
+          "peak_mib": 95.56,
+          "min_mib": 82.55
+        }
+      }
+    },
+    "NEXO": {
+      "samples": 30,
+      "renderer_rss": {
+        "mean_mib": 268.2,
+        "peak_mib": 325.56,
+        "min_mib": 234.5
+      },
+      "shared_chrome_gpu_process_rss": {
+        "mean_mib": 130.08,
+        "peak_mib": 169.36,
+        "min_mib": 113.14
+      },
+      "docker_containers_total": {
+        "mean_mib": 1974.03,
+        "peak_mib": 2172.63,
+        "min_mib": 1924.86
+      },
+      "services": {
+        "edutech-voice-local-frontend-1": {
+          "mean_mib": 119.72,
+          "peak_mib": 127.7,
+          "min_mib": 110.6
+        },
+        "edutech-voice-local-telemetry-1": {
+          "mean_mib": 50.85,
+          "peak_mib": 57.02,
+          "min_mib": 42.76
+        },
+        "edutech-voice-local-voice-agent-1": {
+          "mean_mib": 1529.17,
+          "peak_mib": 1697.79,
+          "min_mib": 1511.42
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "mean_mib": 31.63,
+          "peak_mib": 32.75,
+          "min_mib": 28.48
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "mean_mib": 74.6,
+          "peak_mib": 74.6,
+          "min_mib": 74.6
+        },
+        "edutech-voice-local-qdrant-1": {
+          "mean_mib": 79.36,
+          "peak_mib": 122.4,
+          "min_mib": 72.94
+        },
+        "edutech-voice-local-livekit-1": {
+          "mean_mib": 88.68,
+          "peak_mib": 101.1,
+          "min_mib": 74.07
+        }
+      }
+    },
+    "ELIAN": {
+      "samples": 14,
+      "renderer_rss": {
+        "mean_mib": 263.05,
+        "peak_mib": 269.7,
+        "min_mib": 244.42
+      },
+      "shared_chrome_gpu_process_rss": {
+        "mean_mib": 128.6,
+        "peak_mib": 153.98,
+        "min_mib": 111.16
+      },
+      "docker_containers_total": {
+        "mean_mib": 1959.09,
+        "peak_mib": 1973.15,
+        "min_mib": 1918.73
+      },
+      "services": {
+        "edutech-voice-local-frontend-1": {
+          "mean_mib": 119.26,
+          "peak_mib": 123.0,
+          "min_mib": 101.4
+        },
+        "edutech-voice-local-telemetry-1": {
+          "mean_mib": 49.52,
+          "peak_mib": 52.03,
+          "min_mib": 43.81
+        },
+        "edutech-voice-local-voice-agent-1": {
+          "mean_mib": 1520.35,
+          "peak_mib": 1538.05,
+          "min_mib": 1516.54
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "mean_mib": 30.92,
+          "peak_mib": 32.16,
+          "min_mib": 29.79
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "mean_mib": 74.6,
+          "peak_mib": 74.6,
+          "min_mib": 74.6
+        },
+        "edutech-voice-local-qdrant-1": {
+          "mean_mib": 75.74,
+          "peak_mib": 92.61,
+          "min_mib": 72.65
+        },
+        "edutech-voice-local-livekit-1": {
+          "mean_mib": 88.7,
+          "peak_mib": 92.41,
+          "min_mib": 76.45
+        }
+      }
+    },
+    "after-call": {
+      "samples": 13,
+      "renderer_rss": {
+        "mean_mib": 228.56,
+        "peak_mib": 233.33,
+        "min_mib": 226.88
+      },
+      "shared_chrome_gpu_process_rss": {
+        "mean_mib": 113.09,
+        "peak_mib": 114.47,
+        "min_mib": 109.97
+      },
+      "docker_containers_total": {
+        "mean_mib": 1676.25,
+        "peak_mib": 1975.65,
+        "min_mib": 1585.69
+      },
+      "services": {
+        "edutech-voice-local-frontend-1": {
+          "mean_mib": 121.96,
+          "peak_mib": 126.6,
+          "min_mib": 109.9
+        },
+        "edutech-voice-local-telemetry-1": {
+          "mean_mib": 50.04,
+          "peak_mib": 56.33,
+          "min_mib": 43.82
+        },
+        "edutech-voice-local-voice-agent-1": {
+          "mean_mib": 1234.55,
+          "peak_mib": 1537.02,
+          "min_mib": 1169.41
+        },
+        "edutech-voice-local-telemetry-db-1": {
+          "mean_mib": 31.79,
+          "peak_mib": 35.23,
+          "min_mib": 28.6
+        },
+        "edutech-voice-local-knowledge-sync-1": {
+          "mean_mib": 74.6,
+          "peak_mib": 74.6,
+          "min_mib": 74.6
+        },
+        "edutech-voice-local-qdrant-1": {
+          "mean_mib": 73.68,
+          "peak_mib": 77.72,
+          "min_mib": 72.46
+        },
+        "edutech-voice-local-livekit-1": {
+          "mean_mib": 89.63,
+          "peak_mib": 92.51,
+          "min_mib": 82.07
+        }
+      }
+    }
+  },
+  "period_seconds_approx": 5
+}

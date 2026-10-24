@@ -57,3 +57,10 @@ pertenece al track remoto, sobrevive al cambio de rig y vuelve a reposo ante
 reproducción detenida o errores. Conservar el estilo Santiago. Ver
 docs/validation/2026-10-24-call-gaze/README.md para pruebas y límites; no
 afirmar latencia cero, sincronía fonética ni aceptación UAM.
+
+24 octubre, consumo real: docs/validation/2026-10-24-call-gaze/CONSUMO_ACTUAL.md.
+Una pestaña de llamada: 263–272 MiB RSS medio, pico observado 326 MiB; Docker
+~1,9 GiB con otra llamada existente. No extrapolar a VRAM ni concurrencia UAM.
+Pendiente de presentación: dos handoffs mostraron metainstrucciones en subtítulos;
+no reproducido en cuatro probes directos del proveedor. Investigar AgentSession
+y fuente del texto antes de afirmar corrección; no recortar subtítulos a ciegas.
