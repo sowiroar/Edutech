@@ -6,6 +6,14 @@ export interface MouthPose {
 }
 
 export const REST_MOUTH: Readonly<MouthPose> = Object.freeze({ open: 0, round: 0, wide: 0 });
+/** Use the newest 10 ms for articulation; the FFT keeps its longer spectral window. */
+export function speechRms(pcm: Float32Array, sampleRate: number) {
+  if (!pcm.length || !Number.isFinite(sampleRate) || sampleRate <= 0) return 0;
+  const count = Math.min(pcm.length, Math.max(1, Math.round(sampleRate * 0.01)));
+  let power = 0;
+  for (let i = pcm.length - count; i < pcm.length; i++) power += pcm[i] * pcm[i];
+  return Math.sqrt(power / count);
+}
 const clamp = (n: number) => Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
 const ramp = (value: number, start: number, end: number) => clamp((value - start) / (end - start));
 
@@ -21,13 +29,13 @@ export function createSpeechMotion() {
     },
     read(pcm: Float32Array, spectrumDb: Float32Array, sampleRate: number, dt: number): MouthPose {
       dt = Math.max(0, Math.min(0.1, dt));
-      let power = 0;
-      for (const v of pcm) power += v * v;
-      const rms = Math.sqrt(power / Math.max(1, pcm.length));
+      const rms = speechRms(pcm, sampleRate);
       // Below -46 dBFS is silence; soft syllables have a smooth gate above it.
       const gate = ramp(rms, 0.005, 0.016);
       peak = Math.max(0.045, rms, peak * Math.exp(-dt / 1.5));
-      const level = gate * Math.sqrt(clamp(rms / Math.max(0.045, peak * 0.85)));
+      // Linear dynamics preserve syllabic valleys. A square root amplified soft
+      // segments toward a nearly constant wide-open mouth at ordinary speech levels.
+      const level = gate * clamp(rms / Math.max(0.045, peak * 0.95));
       let low = 0,
         middle = 0,
         high = 0,
@@ -36,7 +44,11 @@ export function createSpeechMotion() {
       for (let i = 1; i < spectrumDb.length; i++) {
         const hz = i * hzPerBin;
         if (hz < 180 || hz > 8000) continue;
-        const value = Number.isFinite(spectrumDb[i]) ? 10 ** (spectrumDb[i] / 10) : 0;
+        // Mild spectral tilt reduces pitch/fundamental dominance: a low voice
+        // should not keep a permanently rounded "o" shape.
+        const value = Number.isFinite(spectrumDb[i])
+          ? 10 ** (spectrumDb[i] / 10) * Math.sqrt(hz / 700)
+          : 0;
         if (hz < 700) low += value;
         else if (hz < 1600) middle += value;
         else if (hz < 3000) high += value;
@@ -56,7 +68,8 @@ export function createSpeechMotion() {
         wide: level * wide * (1 - 0.65 * frication),
       };
       for (const key of ['open', 'round', 'wide'] as const) {
-        const time = gate === 0 ? 0.025 : targets[key] > pose[key] ? 0.035 : 0.045;
+        const time =
+          gate === 0 ? 0.02 : key !== 'open' ? 0.055 : targets[key] > pose[key] ? 0.02 : 0.035;
         pose[key] += (targets[key] - pose[key]) * (1 - Math.exp(-dt / time));
         if (pose[key] < 0.001) pose[key] = 0;
       }

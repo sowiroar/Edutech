@@ -4,8 +4,16 @@ import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { type RemoteAudioTrack, createAudioAnalyser } from 'livekit-client';
 import { useRoomContext, useVoiceAssistant } from '@livekit/components-react';
-import { type MouthPose, REST_MOUTH, createSpeechMotion } from '@/components/avatar/speech-motion';
+import type { AvatarSample } from '@/components/avatar/browser-avatar-stage';
+import { createSpeechMonitor, isTrackAudible } from '@/components/avatar/speech-monitor';
+import {
+  type MouthPose,
+  REST_MOUTH,
+  createSpeechMotion,
+  speechRms,
+} from '@/components/avatar/speech-motion';
 import type { BrowserAvatar } from '@/lib/browser-avatar';
+import { useMediaTelemetry } from '@/lib/telemetry/context';
 
 const BrowserAvatarStage = dynamic(() => import('@/components/avatar/browser-avatar-stage'), {
   ssr: false,
@@ -24,15 +32,24 @@ export function AvatarStage({
 }) {
   const { audioTrack } = useVoiceAssistant();
   const room = useRoomContext();
+  const telemetry = useMediaTelemetry();
   const speech = useRef<() => MouthPose>(() => REST_MOUTH);
+  const monitor = useRef(createSpeechMonitor());
+  const reporting = useRef({
+    since: performance.now(),
+    sent: false,
+    samples: [] as AvatarSample[],
+  });
   const track = audioTrack?.publication.track;
   useEffect(() => {
+    monitor.current = createSpeechMonitor();
+    speech.current = () => REST_MOUTH;
     if (!track || (!asset.mouthMorph && !asset.rigProfile)) return;
     // Analyse already received audio; LiveKit remains the only audio output.
     let analyser: ReturnType<typeof createAudioAnalyser> | undefined;
     try {
       analyser = createAudioAnalyser(track as RemoteAudioTrack, {
-        fftSize: 2048,
+        fftSize: 1024,
         smoothingTimeConstant: 0.05,
         minDecibels: -85,
         maxDecibels: -20,
@@ -47,11 +64,17 @@ export function AvatarStage({
         const now = performance.now();
         const dt = (now - previous) / 1000;
         previous = now;
-        if (!room.canPlaybackAudio || track.isMuted || node.context.state !== 'running')
-          return motion.reset();
+        // A tab may have decoded PCM while its actual media element is paused/muted.
+        if (!isTrackAudible(track as RemoteAudioTrack, room.canPlaybackAudio, node.context.state)) {
+          const pose = motion.reset();
+          monitor.current.observe(now, 0, pose, false);
+          return pose;
+        }
         node.getFloatTimeDomainData(pcm);
         node.getFloatFrequencyData(spectrum);
-        return motion.read(pcm, spectrum, node.context.sampleRate, dt);
+        const pose = motion.read(pcm, spectrum, node.context.sampleRate, dt);
+        monitor.current.observe(now, speechRms(pcm, node.context.sampleRate), pose, true);
+        return pose;
       };
     } catch {
       /* Voice continues if the optional analyser cannot start. */
@@ -61,6 +84,40 @@ export function AvatarStage({
       if (analyser) void analyser.cleanup();
     };
   }, [track, asset.mouthMorph, asset.rigProfile, room]);
+  const sample = (value: AvatarSample) => {
+    const report = reporting.current;
+    report.samples.push(value);
+    const now = performance.now();
+    if (report.sent && now - report.since < 10_000) return;
+    const samples = report.samples;
+    telemetry?.avatarSample({
+      character: asset.character,
+      model_sha256: asset.sha256,
+      measurement_scope: 'live-call-acoustic',
+      window_ms: now - report.since,
+      sample_count: samples.length,
+      fps: samples.reduce((sum, s) => sum + s.fps, 0) / samples.length,
+      fps_min: Math.min(...samples.map((s) => s.fps)),
+      render_submission_ms:
+        samples.reduce((sum, s) => sum + s.renderSubmissionMs, 0) / samples.length,
+      first_frame_ms: value.firstFrameMs,
+      model_bytes: value.modelBytes,
+      texture_bytes_estimate: value.textureBytesEstimate,
+      geometry_bytes: value.geometryDataBytes,
+      page_js_heap_bytes: value.pageJsHeapBytes,
+      triangles: value.triangles,
+      draw_calls: value.drawCalls,
+      width: value.width,
+      height: value.height,
+      resolution_scale: value.resolutionScale,
+      mouth_available: value.mouthAnimationAvailable,
+      lip_shapes_available: value.lipShapesAvailable,
+      ...monitor.current.snapshot(),
+    });
+    report.sent = true;
+    report.since = now;
+    report.samples = [];
+  };
   return (
     <BrowserAvatarStage
       asset={asset}
@@ -68,6 +125,7 @@ export function AvatarStage({
       speech={speech}
       onFailure={onFailure}
       onReady={onReady}
+      onSample={sample}
     />
   );
 }

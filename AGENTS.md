@@ -18,6 +18,18 @@ La fuente principal es UE 5.8.2 y las cejas se recuperaron con UE 5.8.4.
 Los tres candidatos requieren aceptación visual y voz real antes de promoverlos.
 Al instalar archivos GLB nuevos, reiniciar el servidor Next de producción.
 
+Entrega de Santiago recibida el 23: los tres GLB coinciden con los manifiestos
+canónicos y ya están instalados localmente para llamadas. Los preview Mac se
+preservan en data/local-avatar/candidates-before-santiago-20261023 (ignorados).
+Ver docs/validation/2026-10-23-santiago-integration/README.md. El evento v2
+avatar_quality_sample enlaza render y respuesta acústica a la sesión; no audio
+ni sincronía fonética. Actualizar colector antes de frontend. Prueba completa
+local en puerto 3500; 3511 era solo visor sin backend.
+Cierre: 47 tests frontend + 27 colector; dos llamadas nuevas con voz real y
+telemetría persistida. Preferencia GPU de rendimiento y resolución adaptativa
+para FPS bajos; no equivalen a validación RTX4050/UAM. Cronómetro inicia al clic,
+no durante prefetch. Evidencia y pasos comparables en el informe citado.
+
 ## Trabajo y conservación
 
 - Base de desarrollo: main. Features/bugfix/chore vuelven por PR a main.

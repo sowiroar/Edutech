@@ -9,7 +9,12 @@ import { applyElianMaterials } from './elian-materials';
 import { applyLiraMaterials } from './lira-materials';
 import { createMateoRig } from './mateo-rig';
 import { applyNexoMaterials } from './nexo-materials';
-import { MAX_TEXTURE_BYTES, assetMemory, renderSize } from './render-budget';
+import {
+  MAX_TEXTURE_BYTES,
+  assetMemory,
+  createResolutionBudget,
+  renderSize,
+} from './render-budget';
 import { type MouthPose, REST_MOUTH } from './speech-motion';
 
 export interface AvatarSample {
@@ -37,6 +42,7 @@ export interface AvatarSample {
   mouthOpen: number;
   mouthRound: number;
   mouthWide: number;
+  resolutionScale: number;
 }
 
 function disposeModel(root: THREE.Object3D) {
@@ -140,7 +146,8 @@ export default function BrowserAvatarStage({
       renderer = new THREE.WebGLRenderer({
         alpha: true,
         antialias: true,
-        powerPreference: 'low-power',
+        // On hybrid laptops low-power can select the integrated GPU over the RTX.
+        powerPreference: 'high-performance',
       });
       renderer.setPixelRatio(1);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -190,17 +197,23 @@ export default function BrowserAvatarStage({
       );
       rim.position.set(2, 2, -2);
       scene.add(rim);
-      resize = new ResizeObserver(() => {
+      const resolution = createResolutionBudget();
+      const resizeRenderer = () => {
         if (!renderer) return;
         const { width, height } = renderSize(
           element.clientWidth,
           element.clientHeight,
           window.devicePixelRatio
         );
-        renderer.setSize(width, height, false);
+        renderer.setSize(
+          Math.max(2, Math.floor(width * resolution.scale)),
+          Math.max(2, Math.floor(height * resolution.scale)),
+          false
+        );
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-      });
+      };
+      resize = new ResizeObserver(resizeRenderer);
       resize.observe(element);
       const loadMs = performance.now() - started;
       let lastRender = 0,
@@ -268,10 +281,12 @@ export default function BrowserAvatarStage({
             mouthOpen: mouth.open,
             mouthRound: mouth.round,
             mouthWide: mouth.wide,
+            resolutionScale: resolution.scale,
           };
           callbacks.current.onSample?.(sample);
           // Same non-sensitive measurements in preview and conversation, without an extra service.
           window.dispatchEvent(new CustomEvent('viva:avatar-sample', { detail: sample }));
+          if (resolution.observe(sample.fps)) resizeRenderer();
           reportStart = now;
           renders = 0;
           renderMs = 0;

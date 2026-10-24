@@ -42,3 +42,18 @@ test('shared assets are counted once, including uncompressed texture mipmaps', (
   assert.equal(estimate.textureBytesEstimate, Math.ceil((2048 * 2048 * 4 * 4) / 3));
   assert.equal(estimate.geometryDataBytes, 36 + 6);
 });
+
+test('resolution falls only after sustained slow rendering, has a floor and recovers slowly', () => {
+  const b = context.exports.createResolutionBudget();
+  assert.equal(b.scale, 1);
+  for (let i = 0; i < 3; i++) b.observe(2); // first-draw warmup excluded
+  assert.equal(b.scale, 1);
+  for (let i = 0; i < 3; i++) b.observe(20);
+  assert.equal(b.scale, 0.85);
+  for (let i = 0; i < 100; i++) b.observe(2);
+  assert.equal(b.scale, 0.55);
+  for (let i = 0; i < 10; i++) b.observe(30);
+  assert.equal(b.scale, 0.55, 'brief recovery cannot oscillate');
+  for (let i = 0; i < 150; i++) b.observe(30);
+  assert.equal(b.scale, 1);
+});

@@ -17,6 +17,7 @@ export function createMateoRig(root: THREE.Object3D) {
     base: THREE.Quaternion;
     axis: THREE.Vector3;
     sign: number;
+    gain: number;
   }[] = [];
   const lips: {
     bone: THREE.Object3D;
@@ -40,6 +41,8 @@ export function createMateoRig(root: THREE.Object3D) {
           bone,
           base: bone.quaternion.clone(),
           sign,
+          // The lip rotation is an additional deformation, not a second full jaw.
+          gain: name === 'FACIAL_C_Jaw' ? 1 : 0.3,
           axis: axis
             .clone()
             .applyQuaternion(bone.getWorldQuaternion(new THREE.Quaternion()).invert()),
@@ -108,8 +111,8 @@ export function createMateoRig(root: THREE.Object3D) {
     lipShapesAvailable: lips.length >= 6,
     update(pose: MouthPose, seconds: number) {
       const clamp = (v: number) => Math.max(0, Math.min(1, Number.isFinite(v) ? v : 0));
-      rotations.forEach(({ bone, base, axis, sign }) => {
-        rotation.setFromAxisAngle(axis, sign * clamp(pose.open) * 0.12);
+      rotations.forEach(({ bone, base, axis, sign, gain }) => {
+        rotation.setFromAxisAngle(axis, sign * clamp(pose.open) * 0.12 * gain);
         bone.quaternion.copy(base).multiply(rotation);
       });
       lips.forEach(({ bone, base, round, wide }) => {

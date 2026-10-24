@@ -11,6 +11,7 @@ const allowed = new Set([
   'presentation_changed',
   'avatar_unavailable',
   'media_quality_sample',
+  'avatar_quality_sample',
   'media_disconnected',
 ]);
 export async function POST(req: Request) {
@@ -35,7 +36,12 @@ export async function POST(req: Request) {
         'connection_attempt_id',
       ];
       if (Object.keys(event).some((k) => !keys.includes(k))) throw new Error('Unknown field');
-      return { ...context, ...event, source: 'browser', schema_version: 1 };
+      return {
+        ...context,
+        ...event,
+        source: 'browser',
+        schema_version: event.type === 'avatar_quality_sample' ? 2 : 1,
+      };
     });
     const res = await collector('/ingest', {
       method: 'POST',

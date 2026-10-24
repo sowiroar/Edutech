@@ -1,0 +1,99 @@
+{
+  "date_local": "2026-10-23",
+  "runtime": "7a97679-avatar-polish-working",
+  "machine": "Mac M5 24 GB",
+  "scope": "Two local LiveKit/Gemini Live calls; not Santiago laptop or UAM",
+  "notes": [
+    "Renderer reports aggregated; not independent cold starts or a load test.",
+    "Acoustic transitions are measured in calculated poses, not phoneme/speaker synchronization.",
+    "Audio element playing is not guaranteed first non-silent audio.",
+    "No audio or conversation text included."
+  ],
+  "distinct_connection_attempts": true,
+  "calls": [
+    {
+      "call": 1,
+      "start_count": 1,
+      "connection_ms": [
+        246.1
+      ],
+      "audio_element_playing_ms": [
+        522.8
+      ],
+      "ended": true,
+      "attempts": 1
+    },
+    {
+      "call": 2,
+      "start_count": 1,
+      "connection_ms": [
+        230.0
+      ],
+      "audio_element_playing_ms": [
+        506.4
+      ],
+      "ended": true,
+      "attempts": 1
+    }
+  ],
+  "render": [
+    {
+      "character": "LIRA",
+      "reports": 5,
+      "speech_reports": 2,
+      "canvas": [
+        1280,
+        720
+      ],
+      "resolution_scales": [
+        1.0
+      ],
+      "mean_of_report_fps": 29.33,
+      "min_sample_fps": 28.29,
+      "max_silence_to_rest_ms": 67.0,
+      "first_frame_ms": [
+        176.7,
+        203.2
+      ],
+      "model_sha256": "87da34733fb1ffce0433daa6a7da9047e28b4e665abb70598f46897ae875a431"
+    },
+    {
+      "character": "NEXO",
+      "reports": 5,
+      "speech_reports": 2,
+      "canvas": [
+        1280,
+        720
+      ],
+      "resolution_scales": [
+        1.0
+      ],
+      "mean_of_report_fps": 30.12,
+      "min_sample_fps": 29.8,
+      "max_silence_to_rest_ms": 33.6,
+      "first_frame_ms": [
+        116.5
+      ],
+      "model_sha256": "576ffcf55c1803b6ba4e4291e6cb6124a0855d08ff0e10fe403d5e753500228d"
+    },
+    {
+      "character": "ELIAN",
+      "reports": 10,
+      "speech_reports": 5,
+      "canvas": [
+        1280,
+        720
+      ],
+      "resolution_scales": [
+        1.0
+      ],
+      "mean_of_report_fps": 30.13,
+      "min_sample_fps": 29.75,
+      "max_silence_to_rest_ms": 67.1,
+      "first_frame_ms": [
+        106.7
+      ],
+      "model_sha256": "d833245bb6380240dc4de22f4c317449e367a48b891a5cfe3f7ff8fa4f20f40d"
+    }
+  ]
+}

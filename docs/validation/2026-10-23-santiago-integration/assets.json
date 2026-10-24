@@ -1,0 +1,26 @@
+[
+  {
+    "character": "LIRA",
+    "sha256": "87da34733fb1ffce0433daa6a7da9047e28b4e665abb70598f46897ae875a431",
+    "bytes": 4666084,
+    "triangles": 75781,
+    "animations": 1,
+    "manifest_matches_git": true
+  },
+  {
+    "character": "NEXO",
+    "sha256": "576ffcf55c1803b6ba4e4291e6cb6124a0855d08ff0e10fe403d5e753500228d",
+    "bytes": 5974092,
+    "triangles": 64330,
+    "animations": 1,
+    "manifest_matches_git": true
+  },
+  {
+    "character": "ELIAN",
+    "sha256": "d833245bb6380240dc4de22f4c317449e367a48b891a5cfe3f7ff8fa4f20f40d",
+    "bytes": 4592212,
+    "triangles": 61977,
+    "animations": 1,
+    "manifest_matches_git": true
+  }
+]

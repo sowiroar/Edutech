@@ -8,6 +8,7 @@ import { AgentSessionView_01 } from '@/components/agents-ui/blocks/agent-session
 import { WelcomeView } from '@/components/app/welcome-view';
 import { useAvatarStream } from '@/hooks/useAvatarStream';
 import { startSessionAttempt } from '@/lib/session-start';
+import { useMediaTelemetry } from '@/lib/telemetry/context';
 
 const MotionWelcomeView = motion.create(WelcomeView);
 const MotionSessionView = motion.create(AgentSessionView_01);
@@ -34,6 +35,7 @@ export function ViewController() {
   const { isConnected, start, end, room } = useSessionContext();
   const { resolvedTheme } = useTheme();
   const avatar = useAvatarStream();
+  const mediaTelemetry = useMediaTelemetry();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const starting = useRef(false);
@@ -42,6 +44,7 @@ export function ViewController() {
     starting.current = true;
     setPending(true);
     setError('');
+    mediaTelemetry?.beginSession();
     try {
       await startSessionAttempt({ room, start });
     } catch (error) {

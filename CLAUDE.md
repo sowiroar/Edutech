@@ -14,3 +14,5 @@ revisiones de cualquier GLB recién generado.
 
 23 octubre: [LIRA exportada con sus cejas originales](docs/validation/2026-10-23-lira-export/README.md).
 La vista previa está disponible; la promoción a llamadas sigue pendiente.
+
+Entrega vigente: [GLB de Santiago, audio y métricas de llamadas](docs/validation/2026-10-23-santiago-integration/README.md). Los candidatos Mac se conservan como históricos; el visor y las llamadas usan ahora los GLB originales recibidos.

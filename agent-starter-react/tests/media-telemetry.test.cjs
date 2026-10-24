@@ -90,3 +90,69 @@ test('late acknowledgment cannot delete a new session queue', async () => {
   assert.equal(h.client.pending.length, 1);
   assert.equal(h.client.pending[0].event_id, newId);
 });
+
+test('avatar samples require a call token and keep the call connection identifiers', async () => {
+  const sent = [];
+  const h = harness(async (_, opts) => {
+    sent.push(JSON.parse(opts.body));
+    return { ok: true };
+  });
+  h.client.attach(h.room);
+  h.client.avatarSample({ character: 'LIRA' });
+  assert.equal(h.client.pending.length, 0);
+  h.client.beginSession();
+  h.client.avatarSample({ character: 'LIRA' });
+  assert.equal(h.client.pending.length, 1);
+  h.client.setToken('call-token');
+  h.client.avatarSample({ character: 'LIRA', model_sha256: 'a'.repeat(64), fps: 30 });
+  await h.client.flush();
+  assert.equal(sent[0].events[1].type, 'avatar_quality_sample');
+  assert.equal(sent[0].events[1].connection_attempt_id, sent[0].events[0].connection_attempt_id);
+  assert.equal(sent[0].events[1].media_session_id, sent[0].events[0].media_session_id);
+  h.client.beginSession();
+  h.client.avatarSample({ character: 'ELIAN' });
+  assert.equal(h.client.pending.length, 1, 'old call token is cleared');
+});
+
+test('SDK prefetch neither starts the connection clock nor rebinds active events', async () => {
+  const sent = [];
+  const h = harness(async (_, opts) => {
+    sent.push(JSON.parse(opts.body));
+    return { ok: true };
+  });
+  h.client.attach(h.room);
+  h.client.setToken('prepared-first');
+  assert.equal(h.client.pending.length, 0);
+  h.client.beginSession();
+  h.listeners.get('state')('connected');
+  h.client.setToken('prepared-next');
+  h.client.avatarSample({ character: 'ELIAN' });
+  await h.client.flush();
+  assert.equal(sent[0].context_token, 'prepared-first');
+  const firstAttempt = sent[0].events[0].connection_attempt_id;
+  h.client.beginSession();
+  await h.client.flush();
+  assert.equal(sent[1].context_token, 'prepared-next');
+  assert.notEqual(sent[1].events[0].connection_attempt_id, firstAttempt);
+  assert.equal(sent[1].events[0].type, 'media_connect_started');
+});
+
+test('expired prefetched credentials can refresh before connection', async () => {
+  const sent = [];
+  const h = harness(async (_, opts) => {
+    sent.push(JSON.parse(opts.body));
+    return { ok: true };
+  });
+  h.client.attach(h.room);
+  h.client.setToken('expired');
+  h.client.beginSession();
+  h.client.setToken('fresh');
+  h.listeners.get('state')('connected');
+  await h.client.flush();
+  assert.equal(sent[0].context_token, 'fresh');
+  assert.equal(sent[0].events[0].type, 'media_connect_started');
+  h.listeners.get('state')('disconnected');
+  const count = h.client.pending.length;
+  h.client.avatarSample({ character: 'ELIAN' });
+  assert.equal(h.client.pending.length, count);
+});

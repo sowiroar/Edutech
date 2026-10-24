@@ -1,0 +1,43 @@
+{
+  "scope": "synthetic-tone-not-live-call",
+  "baseline": "7a97679",
+  "note": "900 Hz PCM burst .25–.75 s; rolling FFT window and render cadence. No phoneme or speaker alignment.",
+  "results": [
+    {
+      "version": "before",
+      "fps": 15,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 116.6666666666667
+    },
+    {
+      "version": "before",
+      "fps": 30,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 150.00000000000003
+    },
+    {
+      "version": "before",
+      "fps": 60,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 150.00000000000003
+    },
+    {
+      "version": "after",
+      "fps": 15,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 116.6666666666667
+    },
+    {
+      "version": "after",
+      "fps": 30,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 83.33333333333337
+    },
+    {
+      "version": "after",
+      "fps": 60,
+      "onset_ms": 16.666666666666664,
+      "closure_ms": 99.99999999999997
+    }
+  ]
+}
