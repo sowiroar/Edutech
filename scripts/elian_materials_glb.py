@@ -33,11 +33,6 @@ def append_face_materials(glb, directory, character="ELIAN"):
         if not original[section].rsplit(".", 1)[-1].startswith(expected):
             raise ValueError("Unexpected ELIAN source material")
         side = GLB(directory / f"{character.lower()}-face-material-{section}.glb")
-        if len(side.doc.get("materials", [])) != 1:
-            raise ValueError("Expected one original material per face sidecar")
-        material = copy.deepcopy(side.doc["materials"][0])
-        if not material.get("name", "").startswith(expected):
-            raise ValueError("Sidecar does not contain the original ELIAN material")
         target = faces[0]["primitives"][section]
         meshes = side.doc.get("meshes", [])
         if len(meshes) != 1 or len(meshes[0]["primitives"]) != sections:
@@ -45,6 +40,17 @@ def append_face_materials(glb, directory, character="ELIAN"):
                 "Material must be baked on the original face, not a preview sphere"
             )
         source = meshes[0]["primitives"][section]
+        # Unreal may bake a distinct material/atlas for every face section.
+        # Select the material actually referenced by this section, not slot zero.
+        materials = side.doc.get("materials", [])
+        material_index = source.get("material")
+        if not isinstance(material_index, int) or not 0 <= material_index < len(
+            materials
+        ):
+            raise ValueError("Face sidecar section has no valid original material")
+        material = copy.deepcopy(materials[material_index])
+        if not material.get("name", "").startswith(expected):
+            raise ValueError("Sidecar does not contain the original face material")
         # Texture baking can add UV1. Copy its UVs only after verifying the exact
         # original topology/vertex order. Never replace geometry or skin weights.
         for key in ("POSITION",):

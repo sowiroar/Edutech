@@ -93,3 +93,50 @@ La inspección nativa sin renderizado completó los tres mapas el 24 de octubre:
 NOVA Final y ATLAS MatureFace_v2, sus accesorios y animaciones guardadas. No guarda
 assets. La exportación con materiales necesita renderizado y una compilación
 inicial adicional de shaders tras la actualización local a Unreal 5.8.4.
+
+
+## Exportaciones generadas el 24 de octubre: revisión visual abierta
+
+El usuario confirmó que no había otro paquete GLB y autorizó generar NOA/NOVA/ATLAS.
+Los tres archivos ya existen localmente; **el usuario rechazó la apariencia de la
+primera exportación**. No están promovidos a llamadas ni aprobados visualmente.
+Los hashes de los tres GLB de Santiago no cambiaron. `/api/avatar` conserva esos
+modelos y el worker conserva sus tres especialistas.
+
+| Candidato | Archivo | Triángulos de archivo | Estado |
+|---|---:|---:|---|
+| NOA | 4,3 MiB | 61.651 | revisión pendiente tras reparar materiales |
+| NOVA | 5,4 MiB | 74.459 | revisión pendiente tras reparar materiales |
+| ATLAS | 4,7 MiB | 54.206 | revisión pendiente tras reparar materiales |
+
+Hashes, mapa original y rig: [candidate-models.json](candidate-models.json).
+La vista previa ahora indica explícitamente que son exportaciones en revisión.
+
+La exportación inicial de NOA mostraba piel negra, cuello recortado y mangas sin
+su tinte. Unreal produce materiales glTF distintos por sección y no traduce
+correctamente todos los nodos de textura virtual/posición previa al skinning.
+Se corrigió la selección del material por sección verificando topología y UVs;
+se recuperaron las texturas originales desde Unreal en modo NullRHI y se
+incluyeron en el GLB a un máximo de 1024 px. La textura pertenece a cada material
+retenido: no se sustituyó la cara por otro personaje. Sin mapas ni assets guardados.
+
+El visor aplica las expresiones originales de cejas, trazos, uniformes, mangas y
+barba de estos diseños, además de atenuar el brillo plástico del pelo. Estos
+acabados requieren `family-materials.ts` y `family-surface-shaders.ts`: abrir solo
+el GLB en otro visor no reproduce automáticamente los materiales procedurales.
+Hay que seguir comparando encuadre, cuello, ojos, iluminación y movimiento contra
+Unreal. La primera exportación rechazada no debe describirse como entrega final.
+
+Validación de esta reparación: 40 pruebas Python; 59 frontend aprobadas y 3
+omitidas por recursos privados históricos; lint y TypeScript. Vistas locales de
+los tres candidatos sin errores de compilación de shaders y muestras puntuales
+próximas a 30 FPS en este Mac. No representan benchmark UAM, memoria total,
+aceptación artística ni validación de una conversación real con los tres nuevos.
+
+Rutas de fuente local (ignoradas por Git):
+- `data/local-avatar/runtime/web-export/20261024-051137-noa`
+- `data/local-avatar/runtime/web-export/20261024-051826-nova`
+- `data/local-avatar/runtime/web-export/20261024-052445-atlas`
+
+El instalador usa Pillow 12.0.0; CI instala esa versión para verificar restauración
+de textura, identidad y preservación de geometría/UV. No se incorporan GLB a Git.

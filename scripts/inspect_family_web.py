@@ -3,6 +3,7 @@
 import json
 import math
 import os
+import runpy
 from pathlib import Path
 
 import unreal as u
@@ -76,4 +77,5 @@ for actor in actors:
         )
 output = Path(os.environ["NEXO_WEB_EXPORT_DIR"])
 (output / "scene-snapshot.json").write_text(json.dumps(report, indent=2))
+runpy.run_path(str(Path(__file__).with_name("export_family_textures.py")))
 print(f"VIVA_{character}_SCENE_SNAPSHOT_COMPLETE")

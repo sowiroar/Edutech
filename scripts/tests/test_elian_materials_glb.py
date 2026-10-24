@@ -144,3 +144,29 @@ class ElianMaterialTests(unittest.TestCase):
                     self.assertEqual(primitive["material"], index)
                     if index:
                         self.assertIn("TEXCOORD_1", primitive["attributes"])
+
+    def test_selects_section_material_when_unreal_bakes_separate_atlases(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            g = self.fixture(directory, "NOA")
+            path = directory / "noa-face-material-2.glb"
+            side = GLB(path)
+            expected = copy.deepcopy(side.doc["materials"][0])
+            expected["name"] += "_section2"
+            side.doc["materials"] = [{"name": "unrelated"}, expected]
+            side.doc["meshes"][0]["primitives"][2]["material"] = 1
+            side.write(path)
+            report = append_face_materials(g, directory, "NOA")
+            self.assertEqual(report[1]["material"], "MI_EyeL_Baked_section2")
+
+    def test_rejects_wrong_material_on_requested_section(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            g = self.fixture(directory, "NOA")
+            path = directory / "noa-face-material-2.glb"
+            side = GLB(path)
+            side.doc["materials"].append({"name": "wrong"})
+            side.doc["meshes"][0]["primitives"][2]["material"] = 1
+            side.write(path)
+            with self.assertRaisesRegex(ValueError, "original face material"):
+                append_face_materials(g, directory, "NOA")

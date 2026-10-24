@@ -109,6 +109,12 @@ def optimize(source, target, legacy_materials=False, skin_roles=None, character=
                 material.setdefault("extras", {})["vivaMaterial"] = (
                     "nexo-native-face-v2"
                 )
+    if character in ("NOA", "NOVA", "ATLAS"):
+        from family_skin_glb import restore_family_skin
+
+        report["original_skin"] = restore_family_skin(
+            glb, Path(source).parent, character
+        )
     # Compact exact duplicates only, including UVs, normals, skin weights and
     # morphs in the identity. Preserve seams and every triangle's attribute values.
     vertices_before = vertices_after = 0

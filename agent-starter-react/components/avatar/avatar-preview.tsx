@@ -90,6 +90,15 @@ export default function AvatarPreview({
           ))}
         </select>
       </label>
+      {asset?.reviewPending && (
+        <p
+          className="max-w-xl text-center text-sm text-amber-700 dark:text-amber-300"
+          role="status"
+        >
+          Exportación en revisión. Todavía puede presentar diferencias de apariencia y movimiento;
+          no sustituye los modelos habilitados en las llamadas.
+        </p>
+      )}
       {!asset ? (
         <p role="status">El modelo de {character} aún no se ha exportado para la web.</p>
       ) : failed ? (

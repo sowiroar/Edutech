@@ -138,3 +138,11 @@ Mantener AvatarStage sin key por personaje: el relevo usa una imagen 2D y fundid
 240 ms al primer frame, libera el modelo viejo y no reinicia el audio LiveKit.
 Las métricas se reinician por hash. Nuevas exportaciones solo como candidatas,
 sin tocar originales ni heredar aprobación; NOA conserva SK_Noa_AlternateFace.
+
+
+24 octubre — NOA/NOVA/ATLAS GLB generados, solo preview. Primera apariencia
+rechazada por el usuario; se repararon textura virtual, slots por sección y
+superficies procedurales, pero NO hay aceptación visual/de voz. No promoverlos
+por pasar tests. Los tres GLB originales de Santiago siguen intactos en llamadas.
+Ver docs/validation/2026-10-23-family-transitions/README.md y candidate-models.json.
+El GLB nuevo depende de family-materials.ts para conservar cejas/trazos/ropa/barba.

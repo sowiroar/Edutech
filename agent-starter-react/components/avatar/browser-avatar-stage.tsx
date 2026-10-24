@@ -7,6 +7,7 @@ import { AVATAR_MAX_BYTES, AVATAR_MAX_TRIANGLES, type BrowserAvatar } from '@/li
 import { cn } from '@/lib/shadcn/utils';
 import { createAvatarTransition } from './avatar-transition';
 import { applyElianMaterials } from './elian-materials';
+import { applyFamilyMaterials } from './family-materials';
 import { applyLiraMaterials } from './lira-materials';
 import { createMateoRig } from './mateo-rig';
 import { applyNexoMaterials } from './nexo-materials';
@@ -134,6 +135,7 @@ export default function BrowserAvatarStage({
       if (asset.character === 'LIRA') applyLiraMaterials(model);
       if (asset.character === 'NEXO') applyNexoMaterials(model);
       if (asset.character === 'ELIAN') applyElianMaterials(model);
+      applyFamilyMaterials(model, asset.character);
       let triangles = 0;
       const mouths: { mesh: THREE.Mesh; index: number }[] = [];
       model.traverse((node) => {
@@ -181,12 +183,20 @@ export default function BrowserAvatarStage({
       const camera = new THREE.PerspectiveCamera(32, 16 / 9, 0.01, 20);
       camera.position.set(
         0,
-        asset.character === 'LIRA' ? 1.4 : asset.character === 'ELIAN' ? 1.48 : 1.43,
-        asset.character === 'ELIAN' ? 1.06 : 1.3
+        asset.character === 'LIRA'
+          ? 1.4
+          : ['ELIAN', 'NOA', 'NOVA'].includes(asset.character)
+            ? 1.48
+            : 1.43,
+        ['ELIAN', 'NOA', 'NOVA'].includes(asset.character) ? 1.06 : 1.3
       );
       camera.lookAt(
         0,
-        asset.character === 'LIRA' ? 1.39 : asset.character === 'ELIAN' ? 1.47 : 1.42,
+        asset.character === 'LIRA'
+          ? 1.39
+          : ['ELIAN', 'NOA', 'NOVA'].includes(asset.character)
+            ? 1.47
+            : 1.42,
         0
       );
       scene.add(new THREE.HemisphereLight(0xd7eaff, 0x4b4053, 2.5));

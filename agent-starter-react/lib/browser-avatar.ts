@@ -5,6 +5,7 @@ export interface BrowserAvatar {
   modelUrl: string;
   backgroundUrl: string;
   backgroundColor?: string;
+  reviewPending?: boolean;
   bytes: number;
   sha256: string;
   frontYaw: number;

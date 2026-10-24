@@ -37,3 +37,11 @@ clasificador experimental ni sustituir la identidad de los modelos.
 modelo WebGL activo. Entrega web revisada: LIRA/NEXO/ELIAN; NOA/NOVA/ATLAS no
 están en el paquete GLB recibido. No confundir catálogo, exportación y agente.
 Estado, límites y pruebas: docs/validation/2026-10-23-family-transitions/README.md.
+
+
+24 octubre — NOA/NOVA/ATLAS GLB generados, solo preview. Primera apariencia
+rechazada por el usuario; se repararon textura virtual, slots por sección y
+superficies procedurales, pero NO hay aceptación visual/de voz. No promoverlos
+por pasar tests. Los tres GLB originales de Santiago siguen intactos en llamadas.
+Ver docs/validation/2026-10-23-family-transitions/README.md y candidate-models.json.
+El GLB nuevo depende de family-materials.ts para conservar cejas/trazos/ropa/barba.

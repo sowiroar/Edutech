@@ -60,6 +60,7 @@ export async function browserAvatar({
     await stat(path.join(directory, background));
     return {
       engine: 'webgl',
+      ...(candidate !== null ? { reviewPending: true } : {}),
       character,
       modelUrl: `/avatars/${slug}/${filename}`,
       backgroundUrl: `/avatars/${slug}/${background}`,
